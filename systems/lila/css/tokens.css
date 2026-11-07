@@ -255,7 +255,7 @@
   --color-text-muted: var(--color-neutral-600);
   --color-text-subtle: var(--color-neutral-400);
   --color-text-inverse: var(--color-neutral-50);
-  --color-text-link: var(--color-brand-600);
+  --color-text-link: var(--color-brand-800);
   --color-border-default: var(--color-neutral-200);
   --color-border-strong: var(--color-neutral-300);
   --color-border-input: var(--color-neutral-200);

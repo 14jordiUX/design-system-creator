@@ -1125,7 +1125,7 @@
           "$value": "{color.neutral.50}"
         },
         "link": {
-          "$value": "{color.brand.600}"
+          "$value": "{color.brand.800}"
         }
       },
       "border": {
