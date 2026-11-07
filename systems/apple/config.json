@@ -1,0 +1,23 @@
+{
+  "cuestionario": {
+    "name": "Apple",
+    "description": "Discover the innovative world of Apple and shop everything iPhone, iPad, Apple Watch, Mac, and Apple TV, plus explore accessories, entertainment, and expert device support. Creado a partir de apple.com.",
+    "productType": "Basado en la web apple.com",
+    "sober": 40,
+    "serious": 100,
+    "dense": 45,
+    "warmNeutral": false,
+    "font": "Inter",
+    "scale": "amplia",
+    "radius": 16,
+    "border": 1,
+    "unit": "4",
+    "density": 45,
+    "shadow": 20,
+    "speed": 50,
+    "origin": "url",
+    "sourceUrl": "https://www.apple.com/",
+    "applyCharacter": false,
+    "brand": "#0071e3"
+  }
+}

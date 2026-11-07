@@ -1,0 +1,30 @@
+{
+  "id": "apple",
+  "name": "Apple",
+  "description": "Discover the innovative world of Apple and shop everything iPhone, iPad, Apple Watch, Mac, and Apple TV, plus explore accessories, entertainment, and expert device support. Creado a partir de apple.com.",
+  "productType": "Basado en la web apple.com",
+  "origin": "url",
+  "sourceUrl": "https://www.apple.com/",
+  "principles": [
+    {
+      "title": "Equilibrado",
+      "text": "La marca aparece en acciones y detalles; fondos y textos en neutros."
+    },
+    {
+      "title": "Cercano",
+      "text": "Esquinas de 16 px en controles y grises fríos."
+    },
+    {
+      "title": "Cómodo",
+      "text": "Rejilla de 4 px y escala tipográfica amplia."
+    }
+  ],
+  "notes": {
+    "general": "Creado automáticamente desde https://www.apple.com/ el 2026-11-07. Es un punto de partida: revisa colores, fuente y radios en el modo editor. La captura de la web está en referencia.jpg.",
+    "color": "Color de marca #0071e3, sacado de botones.",
+    "tipografía": "La web usa «SF Pro Display», que no está en Google Fonts; se usa Inter en su lugar (cámbiala en Tipografía si tienes la fuente). Texto base de 21 px (escala amplia).",
+    "forma": "Los botones de la web son de píldora (totalmente redondos); el radio de controles queda en 16 px. Radio de controles 16 px, borde de 1 px, botones de unos 36 px de alto."
+  },
+  "createdAt": "2026-11-07",
+  "updatedAt": "2026-11-07"
+}

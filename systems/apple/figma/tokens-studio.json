@@ -1,0 +1,1564 @@
+{
+  "primitives": {
+    "color": {
+      "$type": "color",
+      "white": {
+        "$value": "#ffffff"
+      },
+      "black": {
+        "$value": "#000000"
+      },
+      "neutral": {
+        "50": {
+          "$value": "#f9fafc"
+        },
+        "100": {
+          "$value": "#f2f4f7"
+        },
+        "200": {
+          "$value": "#e2e4e9"
+        },
+        "300": {
+          "$value": "#d2d4d9"
+        },
+        "400": {
+          "$value": "#9fa1a6"
+        },
+        "500": {
+          "$value": "#707175"
+        },
+        "600": {
+          "$value": "#515255"
+        },
+        "700": {
+          "$value": "#3f4042"
+        },
+        "800": {
+          "$value": "#262628"
+        },
+        "900": {
+          "$value": "#17181a"
+        },
+        "950": {
+          "$value": "#090a0c"
+        }
+      },
+      "brand": {
+        "50": {
+          "$value": "#f2f7ff"
+        },
+        "100": {
+          "$value": "#e0edfe"
+        },
+        "200": {
+          "$value": "#c4ddfe"
+        },
+        "300": {
+          "$value": "#9ec6fd"
+        },
+        "400": {
+          "$value": "#6eabfd"
+        },
+        "500": {
+          "$value": "#3a8df8"
+        },
+        "600": {
+          "$value": "#0071e3"
+        },
+        "700": {
+          "$value": "#0e57ab"
+        },
+        "800": {
+          "$value": "#004086"
+        },
+        "900": {
+          "$value": "#022b5d"
+        },
+        "950": {
+          "$value": "#001534"
+        }
+      },
+      "green": {
+        "50": {
+          "$value": "#f0fdf4"
+        },
+        "100": {
+          "$value": "#dcfce7"
+        },
+        "200": {
+          "$value": "#bbf7d0"
+        },
+        "300": {
+          "$value": "#86efac"
+        },
+        "400": {
+          "$value": "#4ade80"
+        },
+        "500": {
+          "$value": "#22c55e"
+        },
+        "600": {
+          "$value": "#16a34a"
+        },
+        "700": {
+          "$value": "#15803d"
+        },
+        "800": {
+          "$value": "#166534"
+        },
+        "900": {
+          "$value": "#14532d"
+        },
+        "950": {
+          "$value": "#052e16"
+        }
+      },
+      "amber": {
+        "50": {
+          "$value": "#fffbeb"
+        },
+        "100": {
+          "$value": "#fef3c7"
+        },
+        "200": {
+          "$value": "#fde68a"
+        },
+        "300": {
+          "$value": "#fcd34d"
+        },
+        "400": {
+          "$value": "#fbbf24"
+        },
+        "500": {
+          "$value": "#f59e0b"
+        },
+        "600": {
+          "$value": "#d97706"
+        },
+        "700": {
+          "$value": "#b45309"
+        },
+        "800": {
+          "$value": "#92400e"
+        },
+        "900": {
+          "$value": "#78350f"
+        },
+        "950": {
+          "$value": "#451a03"
+        }
+      },
+      "red": {
+        "50": {
+          "$value": "#fef2f2"
+        },
+        "100": {
+          "$value": "#fee2e2"
+        },
+        "200": {
+          "$value": "#fecaca"
+        },
+        "300": {
+          "$value": "#fca5a5"
+        },
+        "400": {
+          "$value": "#f87171"
+        },
+        "500": {
+          "$value": "#ef4444"
+        },
+        "600": {
+          "$value": "#dc2626"
+        },
+        "700": {
+          "$value": "#b91c1c"
+        },
+        "800": {
+          "$value": "#991b1b"
+        },
+        "900": {
+          "$value": "#7f1d1d"
+        },
+        "950": {
+          "$value": "#450a0a"
+        }
+      },
+      "blue": {
+        "50": {
+          "$value": "#eff6ff"
+        },
+        "100": {
+          "$value": "#dbeafe"
+        },
+        "200": {
+          "$value": "#bfdbfe"
+        },
+        "300": {
+          "$value": "#93c5fd"
+        },
+        "400": {
+          "$value": "#60a5fa"
+        },
+        "500": {
+          "$value": "#3b82f6"
+        },
+        "600": {
+          "$value": "#2563eb"
+        },
+        "700": {
+          "$value": "#1d4ed8"
+        },
+        "800": {
+          "$value": "#1e40af"
+        },
+        "900": {
+          "$value": "#1e3a8a"
+        },
+        "950": {
+          "$value": "#172554"
+        }
+      }
+    },
+    "space": {
+      "$type": "dimension",
+      "0": {
+        "$value": "0px"
+      },
+      "0-5": {
+        "$value": "2px"
+      },
+      "1": {
+        "$value": "4px"
+      },
+      "1-5": {
+        "$value": "6px"
+      },
+      "2": {
+        "$value": "8px"
+      },
+      "3": {
+        "$value": "12px"
+      },
+      "4": {
+        "$value": "16px"
+      },
+      "5": {
+        "$value": "20px"
+      },
+      "6": {
+        "$value": "24px"
+      },
+      "8": {
+        "$value": "32px"
+      },
+      "10": {
+        "$value": "40px"
+      },
+      "12": {
+        "$value": "48px"
+      },
+      "16": {
+        "$value": "64px"
+      },
+      "20": {
+        "$value": "80px"
+      },
+      "24": {
+        "$value": "96px"
+      }
+    },
+    "radius": {
+      "$type": "dimension",
+      "none": {
+        "$value": "0px"
+      },
+      "xs": {
+        "$value": "5px"
+      },
+      "sm": {
+        "$value": "11px"
+      },
+      "md": {
+        "$value": "16px"
+      },
+      "lg": {
+        "$value": "22px"
+      },
+      "xl": {
+        "$value": "32px"
+      },
+      "2xl": {
+        "$value": "42px"
+      },
+      "full": {
+        "$value": "9999px"
+      }
+    },
+    "border-width": {
+      "$type": "dimension",
+      "0": {
+        "$value": "0px"
+      },
+      "1": {
+        "$value": "1px"
+      },
+      "2": {
+        "$value": "2px"
+      },
+      "4": {
+        "$value": "4px"
+      }
+    },
+    "font": {
+      "family": {
+        "$type": "fontFamily",
+        "sans": {
+          "$value": [
+            "Inter",
+            "ui-sans-serif",
+            "system-ui",
+            "sans-serif"
+          ]
+        },
+        "serif": {
+          "$value": [
+            "Georgia",
+            "ui-serif",
+            "serif"
+          ]
+        },
+        "mono": {
+          "$value": [
+            "JetBrains Mono",
+            "ui-monospace",
+            "monospace"
+          ]
+        }
+      },
+      "size": {
+        "$type": "dimension",
+        "xs": {
+          "$value": "12px"
+        },
+        "sm": {
+          "$value": "14px"
+        },
+        "md": {
+          "$value": "16px"
+        },
+        "lg": {
+          "$value": "20px"
+        },
+        "xl": {
+          "$value": "22px"
+        },
+        "2xl": {
+          "$value": "26px"
+        },
+        "3xl": {
+          "$value": "32px"
+        },
+        "4xl": {
+          "$value": "38px"
+        },
+        "5xl": {
+          "$value": "52px"
+        },
+        "6xl": {
+          "$value": "64px"
+        }
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "regular": {
+          "$value": 400
+        },
+        "medium": {
+          "$value": 500
+        },
+        "semibold": {
+          "$value": 600
+        },
+        "bold": {
+          "$value": 700
+        }
+      },
+      "line-height": {
+        "$type": "number",
+        "tight": {
+          "$value": 1.15
+        },
+        "snug": {
+          "$value": 1.3
+        },
+        "normal": {
+          "$value": 1.5
+        },
+        "relaxed": {
+          "$value": 1.7
+        }
+      },
+      "letter-spacing": {
+        "$type": "dimension",
+        "tight": {
+          "$value": "-0.02em"
+        },
+        "normal": {
+          "$value": "0em"
+        },
+        "wide": {
+          "$value": "0.04em"
+        }
+      }
+    },
+    "shadow": {
+      "$type": "shadow",
+      "sm": {
+        "$value": {
+          "color": "#0000000b",
+          "offsetX": "0px",
+          "offsetY": "1px",
+          "blur": "2px",
+          "spread": "0px"
+        }
+      },
+      "md": {
+        "$value": {
+          "color": "#00000014",
+          "offsetX": "0px",
+          "offsetY": "4px",
+          "blur": "8px",
+          "spread": "-2px"
+        }
+      },
+      "lg": {
+        "$value": {
+          "color": "#00000018",
+          "offsetX": "0px",
+          "offsetY": "12px",
+          "blur": "24px",
+          "spread": "-4px"
+        }
+      },
+      "xl": {
+        "$value": {
+          "color": "#0000001f",
+          "offsetX": "0px",
+          "offsetY": "24px",
+          "blur": "48px",
+          "spread": "-8px"
+        }
+      }
+    },
+    "duration": {
+      "$type": "duration",
+      "instant": {
+        "$value": "0ms"
+      },
+      "fast": {
+        "$value": "130ms"
+      },
+      "normal": {
+        "$value": "220ms"
+      },
+      "slow": {
+        "$value": "350ms"
+      },
+      "loop": {
+        "$value": "1600ms",
+        "$description": "Animaciones que se repiten (carga)"
+      }
+    },
+    "easing": {
+      "$type": "cubicBezier",
+      "standard": {
+        "$value": [
+          0.2,
+          0,
+          0,
+          1
+        ]
+      },
+      "enter": {
+        "$value": [
+          0,
+          0,
+          0.2,
+          1
+        ]
+      },
+      "exit": {
+        "$value": [
+          0.4,
+          0,
+          1,
+          1
+        ]
+      }
+    },
+    "opacity": {
+      "$type": "number",
+      "disabled": {
+        "$value": 0.5
+      },
+      "overlay": {
+        "$value": 0.6
+      }
+    },
+    "breakpoint": {
+      "$type": "dimension",
+      "sm": {
+        "$value": "640px"
+      },
+      "md": {
+        "$value": "768px"
+      },
+      "lg": {
+        "$value": "1024px"
+      },
+      "xl": {
+        "$value": "1280px"
+      }
+    }
+  },
+  "semantic": {
+    "typography": {
+      "display": {
+        "$value": {
+          "fontFamily": "{font.family.sans}",
+          "fontSize": "{font.size.5xl}",
+          "fontWeight": "{font.weight.bold}",
+          "lineHeight": "{font.line-height.tight}",
+          "letterSpacing": "{font.letter-spacing.tight}"
+        },
+        "$type": "typography"
+      },
+      "heading": {
+        "h1": {
+          "$value": {
+            "fontFamily": "{font.family.sans}",
+            "fontSize": "{font.size.4xl}",
+            "fontWeight": "{font.weight.bold}",
+            "lineHeight": "{font.line-height.tight}",
+            "letterSpacing": "{font.letter-spacing.tight}"
+          },
+          "$type": "typography"
+        },
+        "h2": {
+          "$value": {
+            "fontFamily": "{font.family.sans}",
+            "fontSize": "{font.size.3xl}",
+            "fontWeight": "{font.weight.semibold}",
+            "lineHeight": "{font.line-height.tight}",
+            "letterSpacing": "{font.letter-spacing.tight}"
+          },
+          "$type": "typography"
+        },
+        "h3": {
+          "$value": {
+            "fontFamily": "{font.family.sans}",
+            "fontSize": "{font.size.2xl}",
+            "fontWeight": "{font.weight.semibold}",
+            "lineHeight": "{font.line-height.snug}",
+            "letterSpacing": "{font.letter-spacing.normal}"
+          },
+          "$type": "typography"
+        },
+        "h4": {
+          "$value": {
+            "fontFamily": "{font.family.sans}",
+            "fontSize": "{font.size.xl}",
+            "fontWeight": "{font.weight.semibold}",
+            "lineHeight": "{font.line-height.snug}",
+            "letterSpacing": "{font.letter-spacing.normal}"
+          },
+          "$type": "typography"
+        }
+      },
+      "body": {
+        "lg": {
+          "$value": {
+            "fontFamily": "{font.family.sans}",
+            "fontSize": "{font.size.lg}",
+            "fontWeight": "{font.weight.regular}",
+            "lineHeight": "{font.line-height.relaxed}",
+            "letterSpacing": "{font.letter-spacing.normal}"
+          },
+          "$type": "typography"
+        },
+        "md": {
+          "$value": {
+            "fontFamily": "{font.family.sans}",
+            "fontSize": "{font.size.md}",
+            "fontWeight": "{font.weight.regular}",
+            "lineHeight": "{font.line-height.normal}",
+            "letterSpacing": "{font.letter-spacing.normal}"
+          },
+          "$type": "typography"
+        },
+        "sm": {
+          "$value": {
+            "fontFamily": "{font.family.sans}",
+            "fontSize": "{font.size.sm}",
+            "fontWeight": "{font.weight.regular}",
+            "lineHeight": "{font.line-height.normal}",
+            "letterSpacing": "{font.letter-spacing.normal}"
+          },
+          "$type": "typography"
+        }
+      },
+      "label": {
+        "md": {
+          "$value": {
+            "fontFamily": "{font.family.sans}",
+            "fontSize": "{font.size.sm}",
+            "fontWeight": "{font.weight.medium}",
+            "lineHeight": "{font.line-height.snug}",
+            "letterSpacing": "{font.letter-spacing.normal}"
+          },
+          "$type": "typography"
+        },
+        "sm": {
+          "$value": {
+            "fontFamily": "{font.family.sans}",
+            "fontSize": "{font.size.xs}",
+            "fontWeight": "{font.weight.medium}",
+            "lineHeight": "{font.line-height.snug}",
+            "letterSpacing": "{font.letter-spacing.wide}"
+          },
+          "$type": "typography"
+        }
+      },
+      "caption": {
+        "$value": {
+          "fontFamily": "{font.family.sans}",
+          "fontSize": "{font.size.xs}",
+          "fontWeight": "{font.weight.regular}",
+          "lineHeight": "{font.line-height.normal}",
+          "letterSpacing": "{font.letter-spacing.normal}"
+        },
+        "$type": "typography"
+      },
+      "code": {
+        "$value": {
+          "fontFamily": "{font.family.mono}",
+          "fontSize": "{font.size.sm}",
+          "fontWeight": "{font.weight.regular}",
+          "lineHeight": "{font.line-height.normal}",
+          "letterSpacing": "{font.letter-spacing.normal}"
+        },
+        "$type": "typography"
+      }
+    },
+    "space": {
+      "$type": "dimension",
+      "inset": {
+        "$description": "Relleno interior (padding) y distancias a los bordes",
+        "3xs": {
+          "$value": "{space.0-5}"
+        },
+        "2xs": {
+          "$value": "{space.1}"
+        },
+        "xs": {
+          "$value": "{space.1-5}"
+        },
+        "sm": {
+          "$value": "{space.2}"
+        },
+        "md": {
+          "$value": "{space.3}"
+        },
+        "lg": {
+          "$value": "{space.4}"
+        },
+        "xl": {
+          "$value": "{space.6}"
+        },
+        "2xl": {
+          "$value": "{space.8}"
+        },
+        "3xl": {
+          "$value": "{space.12}"
+        },
+        "4xl": {
+          "$value": "{space.16}"
+        }
+      },
+      "gap": {
+        "$description": "Separación entre elementos (gap, márgenes)",
+        "3xs": {
+          "$value": "{space.0-5}"
+        },
+        "2xs": {
+          "$value": "{space.1}"
+        },
+        "xs": {
+          "$value": "{space.1-5}"
+        },
+        "sm": {
+          "$value": "{space.2}"
+        },
+        "md": {
+          "$value": "{space.3}"
+        },
+        "lg": {
+          "$value": "{space.4}"
+        },
+        "xl": {
+          "$value": "{space.6}"
+        },
+        "2xl": {
+          "$value": "{space.8}"
+        },
+        "3xl": {
+          "$value": "{space.12}"
+        },
+        "4xl": {
+          "$value": "{space.16}"
+        }
+      },
+      "section": {
+        "$value": "{space.16}",
+        "$description": "Separación entre secciones de página"
+      }
+    },
+    "radius": {
+      "$type": "dimension",
+      "control": {
+        "$value": "{radius.md}",
+        "$description": "Botones, campos, selects"
+      },
+      "card": {
+        "$value": "{radius.lg}",
+        "$description": "Tarjetas y paneles"
+      },
+      "overlay": {
+        "$value": "{radius.xl}",
+        "$description": "Modales, popovers"
+      },
+      "pill": {
+        "$value": "{radius.full}",
+        "$description": "Badges, avatares, toggles"
+      },
+      "inner": {
+        "$value": "{radius.sm}",
+        "$description": "Elementos dentro de un control (opciones de menú, casillas)"
+      },
+      "fine": {
+        "$value": "{radius.xs}",
+        "$description": "Detalles pequeños"
+      },
+      "square": {
+        "$value": "{radius.none}",
+        "$description": "Sin redondeo"
+      }
+    },
+    "elevation": {
+      "$type": "shadow",
+      "flat": {
+        "$value": "{shadow.sm}"
+      },
+      "raised": {
+        "$value": "{shadow.md}",
+        "$description": "Tarjetas elevadas, dropdowns"
+      },
+      "overlay": {
+        "$value": "{shadow.lg}",
+        "$description": "Popovers, menús"
+      },
+      "modal": {
+        "$value": "{shadow.xl}"
+      }
+    },
+    "motion": {
+      "duration": {
+        "$type": "duration",
+        "micro": {
+          "$value": "{duration.fast}",
+          "$description": "Hover, foco"
+        },
+        "default": {
+          "$value": "{duration.normal}"
+        },
+        "emphasis": {
+          "$value": "{duration.slow}",
+          "$description": "Modales, paneles"
+        },
+        "loop": {
+          "$value": "{duration.loop}"
+        }
+      },
+      "easing": {
+        "$type": "cubicBezier",
+        "default": {
+          "$value": "{easing.standard}"
+        }
+      },
+      "scale": {
+        "$type": "number",
+        "enter": {
+          "$value": 0.95,
+          "$description": "Escala inicial al aparecer (menús, diálogos)"
+        }
+      },
+      "distance": {
+        "$type": "dimension",
+        "enter": {
+          "$value": "{space.2}",
+          "$description": "Desplazamiento al aparecer"
+        }
+      }
+    },
+    "control": {
+      "$type": "dimension",
+      "height": {
+        "sm": {
+          "$value": "32px"
+        },
+        "md": {
+          "$value": "40px"
+        },
+        "lg": {
+          "$value": "48px"
+        }
+      },
+      "border-width": {
+        "$value": "{border-width.1}"
+      },
+      "focus-ring-width": {
+        "$value": "{border-width.2}"
+      },
+      "focus-ring-offset": {
+        "$value": "{border-width.2}",
+        "$description": "Separación entre el control y su anillo de foco"
+      }
+    },
+    "size": {
+      "$type": "dimension",
+      "icon": {
+        "sm": {
+          "$value": "{space.3}",
+          "$description": "Iconos pequeños (dentro de badges, checks)"
+        },
+        "md": {
+          "$value": "{space.4}",
+          "$description": "Iconos por defecto"
+        },
+        "lg": {
+          "$value": "{space.5}",
+          "$description": "Iconos destacados"
+        }
+      },
+      "avatar": {
+        "sm": {
+          "$value": "{space.6}"
+        },
+        "md": {
+          "$value": "{space.8}"
+        },
+        "lg": {
+          "$value": "{space.10}"
+        },
+        "xl": {
+          "$value": "{space.12}"
+        },
+        "2xl": {
+          "$value": "{space.16}"
+        }
+      },
+      "indicator": {
+        "$value": "{space.2}",
+        "$description": "Puntos de radio, viñetas"
+      },
+      "track": {
+        "$value": "{space.1-5}",
+        "$description": "Grosor de barras de slider"
+      },
+      "progress": {
+        "$value": "{space.2}",
+        "$description": "Alto de la barra de progreso"
+      },
+      "menu-min": {
+        "$value": "128px",
+        "$description": "Ancho mínimo de menús desplegables"
+      },
+      "popover": {
+        "$value": "288px",
+        "$description": "Ancho de popovers"
+      },
+      "tooltip": {
+        "$value": "320px",
+        "$description": "Ancho máximo de tooltips"
+      },
+      "dialog": {
+        "$value": "512px",
+        "$description": "Ancho máximo de diálogos"
+      },
+      "sheet": {
+        "$value": "384px",
+        "$description": "Ancho de paneles laterales"
+      },
+      "menu-wide": {
+        "$value": "192px",
+        "$description": "Ancho mínimo de menús de barra (menubar, menús contextuales)"
+      },
+      "list-max": {
+        "$value": "300px",
+        "$description": "Alto máximo de listas con búsqueda (command, combobox)"
+      },
+      "handle": {
+        "$value": "{space.24}",
+        "$description": "Ancho del tirador de un drawer"
+      },
+      "line": {
+        "$value": "{border-width.2}",
+        "$description": "Grosor de líneas indicadoras (pestaña activa, guías)"
+      },
+      "field": {
+        "xs": {
+          "$value": "{space.20}",
+          "$description": "Campos cortos (códigos, números)"
+        },
+        "sm": {
+          "$value": "{space.24}",
+          "$description": "Campos y etiquetas cortas"
+        }
+      },
+      "area-min": {
+        "$value": "{space.24}",
+        "$description": "Alto mínimo de zonas de demo, de soltar archivos o de clic"
+      }
+    },
+    "layout": {
+      "$type": "dimension",
+      "header": {
+        "$value": "56px",
+        "$description": "Alto de la cabecera de una aplicación"
+      },
+      "sidebar": {
+        "$value": "256px",
+        "$description": "Ancho de la barra lateral"
+      },
+      "prose": {
+        "$value": "672px",
+        "$description": "Ancho máximo de un bloque de texto"
+      },
+      "content": {
+        "$value": "1024px",
+        "$description": "Ancho máximo del contenido"
+      },
+      "page": {
+        "$value": "1152px",
+        "$description": "Ancho máximo de una página"
+      },
+      "sidebar-icon": {
+        "$value": "{space.12}",
+        "$description": "Ancho de la barra lateral plegada (solo iconos)"
+      },
+      "sidebar-mobile": {
+        "$value": "288px",
+        "$description": "Ancho de la barra lateral en móvil"
+      },
+      "drawer-max": {
+        "$value": "80vh",
+        "$description": "Alto máximo de un drawer"
+      },
+      "drawer-gap": {
+        "$value": "{space.24}",
+        "$description": "Distancia de un drawer al borde opuesto de la pantalla"
+      }
+    },
+    "text": {
+      "$description": "Tipografía por propiedades sueltas (para combinar). Para estilos completos usa typography.*",
+      "size": {
+        "$type": "dimension",
+        "caption": {
+          "$value": "{font.size.xs}",
+          "$description": "Notas, metadatos"
+        },
+        "ui": {
+          "$value": "{font.size.sm}",
+          "$description": "Texto de controles y menús"
+        },
+        "body": {
+          "$value": "{font.size.md}",
+          "$description": "Texto de lectura"
+        },
+        "lead": {
+          "$value": "{font.size.lg}",
+          "$description": "Entradilla"
+        },
+        "title": {
+          "$value": "{font.size.xl}",
+          "$description": "Títulos de tarjeta o sección pequeña"
+        },
+        "h3": {
+          "$value": "{font.size.2xl}"
+        },
+        "h2": {
+          "$value": "{font.size.3xl}"
+        },
+        "h1": {
+          "$value": "{font.size.4xl}"
+        },
+        "display": {
+          "$value": "{font.size.5xl}"
+        }
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "normal": {
+          "$value": "{font.weight.regular}"
+        },
+        "emphasis": {
+          "$value": "{font.weight.medium}",
+          "$description": "Etiquetas, botones"
+        },
+        "strong": {
+          "$value": "{font.weight.semibold}",
+          "$description": "Títulos"
+        },
+        "heavy": {
+          "$value": "{font.weight.bold}"
+        }
+      },
+      "family": {
+        "$type": "fontFamily",
+        "base": {
+          "$value": "{font.family.sans}"
+        },
+        "code": {
+          "$value": "{font.family.mono}"
+        }
+      },
+      "leading": {
+        "$type": "number",
+        "compact": {
+          "$value": "{font.line-height.tight}"
+        },
+        "body": {
+          "$value": "{font.line-height.normal}"
+        },
+        "prose": {
+          "$value": "{font.line-height.relaxed}"
+        }
+      },
+      "tracking": {
+        "$type": "dimension",
+        "heading": {
+          "$value": "{font.letter-spacing.tight}"
+        },
+        "body": {
+          "$value": "{font.letter-spacing.normal}"
+        },
+        "caps": {
+          "$value": "{font.letter-spacing.wide}",
+          "$description": "Textos en mayúsculas"
+        }
+      }
+    },
+    "state": {
+      "opacity": {
+        "$type": "number",
+        "disabled": {
+          "$value": "{opacity.disabled}",
+          "$description": "Elementos desactivados"
+        },
+        "overlay": {
+          "$value": "{opacity.overlay}"
+        }
+      }
+    }
+  },
+  "color/light": {
+    "color": {
+      "$type": "color",
+      "bg": {
+        "default": {
+          "$value": "{color.white}",
+          "$description": "Fondo de la página"
+        },
+        "subtle": {
+          "$value": "{color.neutral.50}"
+        },
+        "muted": {
+          "$value": "{color.neutral.100}",
+          "$description": "Zonas secundarias, filas alternas"
+        },
+        "inverse": {
+          "$value": "{color.neutral.900}"
+        }
+      },
+      "surface": {
+        "card": {
+          "$value": "{color.white}",
+          "$description": "Tarjetas"
+        },
+        "popover": {
+          "$value": "{color.white}",
+          "$description": "Menús, popovers, tooltips"
+        },
+        "overlay": {
+          "$value": "#09090b99",
+          "$description": "Velo detrás de modales"
+        },
+        "sidebar": {
+          "$value": "{color.neutral.50}",
+          "$description": "Fondo de la barra lateral"
+        }
+      },
+      "text": {
+        "default": {
+          "$value": "{color.neutral.950}",
+          "$description": "Texto principal"
+        },
+        "muted": {
+          "$value": "{color.neutral.600}",
+          "$description": "Texto secundario"
+        },
+        "subtle": {
+          "$value": "{color.neutral.400}",
+          "$description": "Placeholders, deshabilitado"
+        },
+        "inverse": {
+          "$value": "{color.neutral.50}"
+        },
+        "link": {
+          "$value": "{color.brand.600}"
+        }
+      },
+      "border": {
+        "default": {
+          "$value": "{color.neutral.200}"
+        },
+        "strong": {
+          "$value": "{color.neutral.300}"
+        },
+        "input": {
+          "$value": "{color.neutral.200}",
+          "$description": "Borde de campos de formulario"
+        },
+        "focus": {
+          "$value": "{color.brand.500}",
+          "$description": "Anillo de foco"
+        }
+      },
+      "action": {
+        "primary": {
+          "default": {
+            "$value": "{color.brand.600}"
+          },
+          "hover": {
+            "$value": "{color.brand.700}"
+          },
+          "active": {
+            "$value": "{color.brand.800}"
+          },
+          "on": {
+            "$value": "{color.white}",
+            "$description": "Texto/icono sobre primary"
+          },
+          "subtle": {
+            "$value": "{color.brand.50}",
+            "$description": "Fondo suave (tags, selección)"
+          }
+        },
+        "secondary": {
+          "default": {
+            "$value": "{color.neutral.100}"
+          },
+          "hover": {
+            "$value": "{color.neutral.200}"
+          },
+          "active": {
+            "$value": "{color.neutral.300}"
+          },
+          "on": {
+            "$value": "{color.neutral.900}"
+          }
+        },
+        "ghost": {
+          "hover": {
+            "$value": "{color.neutral.100}"
+          },
+          "on": {
+            "$value": "{color.neutral.900}"
+          }
+        },
+        "disabled": {
+          "default": {
+            "$value": "{color.neutral.100}"
+          },
+          "on": {
+            "$value": "{color.neutral.400}"
+          }
+        }
+      },
+      "feedback": {
+        "success": {
+          "solid": {
+            "$value": "{color.green.700}",
+            "$description": "Fondo sólido (badges, botones)"
+          },
+          "on-solid": {
+            "$value": "{color.white}",
+            "$description": "Texto sobre el fondo sólido"
+          },
+          "subtle": {
+            "$value": "{color.green.50}",
+            "$description": "Fondo suave de alertas"
+          },
+          "border": {
+            "$value": "{color.green.200}"
+          },
+          "text": {
+            "$value": "{color.green.700}"
+          }
+        },
+        "warning": {
+          "solid": {
+            "$value": "{color.amber.500}",
+            "$description": "Fondo sólido (badges, botones)"
+          },
+          "on-solid": {
+            "$value": "{color.neutral.950}",
+            "$description": "Texto sobre el fondo sólido"
+          },
+          "subtle": {
+            "$value": "{color.amber.50}",
+            "$description": "Fondo suave de alertas"
+          },
+          "border": {
+            "$value": "{color.amber.200}"
+          },
+          "text": {
+            "$value": "{color.amber.700}"
+          }
+        },
+        "danger": {
+          "solid": {
+            "$value": "{color.red.600}",
+            "$description": "Fondo sólido (badges, botones)"
+          },
+          "on-solid": {
+            "$value": "{color.white}",
+            "$description": "Texto sobre el fondo sólido"
+          },
+          "subtle": {
+            "$value": "{color.red.50}",
+            "$description": "Fondo suave de alertas"
+          },
+          "border": {
+            "$value": "{color.red.200}"
+          },
+          "text": {
+            "$value": "{color.red.700}"
+          },
+          "hover": {
+            "$value": "{color.red.700}",
+            "$description": "Fondo sólido de peligro al pasar el ratón"
+          }
+        },
+        "info": {
+          "solid": {
+            "$value": "{color.blue.600}",
+            "$description": "Fondo sólido (badges, botones)"
+          },
+          "on-solid": {
+            "$value": "{color.white}",
+            "$description": "Texto sobre el fondo sólido"
+          },
+          "subtle": {
+            "$value": "{color.blue.50}",
+            "$description": "Fondo suave de alertas"
+          },
+          "border": {
+            "$value": "{color.blue.200}"
+          },
+          "text": {
+            "$value": "{color.blue.700}"
+          }
+        }
+      },
+      "chart": {
+        "$description": "Colores de series en gráficos",
+        "1": {
+          "$value": "{color.brand.600}"
+        },
+        "2": {
+          "$value": "{color.green.600}"
+        },
+        "3": {
+          "$value": "{color.amber.500}"
+        },
+        "4": {
+          "$value": "{color.blue.600}"
+        },
+        "5": {
+          "$value": "{color.red.500}"
+        }
+      }
+    }
+  },
+  "color/dark": {
+    "color": {
+      "$type": "color",
+      "bg": {
+        "default": {
+          "$value": "{color.neutral.950}",
+          "$description": "Fondo de la página"
+        },
+        "subtle": {
+          "$value": "{color.neutral.900}"
+        },
+        "muted": {
+          "$value": "{color.neutral.800}",
+          "$description": "Zonas secundarias, filas alternas"
+        },
+        "inverse": {
+          "$value": "{color.neutral.50}"
+        }
+      },
+      "surface": {
+        "card": {
+          "$value": "{color.neutral.900}",
+          "$description": "Tarjetas"
+        },
+        "popover": {
+          "$value": "{color.neutral.900}",
+          "$description": "Menús, popovers, tooltips"
+        },
+        "overlay": {
+          "$value": "#09090b99",
+          "$description": "Velo detrás de modales"
+        },
+        "sidebar": {
+          "$value": "{color.neutral.900}",
+          "$description": "Fondo de la barra lateral"
+        }
+      },
+      "text": {
+        "default": {
+          "$value": "{color.neutral.50}",
+          "$description": "Texto principal"
+        },
+        "muted": {
+          "$value": "{color.neutral.400}",
+          "$description": "Texto secundario"
+        },
+        "subtle": {
+          "$value": "{color.neutral.500}",
+          "$description": "Placeholders, deshabilitado"
+        },
+        "inverse": {
+          "$value": "{color.neutral.950}"
+        },
+        "link": {
+          "$value": "{color.brand.400}"
+        }
+      },
+      "border": {
+        "default": {
+          "$value": "{color.neutral.800}"
+        },
+        "strong": {
+          "$value": "{color.neutral.700}"
+        },
+        "input": {
+          "$value": "{color.neutral.800}",
+          "$description": "Borde de campos de formulario"
+        },
+        "focus": {
+          "$value": "{color.brand.400}",
+          "$description": "Anillo de foco"
+        }
+      },
+      "action": {
+        "primary": {
+          "default": {
+            "$value": "{color.brand.600}"
+          },
+          "hover": {
+            "$value": "{color.brand.700}"
+          },
+          "active": {
+            "$value": "{color.brand.800}"
+          },
+          "on": {
+            "$value": "{color.white}",
+            "$description": "Texto/icono sobre primary"
+          },
+          "subtle": {
+            "$value": "{color.brand.950}",
+            "$description": "Fondo suave (tags, selección)"
+          }
+        },
+        "secondary": {
+          "default": {
+            "$value": "{color.neutral.800}"
+          },
+          "hover": {
+            "$value": "{color.neutral.700}"
+          },
+          "active": {
+            "$value": "{color.neutral.600}"
+          },
+          "on": {
+            "$value": "{color.neutral.50}"
+          }
+        },
+        "ghost": {
+          "hover": {
+            "$value": "{color.neutral.800}"
+          },
+          "on": {
+            "$value": "{color.neutral.50}"
+          }
+        },
+        "disabled": {
+          "default": {
+            "$value": "{color.neutral.800}"
+          },
+          "on": {
+            "$value": "{color.neutral.600}"
+          }
+        }
+      },
+      "feedback": {
+        "success": {
+          "solid": {
+            "$value": "{color.green.700}",
+            "$description": "Fondo sólido (badges, botones)"
+          },
+          "on-solid": {
+            "$value": "{color.white}",
+            "$description": "Texto sobre el fondo sólido"
+          },
+          "subtle": {
+            "$value": "{color.green.950}",
+            "$description": "Fondo suave de alertas"
+          },
+          "border": {
+            "$value": "{color.green.800}"
+          },
+          "text": {
+            "$value": "{color.green.300}"
+          }
+        },
+        "warning": {
+          "solid": {
+            "$value": "{color.amber.500}",
+            "$description": "Fondo sólido (badges, botones)"
+          },
+          "on-solid": {
+            "$value": "{color.neutral.950}",
+            "$description": "Texto sobre el fondo sólido"
+          },
+          "subtle": {
+            "$value": "{color.amber.950}",
+            "$description": "Fondo suave de alertas"
+          },
+          "border": {
+            "$value": "{color.amber.800}"
+          },
+          "text": {
+            "$value": "{color.amber.300}"
+          }
+        },
+        "danger": {
+          "solid": {
+            "$value": "{color.red.600}",
+            "$description": "Fondo sólido (badges, botones)"
+          },
+          "on-solid": {
+            "$value": "{color.white}",
+            "$description": "Texto sobre el fondo sólido"
+          },
+          "subtle": {
+            "$value": "{color.red.950}",
+            "$description": "Fondo suave de alertas"
+          },
+          "border": {
+            "$value": "{color.red.800}"
+          },
+          "text": {
+            "$value": "{color.red.300}"
+          },
+          "hover": {
+            "$value": "{color.red.700}",
+            "$description": "Fondo sólido de peligro al pasar el ratón"
+          }
+        },
+        "info": {
+          "solid": {
+            "$value": "{color.blue.600}",
+            "$description": "Fondo sólido (badges, botones)"
+          },
+          "on-solid": {
+            "$value": "{color.white}",
+            "$description": "Texto sobre el fondo sólido"
+          },
+          "subtle": {
+            "$value": "{color.blue.950}",
+            "$description": "Fondo suave de alertas"
+          },
+          "border": {
+            "$value": "{color.blue.800}"
+          },
+          "text": {
+            "$value": "{color.blue.300}"
+          }
+        }
+      },
+      "chart": {
+        "$description": "Colores de series en gráficos",
+        "1": {
+          "$value": "{color.brand.400}"
+        },
+        "2": {
+          "$value": "{color.green.400}"
+        },
+        "3": {
+          "$value": "{color.amber.400}"
+        },
+        "4": {
+          "$value": "{color.blue.400}"
+        },
+        "5": {
+          "$value": "{color.red.400}"
+        }
+      }
+    }
+  },
+  "$themes": [
+    {
+      "id": "light",
+      "name": "Light",
+      "group": "Mode",
+      "selectedTokenSets": {
+        "primitives": "source",
+        "semantic": "enabled",
+        "color/light": "enabled"
+      }
+    },
+    {
+      "id": "dark",
+      "name": "Dark",
+      "group": "Mode",
+      "selectedTokenSets": {
+        "primitives": "source",
+        "semantic": "enabled",
+        "color/dark": "enabled"
+      }
+    }
+  ],
+  "$metadata": {
+    "tokenSetOrder": [
+      "primitives",
+      "semantic",
+      "color/light",
+      "color/dark"
+    ]
+  }
+}
