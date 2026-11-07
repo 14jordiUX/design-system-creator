@@ -65,7 +65,7 @@ Tipo de producto: Producto digital informal (app o web de consumo).
 | `color.surface.sidebar` | `--color-surface-sidebar` | #faf9fe | #18181b | Fondo de la barra lateral |
 | `color.text.default` | `--color-text-default` | #0a0a0d | #faf9fe | Texto principal |
 | `color.text.muted` | `--color-text-muted` | #535158 | #a2a0a9 | Texto secundario |
-| `color.text.subtle` | `--color-text-subtle` | #a2a0a9 | #4000ff | Placeholders, deshabilitado |
+| `color.text.subtle` | `--color-text-subtle` | #a2a0a9 | #797584 | Placeholders, deshabilitado |
 | `color.text.inverse` | `--color-text-inverse` | #faf9fe | #0a0a0d |  |
 | `color.text.link` | `--color-text-link` | #7c5cc4 | #af94f6 |  |
 | `color.border.default` | `--color-border-default` | #e5e3ec | #272629 |  |
