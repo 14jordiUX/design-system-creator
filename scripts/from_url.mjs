@@ -106,7 +106,8 @@ function measure() {
 async function fontOnGoogle(family) {
   try {
     const r = await fetch(`https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}`, { headers: { "User-Agent": "Mozilla/5.0" } })
-    return r.ok
+    // Solo cuentan las fuentes públicas del catálogo (/s/); otras rutas (/l/) no se pueden usar libremente
+    return r.ok && (await r.text()).includes("fonts.gstatic.com/s/")
   } catch { return false }
 }
 
