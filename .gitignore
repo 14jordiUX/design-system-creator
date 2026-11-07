@@ -1,0 +1,8 @@
+# Se instalan o se generan solos
+node_modules/
+web/dist/
+__pycache__/
+*.pyc
+*.tmp
+.DS_Store
+Thumbs.db

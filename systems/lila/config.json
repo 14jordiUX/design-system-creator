@@ -1,0 +1,34 @@
+{
+  "cuestionario": {
+    "name": "Lila",
+    "description": "Sistema muy informal y desenfadado: morado pastel, esquinas muy redondeadas y mucho aire.",
+    "productType": "Producto digital informal (app o web de consumo)",
+    "sober": 75,
+    "serious": 95,
+    "dense": 65,
+    "warmNeutral": true,
+    "font": "Quicksand",
+    "scale": "normal",
+    "radius": 15,
+    "border": 1,
+    "unit": "4",
+    "density": 65,
+    "shadow": 70,
+    "speed": 40,
+    "brand": "#7c5cc4",
+    "overrides": {
+      "light": {
+        "color.action.primary.default": "{color.brand.300}",
+        "color.action.primary.hover": "{color.brand.400}",
+        "color.action.primary.active": "{color.brand.500}",
+        "color.action.primary.on": "{color.brand.950}"
+      },
+      "dark": {
+        "color.action.primary.default": "{color.brand.300}",
+        "color.action.primary.hover": "{color.brand.400}",
+        "color.action.primary.active": "{color.brand.500}",
+        "color.action.primary.on": "{color.brand.950}"
+      }
+    }
+  }
+}

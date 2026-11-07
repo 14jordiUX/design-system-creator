@@ -1,0 +1,58 @@
+# Publica la web en GitHub Pages cada vez que cambia algo en main.
+# Regenera las salidas de todos los sistemas (CSS, Figma, kit), comprueba los tokens y construye la web.
+name: Publicar la web
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Regenerar los sistemas
+        run: python scripts/generate.py --all
+      - name: Comprobar que los dos generadores coinciden
+        run: python scripts/check_generator.py
+      - name: Construir la web
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+      - name: Comprobar que todo sale de tokens
+        run: |
+          python scripts/check_tokens.py | tee check.txt
+          ! grep -E ": [1-9]" check.txt
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

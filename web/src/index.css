@@ -1,0 +1,20 @@
+/* La web solo usa clases que salen de los tokens (ver theme.css, generado desde base/tokens).
+   Sin abrir ningún sistema, la web se ve con el sistema Base; al abrir uno, sus tokens
+   sustituyen a estos en vivo. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/preflight" layer(base);
+@import "tailwindcss/utilities" layer(utilities) source(none);
+@source "./";
+@source not inline("border outline border-x border-y border-t border-r border-b border-l");
+@import "../../base/css/tokens.css";
+@import "./theme.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Fondo de cuadros para ver colores con transparencia */
+.checker {
+  background-image: linear-gradient(45deg, var(--color-bg-muted) 25%, transparent 25%, transparent 75%, var(--color-bg-muted) 75%),
+    linear-gradient(45deg, var(--color-bg-muted) 25%, transparent 25%, transparent 75%, var(--color-bg-muted) 75%);
+  background-size: var(--space-inset-md) var(--space-inset-md);
+  background-position: 0 0, var(--space-inset-xs) var(--space-inset-xs);
+}

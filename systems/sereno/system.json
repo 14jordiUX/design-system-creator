@@ -1,0 +1,29 @@
+{
+  "id": "sereno",
+  "name": "Sereno",
+  "description": "Sistema para una clínica dental: tono cercano y limpio, verde azulado tranquilo, grises cálidos y esquinas suaves.",
+  "productType": "Web y app de reservas para clínica dental",
+  "origin": "conversacion",
+  "createdAt": "2026-11-05",
+  "updatedAt": "2026-11-06",
+  "principles": [
+    {
+      "title": "Tranquilo",
+      "text": "Un verde azulado que transmite salud y calma. Se usa con moderación, sobre todo en acciones."
+    },
+    {
+      "title": "Cercano",
+      "text": "Tipografía redondeada (Plus Jakarta Sans) y esquinas suaves para que nada parezca frío o clínico."
+    },
+    {
+      "title": "Claro",
+      "text": "Mucho aire, textos cortos y contraste alto para pacientes de todas las edades."
+    }
+  ],
+  "notes": {
+    "general": "Pensado para pacientes de cualquier edad: textos cortos, mucho aire y botones grandes y claros.",
+    "color": "El verde azulado solo en acciones (pedir cita, confirmar) y enlaces. El rojo de error nunca para avisos informativos.",
+    "tipografía": "Plus Jakarta Sans para todo. Evitar textos en mayúsculas; usar frases en tono cercano («Pide tu cita»).",
+    "componentes": "Una sola acción principal por pantalla. Las tarjetas con esquinas suaves (radio card) para citas y tratamientos."
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "id": "lila",
+  "name": "Lila",
+  "description": "Sistema muy informal y desenfadado: morado pastel, esquinas muy redondeadas y mucho aire.",
+  "productType": "Producto digital informal (app o web de consumo)",
+  "origin": "conversacion",
+  "principles": [
+    {
+      "title": "Desenfadado",
+      "text": "Botones en morado pastel con texto oscuro, esquinas casi redondas y una fuente redondeada. Nada rígido."
+    },
+    {
+      "title": "Suave",
+      "text": "Los pasteles dan el carácter; el morado intenso (tono 600) se guarda para enlaces y foco, donde hace falta que se lea."
+    },
+    {
+      "title": "Con aire",
+      "text": "Espaciado generoso y escala de texto amplia: mejor que respire a que se apriete."
+    }
+  ],
+  "notes": {
+    "general": "Creado en conversación con Claude a partir de «muy informal y morado pastel».",
+    "color": "El botón principal usa el tono 300 (pastel) con texto en el 950. Enlaces y foco en el 600, que cumple contraste sobre blanco. Fondos suaves en el 50 y 100.",
+    "tipografía": "Quicksand para todo: redondeada y amable. Para textos largos funciona mejor en tamaños de 16 px o más.",
+    "componentes": "Radios grandes en todo. Evitar sombras duras: elevación suave."
+  },
+  "createdAt": "2026-11-07",
+  "updatedAt": "2026-11-07"
+}

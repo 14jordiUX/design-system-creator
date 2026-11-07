@@ -1,0 +1,550 @@
+{
+  "typography": {
+    "display": {
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.5xl}",
+        "fontWeight": "{font.weight.bold}",
+        "lineHeight": "{font.line-height.tight}",
+        "letterSpacing": "{font.letter-spacing.tight}"
+      },
+      "$type": "typography"
+    },
+    "heading": {
+      "h1": {
+        "$value": {
+          "fontFamily": "{font.family.sans}",
+          "fontSize": "{font.size.4xl}",
+          "fontWeight": "{font.weight.bold}",
+          "lineHeight": "{font.line-height.tight}",
+          "letterSpacing": "{font.letter-spacing.tight}"
+        },
+        "$type": "typography"
+      },
+      "h2": {
+        "$value": {
+          "fontFamily": "{font.family.sans}",
+          "fontSize": "{font.size.3xl}",
+          "fontWeight": "{font.weight.semibold}",
+          "lineHeight": "{font.line-height.tight}",
+          "letterSpacing": "{font.letter-spacing.tight}"
+        },
+        "$type": "typography"
+      },
+      "h3": {
+        "$value": {
+          "fontFamily": "{font.family.sans}",
+          "fontSize": "{font.size.2xl}",
+          "fontWeight": "{font.weight.semibold}",
+          "lineHeight": "{font.line-height.snug}",
+          "letterSpacing": "{font.letter-spacing.normal}"
+        },
+        "$type": "typography"
+      },
+      "h4": {
+        "$value": {
+          "fontFamily": "{font.family.sans}",
+          "fontSize": "{font.size.xl}",
+          "fontWeight": "{font.weight.semibold}",
+          "lineHeight": "{font.line-height.snug}",
+          "letterSpacing": "{font.letter-spacing.normal}"
+        },
+        "$type": "typography"
+      }
+    },
+    "body": {
+      "lg": {
+        "$value": {
+          "fontFamily": "{font.family.sans}",
+          "fontSize": "{font.size.lg}",
+          "fontWeight": "{font.weight.regular}",
+          "lineHeight": "{font.line-height.relaxed}",
+          "letterSpacing": "{font.letter-spacing.normal}"
+        },
+        "$type": "typography"
+      },
+      "md": {
+        "$value": {
+          "fontFamily": "{font.family.sans}",
+          "fontSize": "{font.size.md}",
+          "fontWeight": "{font.weight.regular}",
+          "lineHeight": "{font.line-height.normal}",
+          "letterSpacing": "{font.letter-spacing.normal}"
+        },
+        "$type": "typography"
+      },
+      "sm": {
+        "$value": {
+          "fontFamily": "{font.family.sans}",
+          "fontSize": "{font.size.sm}",
+          "fontWeight": "{font.weight.regular}",
+          "lineHeight": "{font.line-height.normal}",
+          "letterSpacing": "{font.letter-spacing.normal}"
+        },
+        "$type": "typography"
+      }
+    },
+    "label": {
+      "md": {
+        "$value": {
+          "fontFamily": "{font.family.sans}",
+          "fontSize": "{font.size.sm}",
+          "fontWeight": "{font.weight.medium}",
+          "lineHeight": "{font.line-height.snug}",
+          "letterSpacing": "{font.letter-spacing.normal}"
+        },
+        "$type": "typography"
+      },
+      "sm": {
+        "$value": {
+          "fontFamily": "{font.family.sans}",
+          "fontSize": "{font.size.xs}",
+          "fontWeight": "{font.weight.medium}",
+          "lineHeight": "{font.line-height.snug}",
+          "letterSpacing": "{font.letter-spacing.wide}"
+        },
+        "$type": "typography"
+      }
+    },
+    "caption": {
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.xs}",
+        "fontWeight": "{font.weight.regular}",
+        "lineHeight": "{font.line-height.normal}",
+        "letterSpacing": "{font.letter-spacing.normal}"
+      },
+      "$type": "typography"
+    },
+    "code": {
+      "$value": {
+        "fontFamily": "{font.family.mono}",
+        "fontSize": "{font.size.sm}",
+        "fontWeight": "{font.weight.regular}",
+        "lineHeight": "{font.line-height.normal}",
+        "letterSpacing": "{font.letter-spacing.normal}"
+      },
+      "$type": "typography"
+    }
+  },
+  "space": {
+    "$type": "dimension",
+    "inset": {
+      "$description": "Relleno interior (padding) y distancias a los bordes",
+      "3xs": {
+        "$value": "{space.0-5}"
+      },
+      "2xs": {
+        "$value": "{space.1}"
+      },
+      "xs": {
+        "$value": "{space.1-5}"
+      },
+      "sm": {
+        "$value": "{space.2}"
+      },
+      "md": {
+        "$value": "{space.3}"
+      },
+      "lg": {
+        "$value": "{space.4}"
+      },
+      "xl": {
+        "$value": "{space.6}"
+      },
+      "2xl": {
+        "$value": "{space.8}"
+      },
+      "3xl": {
+        "$value": "{space.12}"
+      },
+      "4xl": {
+        "$value": "{space.16}"
+      }
+    },
+    "gap": {
+      "$description": "Separación entre elementos (gap, márgenes)",
+      "3xs": {
+        "$value": "{space.0-5}"
+      },
+      "2xs": {
+        "$value": "{space.1}"
+      },
+      "xs": {
+        "$value": "{space.1-5}"
+      },
+      "sm": {
+        "$value": "{space.2}"
+      },
+      "md": {
+        "$value": "{space.3}"
+      },
+      "lg": {
+        "$value": "{space.4}"
+      },
+      "xl": {
+        "$value": "{space.6}"
+      },
+      "2xl": {
+        "$value": "{space.8}"
+      },
+      "3xl": {
+        "$value": "{space.12}"
+      },
+      "4xl": {
+        "$value": "{space.16}"
+      }
+    },
+    "section": {
+      "$value": "{space.16}",
+      "$description": "Separación entre secciones de página"
+    }
+  },
+  "radius": {
+    "$type": "dimension",
+    "control": {
+      "$value": "{radius.md}",
+      "$description": "Botones, campos, selects"
+    },
+    "card": {
+      "$value": "{radius.lg}",
+      "$description": "Tarjetas y paneles"
+    },
+    "overlay": {
+      "$value": "{radius.xl}",
+      "$description": "Modales, popovers"
+    },
+    "pill": {
+      "$value": "{radius.full}",
+      "$description": "Badges, avatares, toggles"
+    },
+    "inner": {
+      "$value": "{radius.sm}",
+      "$description": "Elementos dentro de un control (opciones de menú, casillas)"
+    },
+    "fine": {
+      "$value": "{radius.xs}",
+      "$description": "Detalles pequeños"
+    },
+    "square": {
+      "$value": "{radius.none}",
+      "$description": "Sin redondeo"
+    }
+  },
+  "elevation": {
+    "$type": "shadow",
+    "flat": {
+      "$value": "{shadow.sm}"
+    },
+    "raised": {
+      "$value": "{shadow.md}",
+      "$description": "Tarjetas elevadas, dropdowns"
+    },
+    "overlay": {
+      "$value": "{shadow.lg}",
+      "$description": "Popovers, menús"
+    },
+    "modal": {
+      "$value": "{shadow.xl}"
+    }
+  },
+  "motion": {
+    "duration": {
+      "$type": "duration",
+      "micro": {
+        "$value": "{duration.fast}",
+        "$description": "Hover, foco"
+      },
+      "default": {
+        "$value": "{duration.normal}"
+      },
+      "emphasis": {
+        "$value": "{duration.slow}",
+        "$description": "Modales, paneles"
+      },
+      "loop": {
+        "$value": "{duration.loop}"
+      }
+    },
+    "easing": {
+      "$type": "cubicBezier",
+      "default": {
+        "$value": "{easing.standard}"
+      }
+    },
+    "scale": {
+      "$type": "number",
+      "enter": {
+        "$value": 0.95,
+        "$description": "Escala inicial al aparecer (menús, diálogos)"
+      }
+    },
+    "distance": {
+      "$type": "dimension",
+      "enter": {
+        "$value": "{space.2}",
+        "$description": "Desplazamiento al aparecer"
+      }
+    }
+  },
+  "control": {
+    "$type": "dimension",
+    "height": {
+      "sm": {
+        "$value": "32px"
+      },
+      "md": {
+        "$value": "40px"
+      },
+      "lg": {
+        "$value": "48px"
+      }
+    },
+    "border-width": {
+      "$value": "{border-width.1}"
+    },
+    "focus-ring-width": {
+      "$value": "{border-width.2}"
+    },
+    "focus-ring-offset": {
+      "$value": "{border-width.2}",
+      "$description": "Separación entre el control y su anillo de foco"
+    }
+  },
+  "size": {
+    "$type": "dimension",
+    "icon": {
+      "sm": {
+        "$value": "{space.3}",
+        "$description": "Iconos pequeños (dentro de badges, checks)"
+      },
+      "md": {
+        "$value": "{space.4}",
+        "$description": "Iconos por defecto"
+      },
+      "lg": {
+        "$value": "{space.5}",
+        "$description": "Iconos destacados"
+      }
+    },
+    "avatar": {
+      "sm": {
+        "$value": "{space.6}"
+      },
+      "md": {
+        "$value": "{space.8}"
+      },
+      "lg": {
+        "$value": "{space.10}"
+      },
+      "xl": {
+        "$value": "{space.12}"
+      },
+      "2xl": {
+        "$value": "{space.16}"
+      }
+    },
+    "indicator": {
+      "$value": "{space.2}",
+      "$description": "Puntos de radio, viñetas"
+    },
+    "track": {
+      "$value": "{space.1-5}",
+      "$description": "Grosor de barras de slider"
+    },
+    "progress": {
+      "$value": "{space.2}",
+      "$description": "Alto de la barra de progreso"
+    },
+    "menu-min": {
+      "$value": "128px",
+      "$description": "Ancho mínimo de menús desplegables"
+    },
+    "popover": {
+      "$value": "288px",
+      "$description": "Ancho de popovers"
+    },
+    "tooltip": {
+      "$value": "320px",
+      "$description": "Ancho máximo de tooltips"
+    },
+    "dialog": {
+      "$value": "512px",
+      "$description": "Ancho máximo de diálogos"
+    },
+    "sheet": {
+      "$value": "384px",
+      "$description": "Ancho de paneles laterales"
+    },
+    "menu-wide": {
+      "$value": "192px",
+      "$description": "Ancho mínimo de menús de barra (menubar, menús contextuales)"
+    },
+    "list-max": {
+      "$value": "300px",
+      "$description": "Alto máximo de listas con búsqueda (command, combobox)"
+    },
+    "handle": {
+      "$value": "{space.24}",
+      "$description": "Ancho del tirador de un drawer"
+    },
+    "line": {
+      "$value": "{border-width.2}",
+      "$description": "Grosor de líneas indicadoras (pestaña activa, guías)"
+    },
+    "field": {
+      "xs": {
+        "$value": "{space.20}",
+        "$description": "Campos cortos (códigos, números)"
+      },
+      "sm": {
+        "$value": "{space.24}",
+        "$description": "Campos y etiquetas cortas"
+      }
+    },
+    "area-min": {
+      "$value": "{space.24}",
+      "$description": "Alto mínimo de zonas de demo, de soltar archivos o de clic"
+    }
+  },
+  "layout": {
+    "$type": "dimension",
+    "header": {
+      "$value": "56px",
+      "$description": "Alto de la cabecera de una aplicación"
+    },
+    "sidebar": {
+      "$value": "256px",
+      "$description": "Ancho de la barra lateral"
+    },
+    "prose": {
+      "$value": "672px",
+      "$description": "Ancho máximo de un bloque de texto"
+    },
+    "content": {
+      "$value": "1024px",
+      "$description": "Ancho máximo del contenido"
+    },
+    "page": {
+      "$value": "1152px",
+      "$description": "Ancho máximo de una página"
+    },
+    "sidebar-icon": {
+      "$value": "{space.12}",
+      "$description": "Ancho de la barra lateral plegada (solo iconos)"
+    },
+    "sidebar-mobile": {
+      "$value": "288px",
+      "$description": "Ancho de la barra lateral en móvil"
+    },
+    "drawer-max": {
+      "$value": "80vh",
+      "$description": "Alto máximo de un drawer"
+    },
+    "drawer-gap": {
+      "$value": "{space.24}",
+      "$description": "Distancia de un drawer al borde opuesto de la pantalla"
+    }
+  },
+  "text": {
+    "$description": "Tipografía por propiedades sueltas (para combinar). Para estilos completos usa typography.*",
+    "size": {
+      "$type": "dimension",
+      "caption": {
+        "$value": "{font.size.xs}",
+        "$description": "Notas, metadatos"
+      },
+      "ui": {
+        "$value": "{font.size.sm}",
+        "$description": "Texto de controles y menús"
+      },
+      "body": {
+        "$value": "{font.size.md}",
+        "$description": "Texto de lectura"
+      },
+      "lead": {
+        "$value": "{font.size.lg}",
+        "$description": "Entradilla"
+      },
+      "title": {
+        "$value": "{font.size.xl}",
+        "$description": "Títulos de tarjeta o sección pequeña"
+      },
+      "h3": {
+        "$value": "{font.size.2xl}"
+      },
+      "h2": {
+        "$value": "{font.size.3xl}"
+      },
+      "h1": {
+        "$value": "{font.size.4xl}"
+      },
+      "display": {
+        "$value": "{font.size.5xl}"
+      }
+    },
+    "weight": {
+      "$type": "fontWeight",
+      "normal": {
+        "$value": "{font.weight.regular}"
+      },
+      "emphasis": {
+        "$value": "{font.weight.medium}",
+        "$description": "Etiquetas, botones"
+      },
+      "strong": {
+        "$value": "{font.weight.semibold}",
+        "$description": "Títulos"
+      },
+      "heavy": {
+        "$value": "{font.weight.bold}"
+      }
+    },
+    "family": {
+      "$type": "fontFamily",
+      "base": {
+        "$value": "{font.family.sans}"
+      },
+      "code": {
+        "$value": "{font.family.mono}"
+      }
+    },
+    "leading": {
+      "$type": "number",
+      "compact": {
+        "$value": "{font.line-height.tight}"
+      },
+      "body": {
+        "$value": "{font.line-height.normal}"
+      },
+      "prose": {
+        "$value": "{font.line-height.relaxed}"
+      }
+    },
+    "tracking": {
+      "$type": "dimension",
+      "heading": {
+        "$value": "{font.letter-spacing.tight}"
+      },
+      "body": {
+        "$value": "{font.letter-spacing.normal}"
+      },
+      "caps": {
+        "$value": "{font.letter-spacing.wide}",
+        "$description": "Textos en mayúsculas"
+      }
+    }
+  },
+  "state": {
+    "opacity": {
+      "$type": "number",
+      "disabled": {
+        "$value": "{opacity.disabled}",
+        "$description": "Elementos desactivados"
+      },
+      "overlay": {
+        "$value": "{opacity.overlay}"
+      }
+    }
+  }
+}

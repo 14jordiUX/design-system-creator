@@ -1,0 +1,30 @@
+{
+  "id": "base",
+  "name": "Base",
+  "description": "Sistema genérico del que parten todos los demás. Neutro, sobrio y accesible, pensado para cambiarle la marca y la tipografía.",
+  "productType": "Plantilla",
+  "origin": "plantilla",
+  "isTemplate": true,
+  "createdAt": "2026-11-05",
+  "updatedAt": "2026-11-05",
+  "principles": [
+    {
+      "title": "Neutro por defecto",
+      "text": "Grises fríos y un solo color de marca. Todo lo demás se deriva de ahí."
+    },
+    {
+      "title": "Accesible",
+      "text": "Todos los pares de texto y fondo cumplen contraste WCAG AA, en claro y en oscuro."
+    },
+    {
+      "title": "Dos capas",
+      "text": "Los componentes solo usan tokens semánticos; cambiar la marca es cambiar los primitivos."
+    }
+  ],
+  "notes": {
+    "general": "Plantilla neutra. Para un sistema nuevo cambia la escala brand y la tipografía; el resto suele valer tal cual.",
+    "color": "El color de marca se reserva para acciones principales, enlaces y foco. Fondos y textos siempre en neutros.",
+    "tipografía": "Una sola familia (Inter) para todo. Los títulos usan peso semibold o bold y tracking ajustado.",
+    "componentes": "Componentes de shadcn/ui sin cambios de forma: solo heredan colores, radios y tipografía."
+  }
+}

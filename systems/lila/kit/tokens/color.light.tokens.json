@@ -1,0 +1,230 @@
+{
+  "color": {
+    "$type": "color",
+    "bg": {
+      "default": {
+        "$value": "{color.white}",
+        "$description": "Fondo de la página"
+      },
+      "subtle": {
+        "$value": "{color.neutral.50}"
+      },
+      "muted": {
+        "$value": "{color.neutral.100}",
+        "$description": "Zonas secundarias, filas alternas"
+      },
+      "inverse": {
+        "$value": "{color.neutral.900}"
+      }
+    },
+    "surface": {
+      "card": {
+        "$value": "{color.white}",
+        "$description": "Tarjetas"
+      },
+      "popover": {
+        "$value": "{color.white}",
+        "$description": "Menús, popovers, tooltips"
+      },
+      "overlay": {
+        "$value": "#09090b99",
+        "$description": "Velo detrás de modales"
+      },
+      "sidebar": {
+        "$value": "{color.neutral.50}",
+        "$description": "Fondo de la barra lateral"
+      }
+    },
+    "text": {
+      "default": {
+        "$value": "{color.neutral.950}",
+        "$description": "Texto principal"
+      },
+      "muted": {
+        "$value": "{color.neutral.600}",
+        "$description": "Texto secundario"
+      },
+      "subtle": {
+        "$value": "{color.neutral.400}",
+        "$description": "Placeholders, deshabilitado"
+      },
+      "inverse": {
+        "$value": "{color.neutral.50}"
+      },
+      "link": {
+        "$value": "{color.brand.600}"
+      }
+    },
+    "border": {
+      "default": {
+        "$value": "{color.neutral.200}"
+      },
+      "strong": {
+        "$value": "{color.neutral.300}"
+      },
+      "input": {
+        "$value": "{color.neutral.200}",
+        "$description": "Borde de campos de formulario"
+      },
+      "focus": {
+        "$value": "{color.brand.500}",
+        "$description": "Anillo de foco"
+      }
+    },
+    "action": {
+      "primary": {
+        "default": {
+          "$value": "{color.brand.300}"
+        },
+        "hover": {
+          "$value": "{color.brand.400}"
+        },
+        "active": {
+          "$value": "{color.brand.500}"
+        },
+        "on": {
+          "$value": "{color.brand.950}",
+          "$description": "Texto/icono sobre primary"
+        },
+        "subtle": {
+          "$value": "{color.brand.50}",
+          "$description": "Fondo suave (tags, selección)"
+        }
+      },
+      "secondary": {
+        "default": {
+          "$value": "{color.neutral.100}"
+        },
+        "hover": {
+          "$value": "{color.neutral.200}"
+        },
+        "active": {
+          "$value": "{color.neutral.300}"
+        },
+        "on": {
+          "$value": "{color.neutral.900}"
+        }
+      },
+      "ghost": {
+        "hover": {
+          "$value": "{color.neutral.100}"
+        },
+        "on": {
+          "$value": "{color.neutral.900}"
+        }
+      },
+      "disabled": {
+        "default": {
+          "$value": "{color.neutral.100}"
+        },
+        "on": {
+          "$value": "{color.neutral.400}"
+        }
+      }
+    },
+    "feedback": {
+      "success": {
+        "solid": {
+          "$value": "{color.green.700}",
+          "$description": "Fondo sólido (badges, botones)"
+        },
+        "on-solid": {
+          "$value": "{color.white}",
+          "$description": "Texto sobre el fondo sólido"
+        },
+        "subtle": {
+          "$value": "{color.green.50}",
+          "$description": "Fondo suave de alertas"
+        },
+        "border": {
+          "$value": "{color.green.200}"
+        },
+        "text": {
+          "$value": "{color.green.700}"
+        }
+      },
+      "warning": {
+        "solid": {
+          "$value": "{color.amber.500}",
+          "$description": "Fondo sólido (badges, botones)"
+        },
+        "on-solid": {
+          "$value": "{color.neutral.950}",
+          "$description": "Texto sobre el fondo sólido"
+        },
+        "subtle": {
+          "$value": "{color.amber.50}",
+          "$description": "Fondo suave de alertas"
+        },
+        "border": {
+          "$value": "{color.amber.200}"
+        },
+        "text": {
+          "$value": "{color.amber.700}"
+        }
+      },
+      "danger": {
+        "solid": {
+          "$value": "{color.red.600}",
+          "$description": "Fondo sólido (badges, botones)"
+        },
+        "on-solid": {
+          "$value": "{color.white}",
+          "$description": "Texto sobre el fondo sólido"
+        },
+        "subtle": {
+          "$value": "{color.red.50}",
+          "$description": "Fondo suave de alertas"
+        },
+        "border": {
+          "$value": "{color.red.200}"
+        },
+        "text": {
+          "$value": "{color.red.700}"
+        },
+        "hover": {
+          "$value": "{color.red.700}",
+          "$description": "Fondo sólido de peligro al pasar el ratón"
+        }
+      },
+      "info": {
+        "solid": {
+          "$value": "{color.blue.600}",
+          "$description": "Fondo sólido (badges, botones)"
+        },
+        "on-solid": {
+          "$value": "{color.white}",
+          "$description": "Texto sobre el fondo sólido"
+        },
+        "subtle": {
+          "$value": "{color.blue.50}",
+          "$description": "Fondo suave de alertas"
+        },
+        "border": {
+          "$value": "{color.blue.200}"
+        },
+        "text": {
+          "$value": "{color.blue.700}"
+        }
+      }
+    },
+    "chart": {
+      "$description": "Colores de series en gráficos",
+      "1": {
+        "$value": "{color.brand.600}"
+      },
+      "2": {
+        "$value": "{color.green.600}"
+      },
+      "3": {
+        "$value": "{color.amber.500}"
+      },
+      "4": {
+        "$value": "{color.blue.600}"
+      },
+      "5": {
+        "$value": "{color.red.500}"
+      }
+    }
+  }
+}
