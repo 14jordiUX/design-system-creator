@@ -67,16 +67,16 @@ Tipo de producto: Producto digital informal (app o web de consumo).
 | `color.text.muted` | `--color-text-muted` | #535158 | #a2a0a9 | Texto secundario |
 | `color.text.subtle` | `--color-text-subtle` | #a2a0a9 | #797584 | Placeholders, deshabilitado |
 | `color.text.inverse` | `--color-text-inverse` | #faf9fe | #0a0a0d |  |
-| `color.text.link` | `--color-text-link` | #7c5cc4 | #af94f6 |  |
+| `color.text.link` | `--color-text-link` | #b494ff | #cebefe |  |
 | `color.border.default` | `--color-border-default` | #e5e3ec | #272629 |  |
 | `color.border.strong` | `--color-border-strong` | #d4d3dc | #403f44 |  |
 | `color.border.input` | `--color-border-input` | #e5e3ec | #272629 | Borde de campos de formulario |
-| `color.border.focus` | `--color-border-focus` | #9576e1 | #af94f6 | Anillo de foco |
-| `color.action.primary.default` | `--color-action-primary-default` | #c7b6fe | #c7b6fe |  |
-| `color.action.primary.hover` | `--color-action-primary-hover` | #af94f6 | #af94f6 |  |
-| `color.action.primary.active` | `--color-action-primary-active` | #9576e1 | #9576e1 |  |
-| `color.action.primary.on` | `--color-action-primary-on` | #1a0a35 | #1a0a35 | Texto/icono sobre primary |
-| `color.action.primary.subtle` | `--color-action-primary-subtle` | #f7f5ff | #1a0a35 | Fondo suave (tags, selección) |
+| `color.border.focus` | `--color-border-focus` | #c1aafe | #cebefe | Anillo de foco |
+| `color.action.primary.default` | `--color-action-primary-default` | #dcd2fd | #dcd2fd |  |
+| `color.action.primary.hover` | `--color-action-primary-hover` | #cebefe | #cebefe |  |
+| `color.action.primary.active` | `--color-action-primary-active` | #c1aafe | #c1aafe |  |
+| `color.action.primary.on` | `--color-action-primary-on` | #1a0b34 | #1a0b34 | Texto/icono sobre primary |
+| `color.action.primary.subtle` | `--color-action-primary-subtle` | #f7f5ff | #1a0b34 | Fondo suave (tags, selección) |
 | `color.action.secondary.default` | `--color-action-secondary-default` | #f4f3fa | #272629 |  |
 | `color.action.secondary.hover` | `--color-action-secondary-hover` | #e5e3ec | #403f44 |  |
 | `color.action.secondary.active` | `--color-action-secondary-active` | #d4d3dc | #535158 |  |
@@ -106,7 +106,7 @@ Tipo de producto: Producto digital informal (app o web de consumo).
 | `color.feedback.info.subtle` | `--color-feedback-info-subtle` | #eff6ff | #172554 | Fondo suave de alertas |
 | `color.feedback.info.border` | `--color-feedback-info-border` | #bfdbfe | #1e40af |  |
 | `color.feedback.info.text` | `--color-feedback-info-text` | #1d4ed8 | #93c5fd |  |
-| `color.chart.1` | `--color-chart-1` | #7c5cc4 | #af94f6 |  |
+| `color.chart.1` | `--color-chart-1` | #b494ff | #cebefe |  |
 | `color.chart.2` | `--color-chart-2` | #16a34a | #4ade80 |  |
 | `color.chart.3` | `--color-chart-3` | #f59e0b | #fbbf24 |  |
 | `color.chart.4` | `--color-chart-4` | #2563eb | #60a5fa |  |

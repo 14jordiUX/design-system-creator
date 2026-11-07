@@ -48,34 +48,34 @@
           "$value": "#f7f5ff"
         },
         "100": {
-          "$value": "#ede8ff"
+          "$value": "#f1eeff"
         },
         "200": {
-          "$value": "#dcd3fe"
+          "$value": "#e8e2fe"
         },
         "300": {
-          "$value": "#c7b6fe"
+          "$value": "#dcd2fd"
         },
         "400": {
-          "$value": "#af94f6"
+          "$value": "#cebefe"
         },
         "500": {
-          "$value": "#9576e1"
+          "$value": "#c1aafe"
         },
         "600": {
-          "$value": "#7c5cc4"
+          "$value": "#b494ff"
         },
         "700": {
-          "$value": "#60439f"
+          "$value": "#876ac8"
         },
         "800": {
-          "$value": "#492f7c"
+          "$value": "#624996"
         },
         "900": {
-          "$value": "#321d59"
+          "$value": "#3f2b66"
         },
         "950": {
-          "$value": "#1a0a35"
+          "$value": "#1a0b34"
         }
       },
       "green": {
