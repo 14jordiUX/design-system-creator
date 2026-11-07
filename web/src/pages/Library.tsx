@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
-import { Copy, MessageSquare, MoreHorizontal, Pencil, Plus, Search, Sparkles, Trash2, Wand2, Eye, FilePlus2 } from "lucide-react"
+import { Copy, MessageSquare, MoreHorizontal, Pencil, Plus, Search, Sparkles, Trash2, Wand2, Eye, FilePlus2, Globe } from "lucide-react"
 import { systems, ORIGIN_LABEL, type DesignSystem } from "@/lib/systems"
 import { fontFamilyCss } from "@/lib/tokens"
 import { loadFonts } from "@/lib/theme"
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { EmptyState } from "@/components/app/common"
+import { FromUrlDialog } from "@/components/app/from-url"
 
 export const notYet = (what: string, step: string) =>
   toast.info(`${what}: todavía no`, { description: `Llegará en el paso ${step}. De momento es solo la pantalla.` })
@@ -75,6 +76,7 @@ export default function Library() {
   const [sort, setSort] = useState("recent")
   const [toDelete, setToDelete] = useState<DesignSystem | null>(null)
   const [askClaude, setAskClaude] = useState(false)
+  const [fromUrl, setFromUrl] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -110,9 +112,9 @@ export default function Library() {
               <DropdownMenuLabel>¿Cómo quieres empezar?</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => navigate("/nuevo")}><Wand2 />Con el cuestionario</DropdownMenuItem>
               <DropdownMenuItem onClick={() => notYet("Crear vacío desde la base", "1.4")}><FilePlus2 />Vacío, desde la base</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFromUrl(true)}><Globe />Desde una web</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setAskClaude(true)}><MessageSquare />Pedírselo a Claude</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled>Desde una web (fase 2)</DropdownMenuItem>
               <DropdownMenuItem disabled>Desde Figma (fase 2)</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -155,6 +157,8 @@ export default function Library() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <FromUrlDialog open={fromUrl} onOpenChange={setFromUrl} />
 
       <Dialog open={askClaude} onOpenChange={setAskClaude}>
         <DialogContent>

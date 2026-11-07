@@ -12,6 +12,8 @@ systems/sereno/
 │   ├── color.light.tokens.json
 │   └── color.dark.tokens.json
 │
+├── referencia.jpg         ← solo si se creó desde una web: captura de esa web
+│
 │   (todo lo de abajo se genera solo: no se edita a mano)
 ├── css/tokens.css         ← variables CSS, claro y oscuro
 ├── css/globals.css        ← tema para Tailwind CSS v4 + shadcn/ui
@@ -32,6 +34,7 @@ systems/sereno/
 | `createdAt`, `updatedAt` | Fechas (AAAA-MM-DD) | `2026-11-05` |
 | `principles` | Lista de principios: `{ "title", "text" }` | «Tranquilo», «Cercano»… |
 | `notes` | Notas de uso por tema: `general`, `color`, `tipografía`, `componentes`… | |
+| `sourceUrl` | Solo si se creó desde una web: su dirección | `https://ejemplo.com` |
 
 Los principios y las notas aparecen en la web (Inicio) y se copian al `SKILL.md` del kit, para que Claude los respete.
 
@@ -45,7 +48,11 @@ Formato estándar W3C (DTCG), en dos capas:
 ## Comandos (para Claude)
 
 ```
-python scripts/new_system.py respuestas.json [--fix-contrast]  # crea un sistema completo (igual que el cuestionario de la web)
+python scripts/new_system.py respuestas.json [--fix-contrast | --fix-roles]  # crea un sistema completo (igual que el cuestionario de la web)
+#   --fix-contrast oscurece la marca; --fix-roles arregla cada par sin contraste cambiando solo su rol (como «Contraste» en el editor)
+node scripts/from_url.mjs https://ejemplo.com [--name X] [--dry-run]  # crea un sistema a partir de una web (necesita Playwright e internet)
+#   Si no hay acceso a la web desde aquí: crea peticiones/<id>.json = {"url": "…", "name": "…"} y súbelo a main;
+#   GitHub lo procesa al publicar y deja el resultado en peticiones/resultados/<id>.json
 python scripts/check_generator.py                            # comprueba que new_system.py y el cuestionario dan los mismos tokens
 python scripts/create_tokens.py systems/<id> [config.json]   # (antiguo) crea los tokens desde una config de escalas
 python scripts/generate.py systems/<id>                      # regenera todas las salidas de un sistema

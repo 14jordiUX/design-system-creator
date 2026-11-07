@@ -1,7 +1,7 @@
 """Crea un sistema de diseño nuevo en systems/<id>/ a partir de unas respuestas (las mismas del cuestionario de la web).
 
 Uso:
-  python scripts/new_system.py respuestas.json [--id mi-sistema] [--fix-contrast] [--no-build] [--dry-run]
+  python scripts/new_system.py respuestas.json [--id mi-sistema] [--fix-contrast | --fix-roles] [--no-build] [--dry-run]
 
 respuestas.json (todo opcional salvo name y brand; lo que falte toma el valor por defecto):
 {
@@ -171,25 +171,78 @@ def build_tokens(base, a):
     return t
 
 
+PAIRS = [("Texto principal sobre fondo", "color.text.default", "color.bg.default"),
+         ("Texto secundario sobre fondo", "color.text.muted", "color.bg.default"),
+         ("Texto principal sobre tarjeta", "color.text.default", "color.surface.card"),
+         ("Enlace sobre fondo", "color.text.link", "color.bg.default"),
+         ("Botón principal", "color.action.primary.on", "color.action.primary.default"),
+         ("Botón secundario", "color.action.secondary.on", "color.action.secondary.default"),
+         ("Éxito", "color.feedback.success.on-solid", "color.feedback.success.solid"),
+         ("Aviso", "color.feedback.warning.on-solid", "color.feedback.warning.solid"),
+         ("Error", "color.feedback.danger.on-solid", "color.feedback.danger.solid"),
+         ("Info", "color.feedback.info.on-solid", "color.feedback.info.solid")]
+
+
+def _table(t, mode):
+    table = {}
+    for f in ("primitives", "semantic", mode): flatten(t[f], out=table)
+    return table
+
+
 def contrast_report(t):
-    pairs = [("Texto principal sobre fondo", "color.text.default", "color.bg.default"),
-             ("Texto secundario sobre fondo", "color.text.muted", "color.bg.default"),
-             ("Texto principal sobre tarjeta", "color.text.default", "color.surface.card"),
-             ("Enlace sobre fondo", "color.text.link", "color.bg.default"),
-             ("Botón principal", "color.action.primary.on", "color.action.primary.default"),
-             ("Botón secundario", "color.action.secondary.on", "color.action.secondary.default"),
-             ("Éxito", "color.feedback.success.on-solid", "color.feedback.success.solid"),
-             ("Aviso", "color.feedback.warning.on-solid", "color.feedback.warning.solid"),
-             ("Error", "color.feedback.danger.on-solid", "color.feedback.danger.solid"),
-             ("Info", "color.feedback.info.on-solid", "color.feedback.info.solid")]
     out = []
     for mode in ("light", "dark"):
-        table = {}
-        for f in ("primitives", "semantic", mode): flatten(t[f], out=table)
-        for label, fg, bg in pairs:
+        table = _table(t, mode)
+        for label, fg, bg in PAIRS:
             r = contrast(resolve(table.get(fg, (None,))[0], table), resolve(table.get(bg, (None,))[0], table))
             out.append((label + (" (oscuro)" if mode == "dark" else ""), r))
     return out
+
+
+def _node(tree, path):
+    for k in path.split("."): tree = (tree or {}).get(k)
+    return tree
+
+
+def fix_roles(t):
+    """Arregla los pares sin contraste cambiando solo el rol de ese caso (igual que «Contraste» en el editor de la web):
+    el tono más cercano de la misma escala que llega a 4,5:1, mejor en un rol que no compartan otros pares.
+    Devuelve la lista de cambios hechos."""
+    prim = t["primitives"]["color"]
+    steps = lambda sc: [k for k in prim.get(sc, {}) if not k.startswith("$")]
+    done = []
+    for mode in ("light", "dark"):
+        for label, fg, bg in PAIRS:
+            table = _table(t, mode)
+            val = lambda p: resolve(table.get(p, (None,))[0], table)
+            if (contrast(val(fg), val(bg)) or 0) >= 4.5: continue
+            options = []
+            for side, token, other in (("bg", bg, val(fg)), ("fg", fg, val(bg))):
+                node = _node(t[mode], token)
+                m = re.fullmatch(r"\{(color\.[^}]+)\}", str((node or {}).get("$value", "")))
+                if not m: continue
+                alias, scale = m.group(1), m.group(1).split(".")[1]
+                cands = (["color.white"] + [f"color.neutral.{k}" for k in steps("neutral")] + ["color.black"]
+                         if "$value" in prim.get(scale, {}) else [f"color.{scale}.{k}" for k in steps(scale)])
+                if alias not in cands: continue
+                shared = any(l != label and token in (f2, b2) for l, f2, b2 in PAIRS)
+                for i, c in enumerate(cands):
+                    hx = val(c); r = contrast(other, hx) or 0
+                    if r >= 4.5: options.append((abs(i - cands.index(alias)) + (3 if shared else 0), -r, token, alias, c, node))
+            if not options: continue
+            _, _, token, alias, new, node = min(options, key=lambda o: o[:2])
+            node["$value"] = "{" + new + "}"
+            done.append(f"{label}{' (oscuro)' if mode == 'dark' else ''}: {token} {alias} → {new}")
+            sc, st, nsc, nst = alias.split(".")[1], alias.split(".")[-1], new.split(".")[1], new.split(".")[-1]
+            if re.search(r"\.(default|solid)$", token) and sc == nsc and sc in prim and "$value" not in prim[sc]:
+                ss, parent = steps(sc), token.rsplit(".", 1)[0]
+                for sib in ("hover", "active"):
+                    n2 = _node(t[mode], f"{parent}.{sib}")
+                    m2 = re.fullmatch(r"\{color\.([^.]+)\.([^}]+)\}", str((n2 or {}).get("$value", "")))
+                    if not m2 or m2.group(1) != sc: continue
+                    j = min(len(ss) - 1, max(0, ss.index(m2.group(2)) + ss.index(nst) - ss.index(st)))
+                    n2["$value"] = f"{{color.{sc}.{ss[j]}}}"
+    return done
 
 
 def slugify(name):
@@ -211,6 +264,7 @@ def meta_from(a):
         "description": a["description"].strip() or f"Sistema {tone(a['sober'], 'sobrio', 'equilibrado', 'expresivo')} y {tone(a['serious'], 'serio', 'neutro', 'cercano')}.",
         "productType": a["productType"].strip(),
         "origin": a.get("origin", "conversacion"),
+        **({"sourceUrl": a["sourceUrl"]} if a.get("sourceUrl") else {}),
         "principles": a.get("principles") or [
             {"title": tone(a["sober"], "Sobrio", "Equilibrado", "Expresivo"), "text": tone(a["sober"],
                 "El color de marca se reserva para acciones principales; el resto, en neutros.",
@@ -267,6 +321,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("answers"); ap.add_argument("--id")
     ap.add_argument("--fix-contrast", action="store_true", help="oscurece la marca si el texto blanco no se lee encima")
+    ap.add_argument("--fix-roles", action="store_true", help="arregla los contrastes cambiando solo el rol de cada caso (no la marca)")
     ap.add_argument("--no-build", action="store_true"); ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
     with open(args.answers, encoding="utf-8") as f: raw = json.load(f)
@@ -277,6 +332,8 @@ def main():
         a["brand"] = fixed
 
     tokens = build_tokens(load_base(), a)
+    if args.fix_roles:
+        for c in fix_roles(tokens): print("Contraste arreglado:", c)
     report = contrast_report(tokens)
     bad = [(l, r) for l, r in report if r is None or r < 4.5]
     print("Contraste:", "todo AA" if not bad else "; ".join(f"{l} {r:.2f}:1" if r else l for l, r in bad))
