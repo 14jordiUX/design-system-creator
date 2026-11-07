@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { ArrowRight, Download, Puzzle, Shapes } from "lucide-react"
+import { ArrowRight, Download, ExternalLink, Puzzle, Shapes } from "lucide-react"
 import { ORIGIN_LABEL } from "@/lib/systems"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -28,6 +28,15 @@ export default function SystemHome() {
         <p className="max-w-prose text-lead text-muted-foreground">{ds.meta.description}</p>
         {editor && <Button variant="outline" size="sm" onClick={() => notYet("Editar la descripción y las notas", "1.4")}>Editar descripción</Button>}
       </div>
+
+      {ds.meta.sourceUrl && (
+        <Section title="Web de origen" description="El sistema se creó a partir de esta web. Es un punto de partida: ajusta lo que haga falta en el modo editor.">
+          <a href={ds.meta.sourceUrl} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-card border-thin transition-shadow hover:shadow-overlay">
+            {ds.reference && <img src={ds.reference} alt={`Captura de ${ds.meta.sourceUrl}`} className="block w-full" />}
+            <div className="flex items-center gap-gap-sm px-inset-lg py-inset-md text-ui"><ExternalLink className="size-icon-md" />{ds.meta.sourceUrl}</div>
+          </a>
+        </Section>
+      )}
 
       <Section title="Principios">
         {ds.meta.principles?.length ? (

@@ -16,9 +16,12 @@ export type SystemMeta = {
   updatedAt: string
   principles?: Principle[]
   notes?: Record<string, string>
+  sourceUrl?: string
 }
 export type DesignSystem = {
   meta: SystemMeta
+  /** Captura de la web de la que salió (sistemas creados «Desde una web») */
+  reference?: string
   tokens: TokenFiles
   files: { css?: string; figma?: string; kit: Record<string, string> }
 }
@@ -35,6 +38,9 @@ const rawFiles = {
   ...import.meta.glob(["../../../base/css/tokens.css", "../../../base/figma/tokens-studio.json"], { eager: true, query: "?raw", import: "default" }),
   ...import.meta.glob(["../../../systems/*/css/tokens.css", "../../../systems/*/figma/tokens-studio.json"], { eager: true, query: "?raw", import: "default" }),
 } as Record<string, string>
+
+// Captura de la web de origen (solo en los sistemas creados desde una web)
+const references = import.meta.glob("../../../systems/*/referencia.jpg", { eager: true, query: "?inline", import: "default" }) as Record<string, string>
 
 // Kit de proyecto (texto), para descargarlo como .zip desde la web
 const kitFiles = {
@@ -57,6 +63,7 @@ export const systems: DesignSystem[] = Object.entries(metas).map(([path, meta]) 
   const tk = (name: string) => tokenFiles[`${dir}/tokens/${name}.tokens.json`] ?? {}
   return {
     meta,
+    reference: references[`${dir}/referencia.jpg`],
     tokens: { primitives: tk("primitives"), semantic: tk("semantic"), light: tk("color.light"), dark: tk("color.dark") },
     files: {
       css: rawFiles[`${dir}/css/tokens.css`],

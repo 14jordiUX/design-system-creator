@@ -1,4 +1,5 @@
 # Publica la web en GitHub Pages cada vez que cambia algo en main.
+# Si hay peticiones «Desde una web» (peticiones/*.json), primero crea esos sistemas (scripts/from_url.mjs).
 # Regenera las salidas de todos los sistemas (CSS, Figma, kit), comprueba los tokens y construye la web.
 # Si la web guardó tokens nuevos, también sube al repositorio lo regenerado (y «Abrir la web.html»),
 # para que la carpeta siempre esté completa. Ese commit no vuelve a lanzar este proceso.
@@ -31,6 +32,12 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: web/package-lock.json
+      - name: Crear los sistemas pedidos desde una web (peticiones/)
+        if: hashFiles('peticiones/*.json') != ''
+        run: |
+          npm install --no-save --prefix "$RUNNER_TEMP/pw" playwright
+          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node scripts/from_url.mjs --requests
       - name: Regenerar los sistemas
         run: python scripts/generate.py --all
       - name: Comprobar que los dos generadores coinciden

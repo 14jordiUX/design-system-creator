@@ -1,0 +1,30 @@
+# Prueba «Desde una web» con webs reales cuando cambia el script, sin crear nada (--dry-run).
+# Sirve para revisar en una propuesta (PR) qué saca de cada web antes de aceptarla.
+name: Probar «Desde una web»
+
+on:
+  pull_request:
+    paths: [scripts/from_url.mjs, scripts/new_system.py, .github/workflows/probar-desde-web.yml]
+  workflow_dispatch:
+
+jobs:
+  probar:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        url: [https://stripe.com, https://linear.app, https://www.airbnb.es, https://www.notion.com, https://www.holded.com/es]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Instalar el navegador
+        run: |
+          npm install --no-save --prefix "$RUNNER_TEMP/pw" playwright
+          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Analizar ${{ matrix.url }}
+        run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node scripts/from_url.mjs "${{ matrix.url }}" --dry-run
