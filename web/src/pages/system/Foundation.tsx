@@ -6,6 +6,10 @@ import { FOUNDATIONS } from "@/lib/nav"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
+import { anchorOf, scaleFrom } from "@/lib/generator"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Code, EmptyState, PageHeader, Section } from "@/components/app/common"
 import { useDS } from "./context"
@@ -32,22 +36,48 @@ function group(flat: Record<string, FlatToken>, prefix: string) {
 }
 
 // ---------- Color ----------
-function ColorSwatch({ path, hex }: { path: string; hex: string }) {
-  const { editor, update } = useDS()
+function ColorSwatch({ path, hex, editable, anchor }: { path: string; hex: string; editable: boolean; anchor?: boolean }) {
+  const { update } = useDS()
   const step = path.split(".").pop()
   return (
-    <label className="group relative block min-w-0 flex-1">
-      <div className="checker h-header overflow-hidden rounded-control border-thin"><div className="size-full" style={{ background: hex }} /></div>
-      <div className="mt-gap-2xs text-caption font-emphasis">{step}</div>
+    <label className={cn("group relative block min-w-0 flex-1", editable && "cursor-pointer")}>
+      <div className={cn("checker h-header overflow-hidden rounded-control border-thin", anchor && "focus-ring")}>
+        <div className="size-full" style={{ background: hex }} />
+      </div>
+      <div className="mt-gap-2xs text-caption font-emphasis">{step}{anchor && <span className="text-muted-foreground"> · principal</span>}</div>
       <div className="truncate font-code text-caption text-muted-foreground">{hex}</div>
-      {editor && <input type="color" value={hex.slice(0, 7)} onChange={(e) => update("primitives", path, e.target.value)}
+      {editable && <input type="color" value={hex.slice(0, 7)} onChange={(e) => update("primitives", path, e.target.value)}
         className="absolute inset-0 h-header w-full cursor-pointer opacity-0" aria-label={`Cambiar ${path}`} />}
     </label>
   )
 }
 
+/** Color principal de una escala: al cambiarlo se regeneran los 11 tonos al momento. */
+function ScaleBase({ scale }: { scale: string }) {
+  const { tokens, updateMany } = useDS()
+  const anchor = anchorOf(scale)
+  const hex: string = tokens.primitives.color[scale][anchor].$value
+  const apply = (value: string) => {
+    if (!/^#[0-9a-f]{6}$/i.test(value)) return
+    const steps = Object.keys(tokens.primitives.color[scale]).filter((k) => !k.startsWith("$"))
+    const colors = scaleFrom(scale, value.toLowerCase())
+    updateMany(steps.map((st, i) => ["primitives", `color.${scale}.${st}`, colors[i]] as [any, string, string]), `scale:${scale}`)
+  }
+  return (
+    <div className="flex items-center gap-gap-sm">
+      <label className="relative block size-control-md shrink-0 cursor-pointer overflow-hidden rounded-control border-thin" title="Cambiar el color principal">
+        <div className="size-full" style={{ background: hex }} />
+        <input type="color" value={hex.slice(0, 7)} onChange={(e) => apply(e.target.value)} className="absolute inset-0 size-full cursor-pointer opacity-0" aria-label={`Color principal de ${scale}`} />
+      </label>
+      <Input key={hex} defaultValue={hex} onBlur={(e) => apply(e.target.value.trim())} onKeyDown={(e) => e.key === "Enter" && apply((e.target as HTMLInputElement).value.trim())}
+        className="h-control-sm w-field-xs font-code text-caption" aria-label={`Valor del color principal de ${scale}`} />
+    </div>
+  )
+}
+
 function ColorPage() {
   const { tokens, editor, mode, update } = useDS()
+  const [fine, setFine] = useState(false)
   const { val } = useResolved()
   const prim = flatten(tokens.primitives)
   const scales = Object.keys(tokens.primitives.color).filter((k) => !k.startsWith("$") && !tokens.primitives.color[k].$value)
@@ -61,14 +91,26 @@ function ColorPage() {
 
   return (
     <>
-      <Section title="Primitivos" description={editor ? "Pulsa una muestra para cambiar su color. Todo el sistema se actualiza al momento." : "Los valores en bruto. Cada escala va de 50 (más claro) a 950 (más oscuro)."}>
+      <Section title="Primitivos" description={editor
+        ? (fine ? "Ajuste fino: pulsa cualquier tono para cambiarlo a mano." : "Cambia el color principal de cada escala y el resto de tonos se genera solo, al momento.")
+        : "Los valores en bruto. Cada escala va de 50 (más claro) a 950 (más oscuro)."}>
+        {editor && (
+          <div className="mb-gap-lg flex items-center gap-gap-sm text-ui">
+            <Switch id="fine" checked={fine} onCheckedChange={setFine} />
+            <Label htmlFor="fine">Ajuste fino (editar cada tono a mano)</Label>
+          </div>
+        )}
         <div className="space-y-gap-xl">
           {scales.map((s) => (
             <div key={s}>
-              <div className="mb-gap-sm text-ui font-emphasis capitalize">{s}</div>
+              <div className="mb-gap-sm flex items-center justify-between gap-gap-md">
+                <span className="text-ui font-emphasis capitalize">{s}</span>
+                {editor && !fine && <ScaleBase scale={s} />}
+              </div>
               <div className="flex gap-gap-xs">
                 {Object.keys(tokens.primitives.color[s]).filter((k) => !k.startsWith("$")).map((step) => (
-                  <ColorSwatch key={step} path={`color.${s}.${step}`} hex={tokens.primitives.color[s][step].$value} />
+                  <ColorSwatch key={step} path={`color.${s}.${step}`} hex={tokens.primitives.color[s][step].$value}
+                    editable={editor && fine} anchor={editor && !fine && step === anchorOf(s)} />
                 ))}
               </div>
             </div>

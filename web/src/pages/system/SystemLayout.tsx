@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Download, Eye, Home, LayoutGrid, Moon, Pencil, Puzzle, Redo2, Save, Search, Shapes, Sun, Undo2, RotateCcw, Loader2 } from "lucide-react"
 import { toast } from "sonner"
@@ -52,6 +52,22 @@ function SystemLayout({ id }: { id?: string }) {
   const update = useCallback((file: keyof TokenFiles, path: string, value: any) => {
     setHistory((h) => [...h.slice(0, pos + 1), setTokenValue(h[pos], file, path, value)])
     setPos((p) => p + 1)
+    lastKey.current = null
+  }, [pos])
+
+  // Cambios en bloque (p. ej. regenerar una escala de color entera). Mientras arrastras el selector de color,
+  // los cambios con la misma clave sustituyen al anterior en vez de llenar el historial.
+  const lastKey = useRef<{ key: string; at: number; pos: number } | null>(null)
+  const updateMany = useCallback((changes: [keyof TokenFiles, string, any][], key?: string) => {
+    const now = Date.now()
+    const merge = !!key && lastKey.current?.key === key && lastKey.current.pos === pos && now - lastKey.current.at < 1500 && pos > 0
+    lastKey.current = key ? { key, at: now, pos: merge ? pos : pos + 1 } : null
+    setHistory((h) => {
+      const from = merge ? h[pos - 1] : h[pos]
+      const next = changes.reduce((t, [file, path, value]) => setTokenValue(t, file, path, value), from)
+      return merge ? [...h.slice(0, pos), next] : [...h.slice(0, pos + 1), next]
+    })
+    if (!merge) setPos((p) => p + 1)
   }, [pos])
 
   useSystemTheme(tokens!, mode)
@@ -104,7 +120,7 @@ function SystemLayout({ id }: { id?: string }) {
   }
 
   const base = ds ? (editor ? `/s/${ds.meta.id}/editar` : `/s/${ds.meta.id}`) : "/"
-  const ctx = useMemo(() => ds && ({ ds, tokens: tokens!, mode, editor, base, update, dirty }), [ds, tokens, mode, editor, base, update, dirty])
+  const ctx = useMemo(() => ds && ({ ds, tokens: tokens!, mode, editor, base, update, updateMany, dirty }), [ds, tokens, mode, editor, base, update, updateMany, dirty])
 
   if (!ds || !ctx) {
     return (

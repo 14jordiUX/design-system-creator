@@ -181,3 +181,28 @@ export function readableOnWhite(hex: string, contrast: (a: string, b: string) =>
   while ((contrast("#ffffff", out) ?? 0) < 4.5 && L > 0.2) { L -= 0.01; out = oklchToHex([L, C, H]) }
   return out
 }
+
+/** Grises a partir de un gris de referencia, que queda exactamente como tono 500.
+ *  Se mantiene su tinte (tono y croma, con un máximo para que sigan siendo grises). */
+export function neutralFrom(hex: string): string[] {
+  const [L0, C0, H] = hexToOklch(hex)
+  const T = [0.985, 0.967, 0.92, 0.87, 0.71, 0.55, 0.44, 0.37, 0.27, 0.21, 0.145]
+  const C = Math.min(C0, 0.04)
+  const a = 5
+  return T.map((t, i) => {
+    if (i === a) return hex.toLowerCase()
+    const L = i < a
+      ? L0 + (t - T[a]) * ((T[0] - L0) / (T[0] - T[a]))
+      : L0 + (t - T[a]) * ((L0 - T[10]) / (T[a] - T[10]))
+    return oklchToHex([Math.min(0.99, Math.max(0.1, L)), C * (i < a ? 0.6 + 0.4 * (i / a) : 1 - 0.3 * ((i - a) / 5)), H])
+  })
+}
+
+/** Tono de cada escala que hace de «color principal»: la marca y los estados usan el 600; los grises, el 500. */
+export const ANCHOR: Record<string, string> = { neutral: "500" }
+export const anchorOf = (scale: string) => ANCHOR[scale] ?? "600"
+
+/** Regenera una escala entera a partir de su color principal. */
+export function scaleFrom(scale: string, hex: string): string[] {
+  return scale === "neutral" ? neutralFrom(hex) : brandScale(hex)
+}
