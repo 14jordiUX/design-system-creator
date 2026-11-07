@@ -8,6 +8,9 @@ import { loadFonts } from "@/lib/theme"
 import { brandScale, buildTokens, DEFAULT_ANSWERS, fromCharacter, readableOnWhite, slugify, STEPS as SCALE, type Answers } from "@/lib/generator"
 import { GOOGLE_FONTS, type FontCategory } from "@/lib/fonts"
 import { createSystem, hasLocalServer } from "@/lib/localServer"
+import { createSystemOnGitHub, hostedRepo } from "@/lib/github"
+import { useGitHubConnect } from "@/components/app/github-connect"
+import { useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -56,6 +59,9 @@ export default function NewSystem() {
   const [mode, setMode] = useState<Mode>("light")
   const [server, setServer] = useState(false)
   const [creating, setCreating] = useState<string | null>(null)
+  const github = !server && !!hostedRepo()
+  const connect = useGitHubConnect()
+  const navigate = useNavigate()
 
   useEffect(() => { hasLocalServer().then(setServer) }, [])
   useEffect(() => loadFonts([a.font]), [a.font])
@@ -68,6 +74,19 @@ export default function NewSystem() {
 
   const create = async () => {
     if (!a.name.trim()) { setStep(0); toast.error("Ponle un nombre al sistema"); return }
+    if (github) {
+      if (!(await connect.ask())) return
+      setCreating("Guardando en GitHub")
+      try {
+        const id = await createSystemOnGitHub({ ...metaFrom(a), id: slugify(a.name) }, tokens, a)
+        toast.success(`«${a.name}» creado en GitHub`, { description: `Carpeta systems/${id}. Aparecerá en la biblioteca en 1 o 2 minutos, cuando la web se vuelva a publicar.`, duration: 10000 })
+        navigate("/")
+      } catch (e: any) {
+        toast.error("No se ha podido crear", { description: String(e.message || e).slice(0, 300) })
+      }
+      setCreating(null)
+      return
+    }
     if (!server) {
       toast.info("Para crear el sistema, abre el editor", { description: "Haz doble clic en «Abrir el editor.bat» de tu carpeta y vuelve a hacer el cuestionario desde ahí." })
       return
@@ -85,11 +104,12 @@ export default function NewSystem() {
 
   return (
     <div className="flex min-h-screen flex-col bg-subtle">
+      {connect.dialog}
       <header className="flex h-header items-center gap-gap-md border-b-thin bg-background px-inset-lg">
         <Button variant="ghost" size="sm" asChild><Link to="/"><ArrowLeft />Biblioteca</Link></Button>
         <div className="h-icon-lg w-thin bg-border" />
         <span className="font-strong">Nuevo sistema</span>
-        {!server && <Badge variant="outline">Solo vista: para crearlo, abre «Abrir el editor.bat»</Badge>}
+        {!server && !github && <Badge variant="outline">Solo vista: para crearlo, abre «Abrir el editor.bat»</Badge>}
       </header>
       <div className="grid flex-1 lg:grid-cols-[var(--layout-sidebar)_1fr_1fr]">
         <ol className="space-y-gap-2xs border-r-thin bg-background p-inset-lg">

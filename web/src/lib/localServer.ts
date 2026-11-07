@@ -7,7 +7,8 @@ export type SaveStatus = { state: "idle" | "working" | "done" | "error"; step: s
 let ping: Promise<boolean> | null = null
 export function hasLocalServer(): Promise<boolean> {
   if (!window.location.protocol.startsWith("http")) return Promise.resolve(false)
-  ping ??= fetch("/api/ping", { cache: "no-store" }).then((r) => r.ok).catch(() => false)
+  if (/\.github\.io$/.test(window.location.hostname)) return Promise.resolve(false)
+  ping ??= fetch("/api/ping", { cache: "no-store" }).then((r) => r.json()).then((j) => j?.ok === true).catch(() => false)
   return ping
 }
 

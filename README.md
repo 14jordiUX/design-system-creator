@@ -5,7 +5,8 @@ Herramienta para crear, ver y exportar sistemas de diseño.
 ## Cómo verla
 
 - **Para ver:** doble clic en **`Abrir la web.html`**. Se abre en tu navegador, sin instalar nada.
-- **Para editar y guardar:** doble clic en **`Abrir el editor.bat`**. Se abre una ventana negra (déjala abierta) y la web en `http://localhost:5179`. En el modo editor, el botón **Guardar** escribe los cambios en la carpeta del sistema, regenera CSS, Figma y kit, y actualiza `Abrir la web.html`. Necesita Node.js y Python 3.
+- **Online:** https://14jordiux.github.io/design-system-creator/ . En el modo editor, **Guardar** sube los cambios a GitHub (la primera vez pide una llave de GitHub; la web explica cómo crearla). GitHub regenera todo y vuelve a publicar la web en 1 o 2 minutos. El cuestionario también crea sistemas desde ahí.
+- **Para editar y guardar en tu ordenador:** doble clic en **`Abrir el editor.bat`**. Se abre una ventana negra (déjala abierta) y la web en `http://localhost:5179`. En el modo editor, el botón **Guardar** escribe los cambios en la carpeta del sistema, regenera CSS, Figma y kit, y actualiza `Abrir la web.html`. Necesita Node.js y Python 3.
 
 (Necesita internet solo para cargar las tipografías de Google Fonts.)
 

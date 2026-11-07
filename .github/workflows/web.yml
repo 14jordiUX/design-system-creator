@@ -1,5 +1,7 @@
 # Publica la web en GitHub Pages cada vez que cambia algo en main.
 # Regenera las salidas de todos los sistemas (CSS, Figma, kit), comprueba los tokens y construye la web.
+# Si la web guardó tokens nuevos, también sube al repositorio lo regenerado (y «Abrir la web.html»),
+# para que la carpeta siempre esté completa. Ese commit no vuelve a lanzar este proceso.
 name: Publicar la web
 
 on:
@@ -8,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -40,8 +42,18 @@ jobs:
           npm run build
       - name: Comprobar que todo sale de tokens
         run: |
-          python scripts/check_tokens.py | tee check.txt
-          ! grep -E ": [1-9]" check.txt
+          python scripts/check_tokens.py | tee "$RUNNER_TEMP/check.txt"
+          ! grep -E ": [1-9]" "$RUNNER_TEMP/check.txt"
+      - name: Guardar lo regenerado en el repositorio
+        run: |
+          cp web/dist/index.html "Abrir la web.html"
+          git add -A
+          if git diff --cached --quiet; then echo "Nada que guardar"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898099+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Regenerar CSS, Figma, kit y web"
+          git pull --rebase origin main
+          git push origin HEAD:main
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

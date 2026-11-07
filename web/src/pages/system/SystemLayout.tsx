@@ -4,6 +4,8 @@ import { ArrowLeft, Download, Eye, Home, LayoutGrid, Moon, Pencil, Puzzle, Redo2
 import { toast } from "sonner"
 import { getSystem } from "@/lib/systems"
 import { hasLocalServer, saveSystem } from "@/lib/localServer"
+import { hostedRepo, saveSystemToGitHub } from "@/lib/github"
+import { useGitHubConnect } from "@/components/app/github-connect"
 import { setTokenValue, type Mode, type TokenFiles } from "@/lib/tokens"
 import { useSystemTheme } from "@/lib/theme"
 import { FOUNDATIONS, COMPONENT_GROUPS } from "@/lib/nav"
@@ -57,6 +59,8 @@ function SystemLayout({ id }: { id?: string }) {
   // Guardar en la carpeta: solo si la web se abrió con «Abrir el editor.bat» (servidor local)
   const [server, setServer] = useState(false)
   const [saving, setSaving] = useState<string | null>(null)
+  const github = !server && !!hostedRepo()
+  const connect = useGitHubConnect()
   useEffect(() => { hasLocalServer().then(setServer) }, [])
   const dirty = pos > 0
   useEffect(() => {
@@ -68,6 +72,20 @@ function SystemLayout({ id }: { id?: string }) {
 
   const save = async () => {
     if (!ds || !tokens) return
+    if (github) {
+      if (!(await connect.ask())) return
+      setSaving("Guardando en GitHub")
+      try {
+        await saveSystemToGitHub(ds.meta.id, ds.meta.name, tokens)
+        // Lo guardado pasa a ser el punto de partida (la web publicada se actualiza sola en 1-2 minutos)
+        setHistory([tokens]); setPos(0)
+        toast.success("Guardado en GitHub", { description: "La web publicada se actualizará sola en 1 o 2 minutos. Si recargas antes, verás la versión anterior." })
+      } catch (e: any) {
+        toast.error("No se ha podido guardar", { description: String(e.message || e).slice(0, 300) })
+      }
+      setSaving(null)
+      return
+    }
     if (!server) {
       toast.info("Para guardar, abre el editor", { description: "Cierra esta pestaña y haz doble clic en «Abrir el editor.bat» de tu carpeta. Los cambios que no guardes se pierden." })
       return
@@ -109,6 +127,7 @@ function SystemLayout({ id }: { id?: string }) {
 
   return (
     <Ctx.Provider value={ctx}>
+      {connect.dialog}
       <div className="flex h-screen flex-col bg-background text-foreground">
         <header className="flex h-header shrink-0 items-center gap-gap-md border-b-thin px-inset-lg">
           <Button variant="ghost" size="sm" asChild><Link to="/"><ArrowLeft />Biblioteca</Link></Button>
@@ -138,6 +157,7 @@ function SystemLayout({ id }: { id?: string }) {
             <span className="text-muted-foreground">
               {saving ? `${saving}…`
                 : server ? "Los cambios se ven al momento. Pulsa Guardar para escribirlos en tu carpeta."
+                : github ? "Los cambios se ven al momento. Pulsa Guardar para subirlos a tu repositorio de GitHub."
                 : "Los cambios se ven al momento. Para guardarlos, abre la web con «Abrir el editor.bat»."}
             </span>
             <div className="flex-1" />
