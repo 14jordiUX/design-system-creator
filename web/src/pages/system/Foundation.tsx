@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react"
 import { useParams } from "react-router-dom"
-import { AlertTriangle, CheckCircle2, Play } from "lucide-react"
-import { aliasOf, contrastReport, flatten, resolve, tableFor, toCss, type FlatToken } from "@/lib/tokens"
+import { AlertTriangle, Check, CheckCircle2, Play, Sparkles } from "lucide-react"
+import { aliasOf, contrast, contrastReport, flatten, getAt, resolve, tableFor, toCss, type FlatToken } from "@/lib/tokens"
 import { FOUNDATIONS } from "@/lib/nav"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
@@ -71,6 +72,96 @@ function ScaleBase({ scale }: { scale: string }) {
       </label>
       <Input key={hex} defaultValue={hex} onBlur={(e) => apply(e.target.value.trim())} onKeyDown={(e) => e.key === "Enter" && apply((e.target as HTMLInputElement).value.trim())}
         className="h-control-sm w-field-xs font-code text-caption" aria-label={`Valor del color principal de ${scale}`} />
+    </div>
+  )
+}
+
+
+// ---------- Arreglar un contraste ----------
+type Report = ReturnType<typeof contrastReport>[number]
+const short = (p: string) => p.replace(/^color\./, "")
+
+/** Tonos entre los que se puede elegir para un rol: los de su misma escala (o blanco, negro y grises). */
+function candidates(tokens: any, alias: string): string[] {
+  const scale = alias.split(".")[1]
+  const steps = (s: string) => Object.keys(tokens.primitives.color[s] ?? {}).filter((k) => !k.startsWith("$")).map((k) => `color.${s}.${k}`)
+  return tokens.primitives.color[scale]?.$value !== undefined ? ["color.white", ...steps("neutral"), "color.black"] : steps(scale)
+}
+
+function ContrastFix({ r, report }: { r: Report; report: Report[] }) {
+  const { tokens, mode, updateMany } = useDS()
+  const semFile = mode === "dark" ? "dark" : "light"
+  const table = tableFor(tokens, mode)
+  const hexOf = (p: string) => resolve(table[p]?.value, table)
+
+  const all = ([["bg", r.bg, r.fgValue, "el fondo"], ["fg", r.fg, r.bgValue, "el texto"]] as const).flatMap(([side, token, other, what]) => {
+    const alias = aliasOf(getAt(tokens[semFile], token)?.$value)
+    if (!alias) return []
+    const list = candidates(tokens, alias)
+    const cur = list.indexOf(alias)
+    const options = list.map((p, i) => {
+      const hex = hexOf(p), ratio = contrast(side === "bg" ? other : hex, side === "bg" ? hex : other) ?? 0
+      return { p, i, hex, ratio, ok: ratio >= 4.5, dist: Math.abs(i - cur) }
+    })
+    const shared = report.filter((o) => o.label !== r.label && (o.fg === token || o.bg === token)).map((o) => o.label)
+    return [{ side, token, other, what, alias, cur, options, shared }]
+  })
+  // Solo se ofrecen los roles propios de este caso; los compartidos (p. ej. el fondo de la página) únicamente si no queda otro.
+  const own = all.filter((s) => !s.shared.length)
+  const sides = own.length ? own : all
+
+  // Cambia solo este rol; si es el color «normal» de un botón o estado, sus variantes (encima, pulsado) se mueven igual.
+  const apply = (token: string, alias: string, newAlias: string) => {
+    const changes: [any, string, string][] = [[semFile, token, `{${newAlias}}`]]
+    const [, scale, step] = alias.split("."), [, nScale, nStep] = newAlias.split(".")
+    const parent = token.split(".").slice(0, -1).join(".")
+    if (/\.(default|solid)$/.test(token) && scale === nScale) {
+      const steps = Object.keys(tokens.primitives.color[scale]).filter((k) => !k.startsWith("$"))
+      const delta = steps.indexOf(nStep) - steps.indexOf(step)
+      for (const sib of ["hover", "active"]) {
+        const a = aliasOf(getAt(tokens[semFile], `${parent}.${sib}`)?.$value)
+        if (!a || a.split(".")[1] !== scale) continue
+        const j = Math.min(steps.length - 1, Math.max(0, steps.indexOf(a.split(".")[2]) + delta))
+        changes.push([semFile, `${parent}.${sib}`, `{color.${scale}.${steps[j]}}`])
+      }
+    }
+    updateMany(changes)
+  }
+
+  // Recomendación: el cambio más pequeño que ya cumple, mejor en un rol que no compartan otros pares.
+  const best = sides.flatMap((s) => s.options.filter((o) => o.ok).map((o) => ({ s, o, score: o.dist + (s.shared.length ? 3 : 0) })))
+    .sort((a, b) => a.score - b.score || b.o.ratio - a.o.ratio)[0]
+
+  return (
+    <div className="mt-gap-md space-y-gap-lg border-t-thin pt-gap-md">
+      {best ? (
+        <div className="flex flex-wrap items-center gap-gap-sm text-ui">
+          <Sparkles className="size-icon-md text-primary" />
+          <span className="flex-1">Te recomiendo cambiar solo {best.s.what}{best.s.shared.length ? "" : " de este caso"}: <b className="font-code">{short(best.s.alias)}</b> → <b className="font-code">{short(best.o.p)}</b> ({best.o.ratio.toFixed(2)}:1).</span>
+          <Button size="sm" onClick={() => apply(best.s.token, best.s.alias, best.o.p)}>Aplicar</Button>
+        </div>
+      ) : (
+        <p className="text-ui text-muted-foreground">Ningún tono de estas escalas llega a 4,5:1. Prueba a cambiar el color principal de la escala.</p>
+      )}
+      {sides.map((s) => (
+        <div key={s.side}>
+          <div className="mb-gap-xs text-caption text-muted-foreground">
+            O elige otro tono para {s.what} (<span className="font-code">{short(s.token)}</span>). Solo cambia este rol, no la escala ni los demás {s.side === "bg" ? "fondos" : "textos"}.
+          </div>
+          <div className="flex flex-wrap gap-gap-2xs">
+            {s.options.map((o) => (
+              <button key={o.p} type="button" onClick={() => o.i !== s.cur && apply(s.token, s.alias, o.p)} title={`${short(o.p)} · ${o.ratio.toFixed(2)}:1`}
+                className={cn("flex flex-col items-center gap-gap-3xs rounded-inner p-inset-3xs", o.i === s.cur ? "focus-ring" : "hover:bg-muted", !o.ok && "opacity-disabled")}>
+                <span className="flex size-control-md items-center justify-center rounded-inner border-thin text-caption font-strong"
+                  style={s.side === "bg" ? { background: o.hex, color: s.other } : { background: s.other, color: o.hex }}>Aa</span>
+                <span className="font-code text-caption">{o.p.split(".").pop()}</span>
+                <span className="flex items-center text-caption text-muted-foreground">{o.ok && <Check className="size-icon-sm" />}{o.ratio.toFixed(1)}</span>
+              </button>
+            ))}
+          </div>
+          {s.shared.length > 0 && <p className="mt-gap-xs text-caption text-danger-text">Ojo: este color también lo usa{s.shared.length > 1 ? "n" : ""} {s.shared.join(", ").toLowerCase()}.</p>}
+        </div>
+      ))}
     </div>
   )
 }
@@ -160,18 +251,21 @@ function ColorPage() {
 
       <Section title="Contraste" description="Comprobación WCAG AA: el texto necesita al menos 4,5:1 sobre su fondo.">
         {fails.length ? (
-          <Alert variant="destructive" className="mb-gap-lg"><AlertTriangle /><AlertTitle>{fails.length} pares no llegan al mínimo</AlertTitle>
-            <AlertDescription>Oscurece el fondo o aclara el texto (o al revés en modo oscuro) hasta que aparezca en verde.</AlertDescription></Alert>
+          <Alert variant="destructive" className="mb-gap-lg"><AlertTriangle /><AlertTitle>{fails.length} {fails.length > 1 ? "pares no llegan" : "par no llega"} al mínimo en modo {mode === "dark" ? "oscuro" : "claro"}</AlertTitle>
+            <AlertDescription>{editor ? "Están marcados abajo, con una propuesta para arreglar cada uno. El cambio solo afecta a ese caso." : "Están marcados abajo. Pasa a modo editor para arreglarlos."}</AlertDescription></Alert>
         ) : (
           <Alert className="mb-gap-lg"><CheckCircle2 /><AlertTitle>Todos los pares cumplen AA en modo {mode === "dark" ? "oscuro" : "claro"}</AlertTitle></Alert>
         )}
         <div className="grid gap-gap-sm sm:grid-cols-2">
-          {report.map((r) => (
-            <div key={r.label} className="flex items-center gap-gap-md rounded-card border-thin p-inset-md">
-              <div className="flex size-control-lg items-center justify-center rounded-control text-ui font-strong" style={{ background: r.bgValue, color: r.fgValue }}>Aa</div>
-              <div className="flex-1 text-ui">{r.label}</div>
-              <span className="font-code text-caption">{r.ratio ? r.ratio.toFixed(2) : "–"}:1</span>
-              <Badge variant={r.ok ? "secondary" : "destructive"}>{r.ok ? "AA" : "Falla"}</Badge>
+          {[...fails, ...report.filter((r) => r.ok)].map((r) => (
+            <div key={r.label} className={cn("rounded-card border-thin p-inset-md", !r.ok && "border-danger-border sm:col-span-2")}>
+              <div className="flex items-center gap-gap-md">
+                <div className="flex size-control-lg items-center justify-center rounded-control text-ui font-strong" style={{ background: r.bgValue, color: r.fgValue }}>Aa</div>
+                <div className="flex-1 text-ui">{r.label}</div>
+                <span className="font-code text-caption">{r.ratio ? r.ratio.toFixed(2) : "–"}:1</span>
+                <Badge variant={r.ok ? "secondary" : "destructive"}>{r.ok ? "AA" : "Falla"}</Badge>
+              </div>
+              {!r.ok && editor && <ContrastFix r={r} report={report} />}
             </div>
           ))}
         </div>
