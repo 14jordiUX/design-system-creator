@@ -80,7 +80,7 @@ function measure() {
       const fam = cs.fontFamily, w = ownText.length
       out.fonts[fam] = (out.fonts[fam] || 0) + w
       if (/^H[1-3]$/.test(el.tagName)) out.heading[fam] = (out.heading[fam] || 0) + w
-      if (!/^H[1-6]$/.test(el.tagName) && w > 40) out.sizes.push(parseFloat(cs.fontSize))
+      if (!/^H[1-6]$/.test(el.tagName) && w > 30) out.sizes.push({ size: parseFloat(cs.fontSize), w })
     }
     if (el.matches(btnSel) && r.width >= 50 && r.width <= 520 && r.height >= 24 && r.height <= 90) {
       const col = rgba(cs.color)
@@ -108,6 +108,19 @@ async function fontOnGoogle(family) {
     const r = await fetch(`https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}`, { headers: { "User-Agent": "Mozilla/5.0" } })
     return r.ok
   } catch { return false }
+}
+
+// Nombre en Google Fonts: «inter», «Inter Variable», «NotionInter» → Inter
+const KNOWN = (() => {
+  try { return [...fs.readFileSync(path.join(ROOT, "web", "src", "lib", "fonts.ts"), "utf8").matchAll(/family: "([^"]+)"/g)].map((x) => x[1]).sort((a, b) => b.length - a.length) }
+  catch { return [] }
+})()
+async function googleName(name) {
+  const clean = name.replace(/[-_\s]?(variable|var|vf|web|display|text)$/i, "").replace(/[-_]/g, " ").trim()
+  const title = clean.replace(/\b\w/g, (c) => c.toUpperCase())
+  const known = KNOWN.find((k) => clean.toLowerCase() === k.toLowerCase()) || KNOWN.find((k) => clean.toLowerCase().includes(k.toLowerCase()))
+  for (const c of [...new Set([name, known, clean, title].filter(Boolean))]) if (await fontOnGoogle(c)) return c
+  return null
 }
 
 const firstFamily = (stack) => stack.split(",").map((f) => f.trim().replace(/^["']|["']$/g, "")).find((f) => f && !GENERIC.test(f) && !/fallback|emoji|placeholder/i.test(f))
@@ -162,14 +175,18 @@ async function toAnswers(m, url, name) {
   if (page && oklch(page.rgb).L < 0.35) notes.color.push("La web es de fondo oscuro; el sistema se crea con modo claro y oscuro (mira el modo oscuro).")
 
   // Tipografía
-  let font = topFont(m.fonts) || "Inter"
+  const webFont = topFont(m.fonts)
   const heading = topFont(m.heading)
-  if (!(await fontOnGoogle(font))) {
-    notes.type.push(`La web usa «${font}», que no está en Google Fonts; se usa Inter en su lugar (cámbiala en Tipografía si tienes la fuente).`)
-    font = "Inter"
-  } else notes.type.push(`Fuente ${font}, la del texto de la web.`)
-  if (heading && heading !== font) notes.type.push(`Los titulares de la web usan «${heading}».`)
-  const body = median(m.sizes) || 16
+  const font = webFont ? await googleName(webFont) : null
+  if (!webFont) notes.type.push("La web usa la fuente del sistema; se usa Inter.")
+  else if (!font) notes.type.push(`La web usa «${webFont}», que no está en Google Fonts; se usa Inter en su lugar (cámbiala en Tipografía si tienes la fuente).`)
+  else notes.type.push(font === webFont ? `Fuente ${font}, la del texto de la web.` : `La web usa «${webFont}», que es ${font} de Google Fonts.`)
+  if (heading && heading !== webFont) notes.type.push(`Los titulares de la web usan «${heading}».`)
+  // Tamaño del texto corrido: mediana ponderada por cantidad de texto, sin contar titulares grandes
+  const sizes = m.sizes.filter((x) => x.size >= 11 && x.size <= 22).sort((a, b) => a.size - b.size)
+  const total = sizes.reduce((t, x) => t + x.w, 0)
+  let acc = 0, body = 16
+  for (const x of sizes) { acc += x.w; if (acc >= total / 2) { body = x.size; break } }
   const scale = body < 15 ? "compacta" : body >= 17.5 ? "amplia" : "normal"
 
   // Forma
@@ -201,7 +218,7 @@ async function toAnswers(m, url, name) {
     origin: "url",
     sourceUrl: url,
     applyCharacter: false,
-    sober, serious, dense: density, brand: hex(brand), warmNeutral, font, scale, radius, border, unit: "4",
+    sober, serious, dense: density, brand: hex(brand), warmNeutral, font: font || "Inter", scale, radius, border, unit: "4",
     density, shadow, speed: 50,
     ...(Object.keys(overrides).length ? { overrides } : {}),
     notes: {
