@@ -11,6 +11,7 @@ export function loadFonts(families: string[]) {
     loaded.add(f)
     const link = document.createElement("link")
     link.rel = "stylesheet"
+    link.crossOrigin = "anonymous" // para poder leer las fuentes al descargar pantallas en PNG
     link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(f)}:wght@400;500;600;700&display=swap`
     document.head.appendChild(link)
   }

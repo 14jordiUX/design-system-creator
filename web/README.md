@@ -16,4 +16,4 @@ cp dist/index.html "../Abrir la web.html"
 ```
 
 - `npm run dev` abre la versión de desarrollo; `npm run typecheck` revisa tipos.
-- Rutas: `#/` biblioteca, `#/nuevo` cuestionario, `#/s/<id>` modo cliente, `#/s/<id>/editar` modo editor.
+- Rutas: `#/` biblioteca, `#/nuevo` cuestionario, `#/s/<id>` modo cliente, `#/s/<id>/editar` modo editor, `#/s/<id>/prototipos/<slug>` prototipos, `#/p/<id>/<slug>` prototipo a pantalla completa (sin la web alrededor).

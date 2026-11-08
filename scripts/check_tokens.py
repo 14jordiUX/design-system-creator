@@ -93,6 +93,7 @@ def check_classes(css):
         src = re.sub(r'imp\([^)]*\)', "", src)                 # nombres de archivo en los ejemplos de código
         src = re.sub(r"tokenPx\(\"[^\"]*\"\)", "", src)               # tokens leídos desde JS
         src = re.sub(r'"--[\w-]+"', "", src)                   # nombres de variables CSS en style={…}
+        src = re.sub(r'\b(id|htmlFor|autoComplete|allow|style)="[^"]*"', "", src)  # atributos que no son clases
         for lit in re.findall(r'"([^"\n]+)"', src):
             toks = lit.split()
             # solo cadenas que parecen listas de clases
