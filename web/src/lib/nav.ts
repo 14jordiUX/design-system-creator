@@ -100,6 +100,28 @@ export const COMPONENT_GROUPS: { group: string; items: NavItem[] }[] = [
     { slug: "message-scroller", label: "Message Scroller", ready: true },
     { slug: "trace", label: "Trace", ready: true },
   ]},
+  { group: "AI Elements", items: [
+    { slug: "chain-of-thought", label: "Chain of Thought", ready: true },
+    { slug: "chat", label: "Chat", ready: true },
+    { slug: "checkpoint", label: "Checkpoint", ready: true },
+    { slug: "confirmation", label: "Confirmation", ready: true },
+    { slug: "context", label: "Context", ready: true },
+    { slug: "file-tree", label: "File Tree", ready: true },
+    { slug: "inline-citation", label: "Inline Citation", ready: true },
+    { slug: "model-selector", label: "Model Selector", ready: true },
+    { slug: "plan", label: "Plan", ready: true },
+    { slug: "prompt-input", label: "Prompt Input", ready: true },
+    { slug: "queue", label: "Queue", ready: true },
+    { slug: "reasoning", label: "Reasoning", ready: true },
+    { slug: "sources", label: "Sources", ready: true },
+    { slug: "stack-trace", label: "Stack Trace", ready: true },
+    { slug: "subagent", label: "Subagent", ready: true },
+    { slug: "suggestion", label: "Suggestion", ready: true },
+    { slug: "task", label: "Task", ready: true },
+    { slug: "terminal", label: "Terminal", ready: true },
+    { slug: "test-results", label: "Test Results", ready: true },
+    { slug: "tool", label: "Tool", ready: true },
+  ]},
 ]
 
 export const ALL_COMPONENTS = COMPONENT_GROUPS.flatMap((g) => g.items.map((i) => ({ ...i, group: g.group })))
