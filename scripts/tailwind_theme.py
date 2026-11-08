@@ -119,6 +119,7 @@ def build(primitives, semantic, light):
     for side, prop in [("t", "top"), ("b", "bottom"), ("l", "left"), ("r", "right"), ("x", "inline"), ("y", "block"), ("s", "inline-start"), ("e", "inline-end")]:
         add(f"@utility border-{side}-thin {{ border-{prop}-style: solid; border-{prop}-width: var(--control-border-width); }}")
     add("@utility border-thick { border-style: solid; border-width: var(--control-focus-ring-width); }")
+    add("@utility border-s-thick { border-inline-start-style: solid; border-inline-start-width: var(--control-focus-ring-width); }")
     add("")
     add("/* Foco accesible: anillo con los tokens control.focus-ring-* y color.border.focus */")
     add("@utility focus-ring { outline: var(--control-focus-ring-width) solid var(--ring); outline-offset: var(--control-focus-ring-offset); }")
@@ -199,6 +200,11 @@ ANIMATIONS = """/* Animaciones: duración, curva, escala y distancia salen de lo
 @utility animate-caret-blink { animation: ds-caret-blink var(--motion-duration-loop) var(--motion-easing-default) infinite; }
 @utility aspect-video { aspect-ratio: 16 / 9; }
 @utility animate-pulse { animation: ds-pulse var(--motion-duration-loop) var(--motion-easing-default) infinite; }
+@keyframes ds-shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@utility shimmer { background-image: linear-gradient(var(--motion-rotate-turn), currentColor 40%, var(--foreground) 50%, currentColor 60%); background-size: 300% 100%; background-clip: text; -webkit-background-clip: text; color: transparent; animation: ds-shimmer var(--motion-duration-loop) linear infinite; }
+@utility shimmer-none { background-image: none; color: inherit; animation: none; }
+@utility scroll-fade-x { mask-image: linear-gradient(var(--motion-rotate-turn), transparent, var(--foreground) var(--space-inset-lg), var(--foreground) calc(100% - var(--space-inset-lg)), transparent); }
+@utility scroll-fade-y { mask-image: linear-gradient(transparent, var(--foreground) var(--space-inset-lg), var(--foreground) calc(100% - var(--space-inset-lg)), transparent); }
 @utility animate-spin { animation: ds-spin var(--motion-duration-loop) linear infinite; }"""
 
 

@@ -18,7 +18,7 @@ Si quieres que Claude lo recuerde siempre, guarda `SKILL.md` como skill.
 | `tokens/` | Los tokens en formato W3C (la fuente de verdad). |
 | `styles/tokens.css` | Variables CSS, con modo claro y oscuro. |
 | `styles/globals.css` | Tema listo para Tailwind CSS v4 y shadcn/ui. |
-| `components/ui/` | 58 componentes de shadcn/ui que toman el estilo del sistema. |
+| `components/ui/` | 62 componentes de shadcn/ui que toman el estilo del sistema. |
 | `components/custom/` | Componentes propios del sistema: app-sidebar, appointment-card, fab, stat-card, tab. |
 | `patterns/` | Pantallas de ejemplo hechas solo con los componentes: panel-de-gestion. |
 | `lib/utils.ts` | Función auxiliar que usan los componentes. |

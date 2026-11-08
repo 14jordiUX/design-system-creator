@@ -11855,6 +11855,9 @@
   "border-thick": [
     "control.focus-ring-width"
   ],
+  "border-s-thick": [
+    "control.focus-ring-width"
+  ],
   "focus-ring": [
     "color.border.focus",
     "control.focus-ring-offset",
@@ -12004,6 +12007,20 @@
   "animate-pulse": [
     "motion.duration.loop",
     "motion.easing.default"
+  ],
+  "shimmer": [
+    "color.text.default",
+    "motion.duration.loop",
+    "motion.rotate.turn"
+  ],
+  "scroll-fade-x": [
+    "color.text.default",
+    "motion.rotate.turn",
+    "space.inset.lg"
+  ],
+  "scroll-fade-y": [
+    "color.text.default",
+    "space.inset.lg"
   ],
   "animate-spin": [
     "motion.duration.loop"

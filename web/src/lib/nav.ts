@@ -38,8 +38,12 @@ export const COMPONENT_GROUPS: { group: string; items: NavItem[] }[] = [
     { slug: "field", label: "Field", ready: true },
     { slug: "input-group", label: "Input Group", ready: true },
     { slug: "native-select", label: "Native Select", ready: true },
+    { slug: "questionnaire", label: "Questionnaire", ready: true },
+    { slug: "direction", label: "Direction", ready: true },
   ]},
   { group: "Contenido", items: [
+    { slug: "typography", label: "Typography", ready: true },
+    { slug: "code-block", label: "Code Block", ready: true },
     { slug: "card", label: "Card", ready: true },
     { slug: "table", label: "Table", ready: true },
     { slug: "data-table", label: "Data Table", ready: true },
@@ -94,6 +98,7 @@ export const COMPONENT_GROUPS: { group: string; items: NavItem[] }[] = [
     { slug: "attachment", label: "Attachment", ready: true },
     { slug: "marker", label: "Marker", ready: true },
     { slug: "message-scroller", label: "Message Scroller", ready: true },
+    { slug: "trace", label: "Trace", ready: true },
   ]},
 ]
 
