@@ -65,6 +65,16 @@ ocupa del resto: probarlo (móvil o escritorio, con cualquier sistema), el mapa 
 PNG, y el enlace a pantalla completa `#/p/<sistema>/<slug>?pantalla=<id>&modo=oscuro` para test con usuarios o para
 incrustar. `scripts/generate.py` los copia a la web y al kit (`kit/prototypes/`).
 
+`meta.links` (opcional) dice a qué pantalla lleva cada botón (`{ from, text, to }`), para conectar las pantallas como
+prototipo en Figma.
+
+### Ida y vuelta con Figma
+
+En Prototipos → Compartir → «Llevar a Figma» se descarga un `.json` (`dsc-figma@1`) con los tokens como variables y las
+pantallas medidas tal como se ven, y el plugin de `figma-plugin/` lo dibuja en Figma con componentes, variantes y
+variables enlazadas. El mismo plugin exporta los cambios (`dsc-figma-changes@1`) y `scripts/figma_changes.py` los
+resume para pasarlos al código. Detalles en `figma-plugin/README.md`.
+
 ## La ficha (`system.json`)
 
 | Campo | Qué es | Ejemplo |

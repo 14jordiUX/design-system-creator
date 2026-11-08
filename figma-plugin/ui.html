@@ -1,0 +1,84 @@
+<!-- Ventana del plugin. Usa los colores de Figma (themeColors) para verse bien en claro y en oscuro. -->
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font: 12px/1.5 Inter, system-ui, sans-serif; color: var(--figma-color-text); background: var(--figma-color-bg); }
+  h1 { font-size: 14px; margin: 0 0 4px; }
+  h2 { font-size: 12px; margin: 16px 0 6px; }
+  p { margin: 0 0 8px; color: var(--figma-color-text-secondary); }
+  .drop { border: 1px dashed var(--figma-color-border-strong); border-radius: 6px; padding: 16px; text-align: center; cursor: pointer; }
+  .drop.over { background: var(--figma-color-bg-hover); }
+  .drop strong { display: block; color: var(--figma-color-text); }
+  label.check { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0; }
+  button { width: 100%; border: 0; border-radius: 6px; padding: 9px 12px; font: inherit; font-weight: 600; cursor: pointer; }
+  .primary { background: var(--figma-color-bg-brand); color: var(--figma-color-text-onbrand); }
+  .secondary { background: var(--figma-color-bg-secondary); color: var(--figma-color-text); border: 1px solid var(--figma-color-border); }
+  button:disabled { opacity: .5; cursor: default; }
+  #log { margin-top: 12px; max-height: 190px; overflow: auto; font-size: 11px; }
+  #log div { padding: 2px 0; }
+  .warn { color: var(--figma-color-text-warning); }
+  .error { color: var(--figma-color-text-danger); }
+  .ok { color: var(--figma-color-text-success); font-weight: 600; }
+  hr { border: 0; border-top: 1px solid var(--figma-color-border); margin: 16px 0; }
+</style>
+
+<h1>Design System Creator</h1>
+<p>Dibuja aquí un flujo de la web con sus componentes y tokens, y exporta tus cambios para que Claude los pase al código.</p>
+
+<h2>1. Dibujar un flujo</h2>
+<div class="drop" id="drop">
+  <strong id="dropTitle">Suelta aquí el archivo .json</strong>
+  <span id="dropText">o haz clic para elegirlo. Lo descargas en la web: Prototipos → Compartir → Llevar a Figma.</span>
+  <input type="file" id="file" accept=".json,application/json" hidden />
+</div>
+<label class="check"><input type="checkbox" id="overwrite" /> <span>Actualizar los valores de las variables y estilos que ya existen en este archivo (si no, se respetan tus cambios y solo se añaden los que faltan).</span></label>
+<button class="primary" id="draw" disabled>Dibujar en Figma</button>
+
+<hr />
+<h2>2. Exportar tus cambios</h2>
+<p>Guarda las variables, los componentes y las pantallas de la página actual (o lo que tengas seleccionado) en un archivo para Claude.</p>
+<button class="secondary" id="export">Exportar cambios (.json)</button>
+
+<div id="log"></div>
+
+<script>
+  let data = null
+  const $ = (id) => document.getElementById(id)
+  const log = (text, kind) => { const d = document.createElement("div"); d.textContent = text; d.className = kind || ""; $("log").appendChild(d); $("log").scrollTop = 1e9 }
+  const busy = (b) => { $("draw").disabled = b || !data; $("export").disabled = b }
+
+  function load(file) {
+    const r = new FileReader()
+    r.onload = () => {
+      try {
+        data = JSON.parse(r.result)
+        if (data.format !== "dsc-figma@1") throw new Error("no es un archivo de «Llevar a Figma»")
+        $("dropTitle").textContent = data.prototype.label + " · " + data.system.name
+        $("dropText").textContent = data.screens.length + " pantallas, modo " + data.mode.toLowerCase() + ". Haz clic para cambiar de archivo."
+        busy(false)
+      } catch (e) { data = null; busy(false); log("Este archivo no sirve: " + e.message, "error") }
+    }
+    r.readAsText(file)
+  }
+  $("drop").onclick = () => $("file").click()
+  $("file").onchange = (e) => e.target.files[0] && load(e.target.files[0])
+  $("drop").ondragover = (e) => { e.preventDefault(); $("drop").classList.add("over") }
+  $("drop").ondragleave = () => $("drop").classList.remove("over")
+  $("drop").ondrop = (e) => { e.preventDefault(); $("drop").classList.remove("over"); e.dataTransfer.files[0] && load(e.dataTransfer.files[0]) }
+
+  $("draw").onclick = () => { busy(true); $("log").innerHTML = ""; parent.postMessage({ pluginMessage: { type: "draw", data, options: { overwrite: $("overwrite").checked } } }, "*") }
+  $("export").onclick = () => { busy(true); $("log").innerHTML = ""; parent.postMessage({ pluginMessage: { type: "export" } }, "*") }
+
+  onmessage = (e) => {
+    const m = e.data.pluginMessage
+    if (!m) return
+    if (m.type === "log") log(m.text, m.kind)
+    if (m.type === "done") busy(false)
+    if (m.type === "download") {
+      const a = document.createElement("a")
+      a.href = URL.createObjectURL(new Blob([m.content], { type: "application/json" }))
+      a.download = m.name
+      a.click()
+    }
+  }
+  busy(false)
+</script>
