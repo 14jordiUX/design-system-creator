@@ -128,6 +128,8 @@
   --spacing-field-xs: var(--size-field-xs);
   --spacing-field-sm: var(--size-field-sm);
   --spacing-area-min: var(--size-area-min);
+  --spacing-fab-md: var(--size-fab-md);
+  --spacing-fab-sm: var(--size-fab-sm);
   --spacing-header: var(--layout-header);
   --spacing-sidebar: var(--layout-sidebar);
   --spacing-prose: var(--layout-prose);
@@ -185,6 +187,8 @@
   --container-field-xs: var(--size-field-xs);
   --container-field-sm: var(--size-field-sm);
   --container-area-min: var(--size-area-min);
+  --container-fab-md: var(--size-fab-md);
+  --container-fab-sm: var(--size-fab-sm);
   --container-header: var(--layout-header);
   --container-sidebar: var(--layout-sidebar);
   --container-prose: var(--layout-prose);

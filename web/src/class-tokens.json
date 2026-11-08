@@ -9611,6 +9611,306 @@
   "scroll-my-area-min": [
     "size.area-min"
   ],
+  "p-fab-md": [
+    "size.fab.md"
+  ],
+  "px-fab-md": [
+    "size.fab.md"
+  ],
+  "py-fab-md": [
+    "size.fab.md"
+  ],
+  "pt-fab-md": [
+    "size.fab.md"
+  ],
+  "pr-fab-md": [
+    "size.fab.md"
+  ],
+  "pb-fab-md": [
+    "size.fab.md"
+  ],
+  "pl-fab-md": [
+    "size.fab.md"
+  ],
+  "ps-fab-md": [
+    "size.fab.md"
+  ],
+  "pe-fab-md": [
+    "size.fab.md"
+  ],
+  "m-fab-md": [
+    "size.fab.md"
+  ],
+  "mx-fab-md": [
+    "size.fab.md"
+  ],
+  "my-fab-md": [
+    "size.fab.md"
+  ],
+  "mt-fab-md": [
+    "size.fab.md"
+  ],
+  "mr-fab-md": [
+    "size.fab.md"
+  ],
+  "mb-fab-md": [
+    "size.fab.md"
+  ],
+  "ml-fab-md": [
+    "size.fab.md"
+  ],
+  "-mx-fab-md": [
+    "size.fab.md"
+  ],
+  "-my-fab-md": [
+    "size.fab.md"
+  ],
+  "-mt-fab-md": [
+    "size.fab.md"
+  ],
+  "-ml-fab-md": [
+    "size.fab.md"
+  ],
+  "gap-fab-md": [
+    "size.fab.md"
+  ],
+  "gap-x-fab-md": [
+    "size.fab.md"
+  ],
+  "gap-y-fab-md": [
+    "size.fab.md"
+  ],
+  "space-x-fab-md": [
+    "size.fab.md"
+  ],
+  "space-y-fab-md": [
+    "size.fab.md"
+  ],
+  "-space-x-fab-md": [
+    "size.fab.md"
+  ],
+  "-space-y-fab-md": [
+    "size.fab.md"
+  ],
+  "size-fab-md": [
+    "size.fab.md"
+  ],
+  "w-fab-md": [
+    "size.fab.md"
+  ],
+  "h-fab-md": [
+    "size.fab.md"
+  ],
+  "min-w-fab-md": [
+    "size.fab.md"
+  ],
+  "min-h-fab-md": [
+    "size.fab.md"
+  ],
+  "max-w-fab-md": [
+    "size.fab.md"
+  ],
+  "max-h-fab-md": [
+    "size.fab.md"
+  ],
+  "top-fab-md": [
+    "size.fab.md"
+  ],
+  "left-fab-md": [
+    "size.fab.md"
+  ],
+  "right-fab-md": [
+    "size.fab.md"
+  ],
+  "bottom-fab-md": [
+    "size.fab.md"
+  ],
+  "inset-fab-md": [
+    "size.fab.md"
+  ],
+  "inset-x-fab-md": [
+    "size.fab.md"
+  ],
+  "inset-y-fab-md": [
+    "size.fab.md"
+  ],
+  "-top-fab-md": [
+    "size.fab.md"
+  ],
+  "-left-fab-md": [
+    "size.fab.md"
+  ],
+  "-right-fab-md": [
+    "size.fab.md"
+  ],
+  "-bottom-fab-md": [
+    "size.fab.md"
+  ],
+  "translate-x-fab-md": [
+    "size.fab.md"
+  ],
+  "translate-y-fab-md": [
+    "size.fab.md"
+  ],
+  "-translate-x-fab-md": [
+    "size.fab.md"
+  ],
+  "-translate-y-fab-md": [
+    "size.fab.md"
+  ],
+  "scroll-my-fab-md": [
+    "size.fab.md"
+  ],
+  "p-fab-sm": [
+    "size.fab.sm"
+  ],
+  "px-fab-sm": [
+    "size.fab.sm"
+  ],
+  "py-fab-sm": [
+    "size.fab.sm"
+  ],
+  "pt-fab-sm": [
+    "size.fab.sm"
+  ],
+  "pr-fab-sm": [
+    "size.fab.sm"
+  ],
+  "pb-fab-sm": [
+    "size.fab.sm"
+  ],
+  "pl-fab-sm": [
+    "size.fab.sm"
+  ],
+  "ps-fab-sm": [
+    "size.fab.sm"
+  ],
+  "pe-fab-sm": [
+    "size.fab.sm"
+  ],
+  "m-fab-sm": [
+    "size.fab.sm"
+  ],
+  "mx-fab-sm": [
+    "size.fab.sm"
+  ],
+  "my-fab-sm": [
+    "size.fab.sm"
+  ],
+  "mt-fab-sm": [
+    "size.fab.sm"
+  ],
+  "mr-fab-sm": [
+    "size.fab.sm"
+  ],
+  "mb-fab-sm": [
+    "size.fab.sm"
+  ],
+  "ml-fab-sm": [
+    "size.fab.sm"
+  ],
+  "-mx-fab-sm": [
+    "size.fab.sm"
+  ],
+  "-my-fab-sm": [
+    "size.fab.sm"
+  ],
+  "-mt-fab-sm": [
+    "size.fab.sm"
+  ],
+  "-ml-fab-sm": [
+    "size.fab.sm"
+  ],
+  "gap-fab-sm": [
+    "size.fab.sm"
+  ],
+  "gap-x-fab-sm": [
+    "size.fab.sm"
+  ],
+  "gap-y-fab-sm": [
+    "size.fab.sm"
+  ],
+  "space-x-fab-sm": [
+    "size.fab.sm"
+  ],
+  "space-y-fab-sm": [
+    "size.fab.sm"
+  ],
+  "-space-x-fab-sm": [
+    "size.fab.sm"
+  ],
+  "-space-y-fab-sm": [
+    "size.fab.sm"
+  ],
+  "size-fab-sm": [
+    "size.fab.sm"
+  ],
+  "w-fab-sm": [
+    "size.fab.sm"
+  ],
+  "h-fab-sm": [
+    "size.fab.sm"
+  ],
+  "min-w-fab-sm": [
+    "size.fab.sm"
+  ],
+  "min-h-fab-sm": [
+    "size.fab.sm"
+  ],
+  "max-w-fab-sm": [
+    "size.fab.sm"
+  ],
+  "max-h-fab-sm": [
+    "size.fab.sm"
+  ],
+  "top-fab-sm": [
+    "size.fab.sm"
+  ],
+  "left-fab-sm": [
+    "size.fab.sm"
+  ],
+  "right-fab-sm": [
+    "size.fab.sm"
+  ],
+  "bottom-fab-sm": [
+    "size.fab.sm"
+  ],
+  "inset-fab-sm": [
+    "size.fab.sm"
+  ],
+  "inset-x-fab-sm": [
+    "size.fab.sm"
+  ],
+  "inset-y-fab-sm": [
+    "size.fab.sm"
+  ],
+  "-top-fab-sm": [
+    "size.fab.sm"
+  ],
+  "-left-fab-sm": [
+    "size.fab.sm"
+  ],
+  "-right-fab-sm": [
+    "size.fab.sm"
+  ],
+  "-bottom-fab-sm": [
+    "size.fab.sm"
+  ],
+  "translate-x-fab-sm": [
+    "size.fab.sm"
+  ],
+  "translate-y-fab-sm": [
+    "size.fab.sm"
+  ],
+  "-translate-x-fab-sm": [
+    "size.fab.sm"
+  ],
+  "-translate-y-fab-sm": [
+    "size.fab.sm"
+  ],
+  "scroll-my-fab-sm": [
+    "size.fab.sm"
+  ],
   "p-header": [
     "layout.header"
   ],

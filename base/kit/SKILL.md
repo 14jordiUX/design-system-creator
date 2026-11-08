@@ -24,7 +24,7 @@ Tipo de producto: Plantilla.
 
 ## Reglas
 
-1. **Usa siempre los componentes de `components/ui/`** (shadcn/ui ya tematizados). No crees botones, campos o tarjetas desde cero si existe el componente. Componentes disponibles: accordion, alert, alert-dialog, aspect-ratio, attachment, avatar, badge, breadcrumb, bubble, button, button-group, calendar, card, carousel, chart, checkbox, collapsible, command, context-menu, dialog, drawer, dropdown-menu, empty, field, form, hover-card, input, input-group, input-otp, item, kbd, label, marker, menubar, message, message-scroller, native-select, navigation-menu, pagination, popover, progress, radio-group, resizable, scroll-area, select, separator, sheet, sidebar, skeleton, slider, spinner, switch, table, tabs, textarea, toggle, toggle-group, tooltip. Además, componentes propios de este sistema en `components/custom/`: stat-card. Úsalos antes que montar algo parecido.
+1. **Usa siempre los componentes de `components/ui/`** (shadcn/ui ya tematizados). No crees botones, campos o tarjetas desde cero si existe el componente. Componentes disponibles: accordion, alert, alert-dialog, aspect-ratio, attachment, avatar, badge, breadcrumb, bubble, button, button-group, calendar, card, carousel, chart, checkbox, collapsible, command, context-menu, dialog, drawer, dropdown-menu, empty, field, form, hover-card, input, input-group, input-otp, item, kbd, label, marker, menubar, message, message-scroller, native-select, navigation-menu, pagination, popover, progress, radio-group, resizable, scroll-area, select, separator, sheet, sidebar, skeleton, slider, spinner, switch, table, tabs, textarea, toggle, toggle-group, tooltip. Además, componentes propios de este sistema en `components/custom/`: fab, stat-card. Úsalos antes que montar algo parecido.
 2. **Nunca escribas valores a mano**: nada de `#hex`, `px`, `rem`, `ms` ni clases con corchetes como `p-[13px]`. El tema de Tailwind de este kit solo contiene clases que apuntan a tokens; si una clase no existe (por ejemplo `h-9`, `bg-red-500` sin token o `text-white`), no genera CSS. Si necesitas un valor que no está, pide añadir un token.
 3. **Solo tokens semánticos.** Los primitivos (`space.4`, `radius.md`, `font.size.sm`, `color.brand.600`…) son la capa de gestión: no se usan en el código y no tienen clase. Usa siempre el semántico (`space.inset.lg`, `radius.control`, `text.size.ui`, `color.action.primary.default`…).
 4. Vocabulario de clases (todas salen de tokens):
@@ -203,6 +203,8 @@ Familias: sans = Inter, ui-sans-serif, system-ui, sans-serif; mono = JetBrains M
 | `--size-field-xs` | 80px | Campos cortos (códigos, números) |
 | `--size-field-sm` | 96px | Campos y etiquetas cortas |
 | `--size-area-min` | 96px | Alto mínimo de zonas de demo, de soltar archivos o de clic |
+| `--size-fab-md` | 56px | Botón flotante (fab) |
+| `--size-fab-sm` | 40px | Botón flotante pequeño y acciones de su lista |
 | `--layout-header` | 56px | Alto de la cabecera de una aplicación |
 | `--layout-sidebar` | 256px | Ancho de la barra lateral |
 | `--layout-prose` | 672px | Ancho máximo de un bloque de texto |

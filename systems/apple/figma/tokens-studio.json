@@ -928,6 +928,16 @@
       "area-min": {
         "$value": "{space.24}",
         "$description": "Alto mínimo de zonas de demo, de soltar archivos o de clic"
+      },
+      "fab": {
+        "md": {
+          "$value": "56px",
+          "$description": "Botón flotante (fab)"
+        },
+        "sm": {
+          "$value": "{space.10}",
+          "$description": "Botón flotante pequeño y acciones de su lista"
+        }
       }
     },
     "layout": {

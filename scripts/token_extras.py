@@ -60,6 +60,7 @@ def extend(primitives, semantic, light, dark):
             "line": t("{border-width.2}", desc="Grosor de líneas indicadoras (pestaña activa, guías)"),
             "field": {"xs": t("{space.20}", desc="Campos cortos (códigos, números)"), "sm": t("{space.24}", desc="Campos y etiquetas cortas")},
             "area-min": t("{space.24}", desc="Alto mínimo de zonas de demo, de soltar archivos o de clic"),
+            "fab": {"md": t("56px", desc="Botón flotante (fab)"), "sm": t("{space.10}", desc="Botón flotante pequeño y acciones de su lista")},
         },
         "layout": {"$type": "dimension",
             "header": t("56px", desc="Alto de la cabecera de una aplicación"),
