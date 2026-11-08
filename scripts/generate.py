@@ -22,6 +22,38 @@ DEPS = ["radix-ui", "class-variance-authority", "clsx", "tailwind-merge", "lucid
         "react-resizable-panels", "@shadcn/react"]
 
 
+def custom_components(sysdir):
+    """Componentes propios (no de shadcn) de un sistema: los de base/components (para todos) y los de <sistema>/components.
+    Cada uno es una carpeta <slug>/ con <slug>.tsx (el componente) y demo.tsx (sus ejemplos para la web).
+    Devuelve {slug: carpeta}; si un sistema tiene uno con el mismo nombre que base, manda el del sistema."""
+    out = {}
+    for d in [os.path.join(ROOT, "base", "components"), os.path.join(os.path.abspath(sysdir), "components")]:
+        if not os.path.isdir(d): continue
+        for slug in sorted(os.listdir(d)):
+            if os.path.isfile(os.path.join(d, slug, slug + ".tsx")): out[slug] = os.path.join(d, slug)
+    return out
+
+
+def kit_imports(src, folder):
+    """Rutas relativas para el kit (components/ui o components/custom), para que funcione sin configurar alias."""
+    ui = '"./' if folder == "ui" else '"../ui/'
+    custom = '"./' if folder == "custom" else '"../custom/'
+    return (src.replace('"@/lib/utils"', '"../../lib/utils"').replace('"@/hooks/', '"../../hooks/')
+               .replace('"@/components/ui/', ui).replace('"@/components/custom/', custom))
+
+
+def sync_web_custom():
+    """Copia los componentes propios a web/src/custom/<base|sistema>/<slug>/ para que la web los compile (no se guarda en git)."""
+    dst = os.path.join(ROOT, "web", "src", "custom")
+    if os.path.isdir(dst): shutil.rmtree(dst)
+    sources = [("base", os.path.join(ROOT, "base", "components"))]
+    sd = os.path.join(ROOT, "systems")
+    sources += [(d, os.path.join(sd, d, "components")) for d in sorted(os.listdir(sd)) if os.path.isdir(os.path.join(sd, d, "components"))]
+    for scope, d in sources:
+        if os.path.isdir(d): shutil.copytree(d, os.path.join(dst, scope))
+    os.makedirs(dst, exist_ok=True)
+
+
 def load(path):
     with open(path, encoding="utf-8") as f: return json.load(f)
 
@@ -193,8 +225,12 @@ def build_kit(sysdir, meta, primitives, sem, lf, df, table_light, table_dark, to
     for c in comps:
         # Rutas relativas, para que el kit funcione sin configurar alias en el proyecto
         src = open(os.path.join(UI_DIR, c + ".tsx"), encoding="utf-8").read()
-        src = src.replace('"@/lib/utils"', '"../../lib/utils"').replace('"@/components/ui/', '"./').replace('"@/hooks/', '"../../hooks/')
-        write(os.path.join(kit, "components", "ui", c + ".tsx"), src)
+        write(os.path.join(kit, "components", "ui", c + ".tsx"), kit_imports(src, "ui"))
+    custom = custom_components(sysdir)
+    for slug, d in custom.items():
+        src = open(os.path.join(d, slug + ".tsx"), encoding="utf-8").read()
+        write(os.path.join(kit, "components", "custom", slug + ".tsx"), kit_imports(src, "custom"))
+    meta = {**meta, "_custom": sorted(custom)}
     os.makedirs(os.path.join(kit, "lib"), exist_ok=True)
     shutil.copy(UTILS, os.path.join(kit, "lib", "utils.ts"))
     shutil.copytree(os.path.join(os.path.dirname(UI_DIR), "..", "hooks"), os.path.join(kit, "hooks"))
@@ -243,7 +279,7 @@ Tipo de producto: {meta.get('productType', '—')}.
 
 ## Reglas
 
-1. **Usa siempre los componentes de `components/ui/`** (shadcn/ui ya tematizados). No crees botones, campos o tarjetas desde cero si existe el componente. Componentes disponibles: {", ".join(comps)}.
+1. **Usa siempre los componentes de `components/ui/`** (shadcn/ui ya tematizados). No crees botones, campos o tarjetas desde cero si existe el componente. Componentes disponibles: {", ".join(comps)}.{(" Además, componentes propios de este sistema en `components/custom/`: " + ", ".join(meta.get("_custom", [])) + ". Úsalos antes que montar algo parecido.") if meta.get("_custom") else ""}
 2. **Nunca escribas valores a mano**: nada de `#hex`, `px`, `rem`, `ms` ni clases con corchetes como `p-[13px]`. El tema de Tailwind de este kit solo contiene clases que apuntan a tokens; si una clase no existe (por ejemplo `h-9`, `bg-red-500` sin token o `text-white`), no genera CSS. Si necesitas un valor que no está, pide añadir un token.
 3. **Solo tokens semánticos.** Los primitivos (`space.4`, `radius.md`, `font.size.sm`, `color.brand.600`…) son la capa de gestión: no se usan en el código y no tienen clase. Usa siempre el semántico (`space.inset.lg`, `radius.control`, `text.size.ui`, `color.action.primary.default`…).
 4. Vocabulario de clases (todas salen de tokens):
@@ -315,7 +351,7 @@ Si quieres que Claude lo recuerde siempre, guarda `SKILL.md` como skill.
 | `tokens/` | Los tokens en formato W3C (la fuente de verdad). |
 | `styles/tokens.css` | Variables CSS, con modo claro y oscuro. |
 | `styles/globals.css` | Tema listo para Tailwind CSS v4 y shadcn/ui. |
-| `components/ui/` | {len(comps)} componentes de shadcn/ui que toman el estilo del sistema. |
+| `components/ui/` | {len(comps)} componentes de shadcn/ui que toman el estilo del sistema. |{chr(10) + "| `components/custom/` | Componentes propios del sistema: " + ", ".join(meta.get("_custom", [])) + ". |" if meta.get("_custom") else ""}
 | `lib/utils.ts` | Función auxiliar que usan los componentes. |
 | `components.json` | Configuración para añadir más componentes con `npx shadcn add`. |
 
@@ -333,6 +369,7 @@ if __name__ == "__main__":
     else:
         targets = sys.argv[1:]
     for t in targets: generate(t)
+    sync_web_custom()
     # La web usa el mismo tema (las clases son iguales para todos los sistemas; los valores cambian en vivo)
     base = os.path.join(ROOT, "base", "tokens")
     L = lambda n: load(os.path.join(base, f"{n}.tokens.json"))
