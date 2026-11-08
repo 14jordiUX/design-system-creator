@@ -36,7 +36,7 @@ function DrawerOverlay({
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-overlay data-[state=closed]:animate-exit data-[state=open]:animate-enter",
+        "fixed inset-0 z-overlay bg-overlay data-[state=closed]:animate-exit data-[state=open]:animate-enter",
         className
       )}
       {...props}
@@ -55,7 +55,7 @@ function DrawerContent({
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          "group/drawer-content fixed z-50 flex h-auto flex-col bg-background",
+          "group/drawer-content fixed z-overlay flex h-auto flex-col bg-background",
           "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-drawer-gap data-[vaul-drawer-direction=top]:max-h-drawer-max data-[vaul-drawer-direction=top]:rounded-b-card data-[vaul-drawer-direction=top]:border-b-thin",
           "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-drawer-gap data-[vaul-drawer-direction=bottom]:max-h-drawer-max data-[vaul-drawer-direction=bottom]:rounded-t-card data-[vaul-drawer-direction=bottom]:border-t-thin",
           "data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=right]:border-l-thin data-[vaul-drawer-direction=right]:sm:max-w-sheet",

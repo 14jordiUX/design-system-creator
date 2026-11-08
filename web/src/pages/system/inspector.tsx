@@ -171,13 +171,13 @@ function ShapeBox({ shape }: { shape: Shape }) {
   // La posición es la del elemento en pantalla (se calcula al vuelo, no es una medida de diseño)
   const pos = { top: shape.top, left: shape.left, width: shape.width, height: shape.height }
   if (shape.kind === "outline")
-    return <div className="pointer-events-none fixed z-50 rounded-fine border-thick border-ring" style={pos} />
-  return <div className={cn("pointer-events-none fixed z-50 opacity-disabled", FILL[shape.kind])} style={pos} />
+    return <div className="pointer-events-none fixed z-overlay rounded-fine border-thick border-ring" style={pos} />
+  return <div className={cn("pointer-events-none fixed z-overlay opacity-disabled", FILL[shape.kind])} style={pos} />
 }
 
 function Box({ rect }: { rect: DOMRect }) {
   const pos = { top: rect.top, left: rect.left, width: rect.width, height: rect.height }
-  return <div className="pointer-events-none fixed z-50 rounded-fine border-thin border-dashed border-ring" style={pos} />
+  return <div className="pointer-events-none fixed z-overlay rounded-fine border-thin border-dashed border-ring" style={pos} />
 }
 
 /* ---------- chip de token (se puede usar en cualquier lista) ---------- */

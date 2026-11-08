@@ -40,7 +40,7 @@ function Fab({ vertical = "bottom", horizontal = "end", edge = false, fixed = fa
     <FabContext.Provider value={{ activated: open, setActivated, inList: false }}>
       <div ref={ref} data-slot="fab" data-state={open ? "open" : "closed"} data-vertical={vertical} data-horizontal={horizontal} data-edge={edge || undefined}
         className={cn(
-          "z-40",
+          "z-floating",
           fixed ? "fixed" : "absolute",
           "data-[vertical=top]:top-inset-lg data-[vertical=bottom]:bottom-inset-lg data-[vertical=center]:top-1/2 data-[vertical=center]:-translate-y-1/2",
           "data-[horizontal=start]:start-inset-lg data-[horizontal=end]:end-inset-lg data-[horizontal=center]:start-1/2 data-[horizontal=center]:-translate-x-1/2",
@@ -77,10 +77,10 @@ function FabButton({ size, closeIcon = <X />, onClick, className, children, ...p
         inList ? "bg-secondary text-secondary-foreground hover:bg-secondary-hover" : "bg-primary text-primary-foreground hover:bg-primary-hover",
         className)}
       {...props}>
-      <span data-slot="fab-button-icon" className={cn("flex items-center justify-center transition-all duration-default", showClose && "rotate-90 opacity-0")}>{children}</span>
+      <span data-slot="fab-button-icon" className={cn("flex items-center justify-center transition-all duration-default", showClose && "rotate-turn opacity-0")}>{children}</span>
       {hasList && closeIcon && (
         <span data-slot="fab-button-close" aria-hidden
-          className={cn("absolute inset-0 flex items-center justify-center transition-all duration-default", !showClose && "rotate-90 opacity-0")}>
+          className={cn("absolute inset-0 flex items-center justify-center transition-all duration-default", !showClose && "rotate-turn opacity-0")}>
           {closeIcon}
         </span>
       )}

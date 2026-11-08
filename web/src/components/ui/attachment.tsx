@@ -57,7 +57,7 @@ function AttachmentDescription({ className, ...props }: React.ComponentProps<"sp
 function AttachmentActions({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div data-slot="attachment-actions"
-      className={cn("relative z-20 flex shrink-0 items-center group-data-[orientation=vertical]/attachment:absolute group-data-[orientation=vertical]/attachment:top-inset-md group-data-[orientation=vertical]/attachment:right-inset-md group-data-[orientation=vertical]/attachment:gap-gap-2xs", className)} {...props} />
+      className={cn("relative z-sticky flex shrink-0 items-center group-data-[orientation=vertical]/attachment:absolute group-data-[orientation=vertical]/attachment:top-inset-md group-data-[orientation=vertical]/attachment:right-inset-md group-data-[orientation=vertical]/attachment:gap-gap-2xs", className)} {...props} />
   )
 }
 
@@ -67,7 +67,7 @@ function AttachmentAction({ className, variant, size = "icon-xs", ...props }: Re
 
 function AttachmentTrigger({ className, asChild = false, type, ...props }: React.ComponentProps<"button"> & { asChild?: boolean }) {
   const Comp = asChild ? Slot.Root : "button"
-  return <Comp data-slot="attachment-trigger" type={asChild ? undefined : (type ?? "button")} className={cn("absolute inset-0 z-10 outline-none", className)} {...props} />
+  return <Comp data-slot="attachment-trigger" type={asChild ? undefined : (type ?? "button")} className={cn("absolute inset-0 z-raised outline-none", className)} {...props} />
 }
 
 function AttachmentGroup({ className, ...props }: React.ComponentProps<"div">) {

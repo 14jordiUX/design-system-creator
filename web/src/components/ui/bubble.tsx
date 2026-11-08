@@ -41,7 +41,7 @@ function BubbleContent({ asChild = false, className, ...props }: React.Component
 }
 
 const bubbleReactionsVariants = cva(
-  "absolute z-10 flex w-fit shrink-0 items-center justify-center gap-gap-2xs rounded-pill border-thick border-card bg-muted px-inset-xs py-inset-3xs text-ui has-[button]:p-0",
+  "absolute z-raised flex w-fit shrink-0 items-center justify-center gap-gap-2xs rounded-pill border-thick border-card bg-muted px-inset-xs py-inset-3xs text-ui has-[button]:p-0",
   {
     variants: {
       side: { top: "top-0 -translate-y-3/4", bottom: "bottom-0 translate-y-3/4" },

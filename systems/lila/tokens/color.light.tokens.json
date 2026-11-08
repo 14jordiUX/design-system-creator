@@ -27,7 +27,7 @@
         "$description": "Menús, popovers, tooltips"
       },
       "overlay": {
-        "$value": "#09090b99",
+        "$value": "{color.scrim}",
         "$description": "Velo detrás de modales"
       },
       "sidebar": {

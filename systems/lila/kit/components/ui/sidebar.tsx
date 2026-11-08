@@ -220,7 +220,7 @@ function Sidebar({
         className={cn(
           "relative w-(--sidebar-width) bg-transparent transition-[width] ease-default",
           "group-data-[collapsible=offcanvas]:w-0",
-          "group-data-[side=right]:rotate-180",
+          "group-data-[side=right]:rotate-flip",
           variant === "floating" || variant === "inset"
             ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+var(--space-inset-lg))]"
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)"
@@ -229,7 +229,7 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-[100svh] w-(--sidebar-width) transition-[left,right,width] ease-default md:flex",
+          "fixed inset-y-0 z-raised hidden h-[100svh] w-(--sidebar-width) transition-[left,right,width] ease-default md:flex",
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
@@ -291,7 +291,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
       onClick={toggleSidebar}
       title="Toggle Sidebar"
       className={cn(
-        "absolute inset-y-0 z-20 hidden w-icon-md -translate-x-1/2 transition-all ease-default group-data-[side=left]:-right-inset-lg group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-line hover:after:bg-sidebar-border sm:flex",
+        "absolute inset-y-0 z-sticky hidden w-icon-md -translate-x-1/2 transition-all ease-default group-data-[side=left]:-right-inset-lg group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-line hover:after:bg-sidebar-border sm:flex",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
         "group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full hover:group-data-[collapsible=offcanvas]:bg-sidebar",

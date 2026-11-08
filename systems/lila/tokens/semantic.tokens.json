@@ -275,7 +275,7 @@
     "scale": {
       "$type": "number",
       "enter": {
-        "$value": 0.95,
+        "$value": "{scale.95}",
         "$description": "Escala inicial al aparecer (menús, diálogos)"
       }
     },
@@ -285,19 +285,34 @@
         "$value": "{space.2}",
         "$description": "Desplazamiento al aparecer"
       }
+    },
+    "rotate": {
+      "$type": "other",
+      "tilt": {
+        "$value": "{angle.45}",
+        "$description": "Giro de un octavo (un + que se convierte en ×)"
+      },
+      "turn": {
+        "$value": "{angle.90}",
+        "$description": "Giro de un cuarto (flechas de submenú, iconos que cambian)"
+      },
+      "flip": {
+        "$value": "{angle.180}",
+        "$description": "Media vuelta (flecha de un acordeón o un select abiertos)"
+      }
     }
   },
   "control": {
     "$type": "dimension",
     "height": {
       "sm": {
-        "$value": "32px"
+        "$value": "{dimension.32}"
       },
       "md": {
-        "$value": "40px"
+        "$value": "{dimension.40}"
       },
       "lg": {
-        "$value": "48px"
+        "$value": "{dimension.48}"
       }
     },
     "border-width": {
@@ -357,31 +372,31 @@
       "$description": "Alto de la barra de progreso"
     },
     "menu-min": {
-      "$value": "128px",
+      "$value": "{dimension.128}",
       "$description": "Ancho mínimo de menús desplegables"
     },
     "popover": {
-      "$value": "288px",
+      "$value": "{dimension.288}",
       "$description": "Ancho de popovers"
     },
     "tooltip": {
-      "$value": "320px",
+      "$value": "{dimension.320}",
       "$description": "Ancho máximo de tooltips"
     },
     "dialog": {
-      "$value": "512px",
+      "$value": "{dimension.512}",
       "$description": "Ancho máximo de diálogos"
     },
     "sheet": {
-      "$value": "384px",
+      "$value": "{dimension.384}",
       "$description": "Ancho de paneles laterales"
     },
     "menu-wide": {
-      "$value": "192px",
+      "$value": "{dimension.192}",
       "$description": "Ancho mínimo de menús de barra (menubar, menús contextuales)"
     },
     "list-max": {
-      "$value": "300px",
+      "$value": "{dimension.300}",
       "$description": "Alto máximo de listas con búsqueda (command, combobox)"
     },
     "handle": {
@@ -408,7 +423,7 @@
     },
     "fab": {
       "md": {
-        "$value": "56px",
+        "$value": "{dimension.56}",
         "$description": "Botón flotante (fab)"
       },
       "sm": {
@@ -420,23 +435,23 @@
   "layout": {
     "$type": "dimension",
     "header": {
-      "$value": "56px",
+      "$value": "{dimension.56}",
       "$description": "Alto de la cabecera de una aplicación"
     },
     "sidebar": {
-      "$value": "256px",
+      "$value": "{dimension.256}",
       "$description": "Ancho de la barra lateral"
     },
     "prose": {
-      "$value": "672px",
+      "$value": "{dimension.672}",
       "$description": "Ancho máximo de un bloque de texto"
     },
     "content": {
-      "$value": "1024px",
+      "$value": "{dimension.1024}",
       "$description": "Ancho máximo del contenido"
     },
     "page": {
-      "$value": "1152px",
+      "$value": "{dimension.1152}",
       "$description": "Ancho máximo de una página"
     },
     "sidebar-icon": {
@@ -444,11 +459,11 @@
       "$description": "Ancho de la barra lateral plegada (solo iconos)"
     },
     "sidebar-mobile": {
-      "$value": "288px",
+      "$value": "{dimension.288}",
       "$description": "Ancho de la barra lateral en móvil"
     },
     "drawer-max": {
-      "$value": "80vh",
+      "$value": "{viewport.80}",
       "$description": "Alto máximo de un drawer"
     },
     "drawer-gap": {
@@ -555,6 +570,26 @@
       "overlay": {
         "$value": "{opacity.overlay}"
       }
+    }
+  },
+  "layer": {
+    "$type": "number",
+    "$description": "Qué queda encima de qué (z-index)",
+    "raised": {
+      "$value": "{z-index.10}",
+      "$description": "Un elemento por encima de sus vecinos (foco en grupos de botones, casilla activa)"
+    },
+    "sticky": {
+      "$value": "{z-index.20}",
+      "$description": "Partes pegadas o superpuestas dentro de un componente"
+    },
+    "floating": {
+      "$value": "{z-index.40}",
+      "$description": "Botones flotantes (fab)"
+    },
+    "overlay": {
+      "$value": "{z-index.50}",
+      "$description": "Menús, popovers, diálogos y paneles"
     }
   }
 }

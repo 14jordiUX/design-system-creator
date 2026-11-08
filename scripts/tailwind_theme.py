@@ -117,6 +117,12 @@ def build(primitives, semantic, light):
     add("/* Opacidades con nombre */")
     L += [f"@utility opacity-{k} {{ opacity: var(--state-opacity-{k}); }}" for k in _keys(semantic["state"]["opacity"])]
     add("")
+    add("/* Capas (z-index con nombre): z-raised, z-sticky, z-floating, z-overlay */")
+    L += [f"@utility z-{k} {{ z-index: var(--layer-{k}); }}" for k in _keys(semantic["layer"])]
+    add("")
+    add("/* Giros con nombre: rotate-tilt (45º), rotate-turn (90º), rotate-flip (180º) */")
+    L += [f"@utility rotate-{k} {{ rotate: var(--motion-rotate-{k}); }}" for k in _keys(semantic["motion"]["rotate"])]
+    add("")
     add("/* Duraciones con nombre */")
     L += [f"@utility duration-{k} {{ --tw-duration: var(--motion-duration-{k}); transition-duration: var(--motion-duration-{k}); }}"
           for k in _keys(semantic["motion"]["duration"])]

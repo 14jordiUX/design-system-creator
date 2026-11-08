@@ -36,7 +36,7 @@ function MessageScrollerButton({ direction = "end", className, children, render,
       data-size={size}
       direction={direction}
       className={cn(
-        "absolute left-1/2 -translate-x-1/2 border-thin border-border bg-background text-foreground shadow-raised transition-all duration-default ease-default hover:bg-muted hover:text-foreground data-[active=false]:pointer-events-none data-[active=false]:scale-95 data-[active=false]:opacity-0 data-[active=true]:translate-y-0 data-[active=true]:scale-100 data-[active=true]:opacity-100 data-[direction=end]:bottom-inset-lg data-[direction=end]:data-[active=false]:translate-y-full data-[direction=start]:top-inset-lg data-[direction=start]:data-[active=false]:-translate-y-full data-[direction=start]:[&_svg]:rotate-180",
+        "absolute left-1/2 -translate-x-1/2 border-thin border-border bg-background text-foreground shadow-raised transition-all duration-default ease-default hover:bg-muted hover:text-foreground data-[active=false]:pointer-events-none data-[active=false]:scale-95 data-[active=false]:opacity-0 data-[active=true]:translate-y-0 data-[active=true]:scale-100 data-[active=true]:opacity-100 data-[direction=end]:bottom-inset-lg data-[direction=end]:data-[active=false]:translate-y-full data-[direction=start]:top-inset-lg data-[direction=start]:data-[active=false]:-translate-y-full data-[direction=start]:[&_svg]:rotate-flip",
         className
       )}
       render={render ?? <Button variant={variant} size={size} />}

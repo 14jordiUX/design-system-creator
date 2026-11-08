@@ -86,8 +86,14 @@ los valores por defecto de Tailwind**: una clase que no apunta a un token (`h-9`
 `scripts/check_tokens.py` lo comprueba en el CSS final.
 
 Cuando una librería pide un número en JavaScript (por ejemplo la separación `sideOffset` de menús y popovers),
-se lee del token con `tokenPx("space-inset-2xs")` (en `lib/utils.ts`). Excepciones permitidas porque no son medidas de
-diseño: orden de capas (z-index), proporciones (%, 16:9) y giros de iconos (45/90/180º).
+se lee del token con `tokenPx("space-inset-2xs")` (en `lib/utils.ts`). El orden de capas también es token (`layer.*`:
+`z-raised`, `z-sticky`, `z-floating`, `z-overlay`) y los giros también (`motion.rotate.*`: `rotate-tilt` 45º,
+`rotate-turn` 90º, `rotate-flip` 180º). Solo se permiten sin token las proporciones (%, ½, 16:9) y 0/1.
+
+Los semánticos tampoco llevan valores escritos a mano: siempre apuntan a un primitivo. Las medidas fijas que no
+siguen la escala de espaciado (alturas de control, anchos de menús, diálogos, paneles y páginas) están en
+`dimension.*` (por ejemplo `dimension.512`), el alto máximo del drawer en `viewport.80`, la escala de entrada en
+`scale.95`, el velo de los modales en `color.scrim`, las capas en `z-index.*` y los giros en `angle.*`.
 
 ### Primitivos y semánticos
 

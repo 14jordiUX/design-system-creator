@@ -216,6 +216,11 @@
       "950": {
         "$value": "#172554"
       }
+    },
+    "scrim": {
+      "$value": "#09090b99",
+      "$type": "color",
+      "$description": "Negro translúcido para velos"
     }
   },
   "space": {
@@ -517,6 +522,98 @@
     },
     "xl": {
       "$value": "1280px"
+    }
+  },
+  "dimension": {
+    "$type": "dimension",
+    "$description": "Medidas fijas (alturas de control, anchos de paneles y páginas)",
+    "32": {
+      "$value": "32px"
+    },
+    "40": {
+      "$value": "40px"
+    },
+    "48": {
+      "$value": "48px"
+    },
+    "56": {
+      "$value": "56px"
+    },
+    "128": {
+      "$value": "128px"
+    },
+    "192": {
+      "$value": "192px"
+    },
+    "256": {
+      "$value": "256px"
+    },
+    "288": {
+      "$value": "288px"
+    },
+    "300": {
+      "$value": "300px"
+    },
+    "320": {
+      "$value": "320px"
+    },
+    "384": {
+      "$value": "384px"
+    },
+    "512": {
+      "$value": "512px"
+    },
+    "672": {
+      "$value": "672px"
+    },
+    "1024": {
+      "$value": "1024px"
+    },
+    "1152": {
+      "$value": "1152px"
+    }
+  },
+  "viewport": {
+    "$type": "dimension",
+    "80": {
+      "$value": "80vh"
+    }
+  },
+  "scale": {
+    "$type": "number",
+    "95": {
+      "$value": 0.95
+    }
+  },
+  "z-index": {
+    "$type": "number",
+    "$description": "Orden de apilado (qué queda encima)",
+    "10": {
+      "$value": 10
+    },
+    "20": {
+      "$value": 20
+    },
+    "30": {
+      "$value": 30
+    },
+    "40": {
+      "$value": 40
+    },
+    "50": {
+      "$value": 50
+    }
+  },
+  "angle": {
+    "$type": "other",
+    "45": {
+      "$value": "45deg"
+    },
+    "90": {
+      "$value": "90deg"
+    },
+    "180": {
+      "$value": "180deg"
     }
   }
 }

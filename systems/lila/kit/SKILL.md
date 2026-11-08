@@ -174,6 +174,9 @@ Familias: sans = Quicksand, ui-sans-serif, system-ui, sans-serif; mono = JetBrai
 | `--motion-easing-default` | cubic-bezier(0.2, 0, 0, 1) |  |
 | `--motion-scale-enter` | 0.95 | Escala inicial al aparecer (menús, diálogos) |
 | `--motion-distance-enter` | 8px | Desplazamiento al aparecer |
+| `--motion-rotate-tilt` | 45deg | Giro de un octavo (un + que se convierte en ×) |
+| `--motion-rotate-turn` | 90deg | Giro de un cuarto (flechas de submenú, iconos que cambian) |
+| `--motion-rotate-flip` | 180deg | Media vuelta (flecha de un acordeón o un select abiertos) |
 | `--control-height-sm` | 32px |  |
 | `--control-height-md` | 40px |  |
 | `--control-height-lg` | 48px |  |
@@ -237,5 +240,9 @@ Familias: sans = Quicksand, ui-sans-serif, system-ui, sans-serif; mono = JetBrai
 | `--text-tracking-caps` | 0.04em | Textos en mayúsculas |
 | `--state-opacity-disabled` | 0.5 | Elementos desactivados |
 | `--state-opacity-overlay` | 0.6 |  |
+| `--layer-raised` | 10 | Un elemento por encima de sus vecinos (foco en grupos de botones, casilla activa) |
+| `--layer-sticky` | 20 | Partes pegadas o superpuestas dentro de un componente |
+| `--layer-floating` | 40 | Botones flotantes (fab) |
+| `--layer-overlay` | 50 | Menús, popovers, diálogos y paneles |
 
 Archivos de referencia: `tokens/*.tokens.json` (fuente, formato W3C DTCG), `styles/tokens.css` (variables), `styles/globals.css` (tema de Tailwind).

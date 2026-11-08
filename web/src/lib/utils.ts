@@ -26,6 +26,8 @@ const twMerge = extendTailwindMerge<string>({
       "border-w-y": [{ "border-y": ["thin"] }],
       opacity: [{ opacity: ["disabled", "overlay"] }],
       duration: [{ duration: ["micro", "default", "emphasis", "loop"] }],
+      z: [{ z: ["raised", "sticky", "floating", "overlay"] }],
+      rotate: [{ rotate: ["tilt", "turn", "flip"] }],
       typo: [{ typo: [(v: string) => /^[a-z0-9-]+$/.test(v)] }],
       "focus-ring": ["focus-ring", "focus-ring-inset"],
     },

@@ -271,6 +271,17 @@
 @utility opacity-disabled { opacity: var(--state-opacity-disabled); }
 @utility opacity-overlay { opacity: var(--state-opacity-overlay); }
 
+/* Capas (z-index con nombre): z-raised, z-sticky, z-floating, z-overlay */
+@utility z-raised { z-index: var(--layer-raised); }
+@utility z-sticky { z-index: var(--layer-sticky); }
+@utility z-floating { z-index: var(--layer-floating); }
+@utility z-overlay { z-index: var(--layer-overlay); }
+
+/* Giros con nombre: rotate-tilt (45º), rotate-turn (90º), rotate-flip (180º) */
+@utility rotate-tilt { rotate: var(--motion-rotate-tilt); }
+@utility rotate-turn { rotate: var(--motion-rotate-turn); }
+@utility rotate-flip { rotate: var(--motion-rotate-flip); }
+
 /* Duraciones con nombre */
 @utility duration-micro { --tw-duration: var(--motion-duration-micro); transition-duration: var(--motion-duration-micro); }
 @utility duration-default { --tw-duration: var(--motion-duration-default); transition-duration: var(--motion-duration-default); }

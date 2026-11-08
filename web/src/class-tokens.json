@@ -11564,6 +11564,27 @@
   "opacity-overlay": [
     "state.opacity.overlay"
   ],
+  "z-raised": [
+    "layer.raised"
+  ],
+  "z-sticky": [
+    "layer.sticky"
+  ],
+  "z-floating": [
+    "layer.floating"
+  ],
+  "z-overlay": [
+    "layer.overlay"
+  ],
+  "rotate-tilt": [
+    "motion.rotate.tilt"
+  ],
+  "rotate-turn": [
+    "motion.rotate.turn"
+  ],
+  "rotate-flip": [
+    "motion.rotate.flip"
+  ],
   "duration-micro": [
     "motion.duration.micro"
   ],

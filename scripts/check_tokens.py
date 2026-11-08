@@ -14,9 +14,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HTML = os.path.join(ROOT, "web", "dist", "index.html")
 
 # Valores permitidos aunque sean literales: no son decisiones de diseño
-ALLOWED_PROPS = {"z-index", "flex", "flex-grow", "flex-shrink", "order", "grid-template-columns", "grid-template-rows",
+ALLOWED_PROPS = {"flex", "flex-grow", "flex-shrink", "order", "grid-template-columns", "grid-template-rows",
                  "grid-column", "grid-row", "grid-column-start", "grid-column-end", "grid-row-start", "grid-row-end", "-webkit-line-clamp", "line-clamp", "content", "animation-iteration-count", "aspect-ratio"}
-ALLOWED_VALUE = re.compile(r"^(0|0px|-?\d+(\.\d+)?%|100vh|100dvh|100svh|1|-1|180deg|-180deg|45deg|90deg|#0000)$")  # %, transparente y giros (45/90/180º): proporciones, no medidas
+ALLOWED_VALUE = re.compile(r"^(0|0px|-?\d+(\.\d+)?%|100vh|100dvh|100svh|1|-1|#0000)$")  # %, 0/1 y transparente: proporciones, no medidas (capas y giros ya son tokens)
 LITERAL = re.compile(r"(?<![\w-])(-?\d*\.?\d+)(px|rem|em|ms|s|deg|vh|vw|dvh|%)?(?![\w-])|#[0-9a-fA-F]{3,8}\b|\b(rgb|rgba|hsl|oklch|oklab)\(")
 # Utilidades técnicas de accesibilidad / maquetación permitidas tal cual
 ALLOWED_SELECTORS = re.compile(r"^\.(sr-only|not-sr-only|line-clamp-\d|checker)")

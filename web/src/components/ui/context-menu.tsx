@@ -84,7 +84,7 @@ function ContextMenuSubContent({
     <ContextMenuPrimitive.SubContent
       data-slot="context-menu-sub-content"
       className={cn(
-        "z-50 min-w-menu-min origin-(--radix-context-menu-content-transform-origin) overflow-hidden rounded-control border-thin bg-popover p-inset-2xs text-popover-foreground shadow-modal data-[state=closed]:animate-exit data-[state=open]:animate-enter",
+        "z-overlay min-w-menu-min origin-(--radix-context-menu-content-transform-origin) overflow-hidden rounded-control border-thin bg-popover p-inset-2xs text-popover-foreground shadow-modal data-[state=closed]:animate-exit data-[state=open]:animate-enter",
         className
       )}
       {...props}
@@ -101,7 +101,7 @@ function ContextMenuContent({
       <ContextMenuPrimitive.Content
         data-slot="context-menu-content"
         className={cn(
-          "z-50 max-h-(--radix-context-menu-content-available-height) min-w-menu-min origin-(--radix-context-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-control border-thin bg-popover p-inset-2xs text-popover-foreground shadow-overlay data-[state=closed]:animate-exit data-[state=open]:animate-enter",
+          "z-overlay max-h-(--radix-context-menu-content-available-height) min-w-menu-min origin-(--radix-context-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-control border-thin bg-popover p-inset-2xs text-popover-foreground shadow-overlay data-[state=closed]:animate-exit data-[state=open]:animate-enter",
           className
         )}
         {...props}

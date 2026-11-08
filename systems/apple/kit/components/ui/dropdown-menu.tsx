@@ -41,7 +41,7 @@ function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          "z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-menu-min origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-control border-thin bg-popover p-inset-2xs text-popover-foreground shadow-overlay data-[state=closed]:animate-exit data-[state=open]:animate-enter",
+          "z-overlay max-h-(--radix-dropdown-menu-content-available-height) min-w-menu-min origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-control border-thin bg-popover p-inset-2xs text-popover-foreground shadow-overlay data-[state=closed]:animate-exit data-[state=open]:animate-enter",
           className
         )}
         {...props}
@@ -229,7 +229,7 @@ function DropdownMenuSubContent({
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
       className={cn(
-        "z-50 min-w-menu-min origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-control border-thin bg-popover p-inset-2xs text-popover-foreground shadow-modal data-[state=closed]:animate-exit data-[state=open]:animate-enter",
+        "z-overlay min-w-menu-min origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-control border-thin bg-popover p-inset-2xs text-popover-foreground shadow-modal data-[state=closed]:animate-exit data-[state=open]:animate-enter",
         className
       )}
       {...props}

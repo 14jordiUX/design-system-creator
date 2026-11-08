@@ -35,7 +35,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-overlay data-[state=closed]:animate-exit data-[state=open]:animate-enter",
+        "fixed inset-0 z-overlay bg-overlay data-[state=closed]:animate-exit data-[state=open]:animate-enter",
         className
       )}
       {...props}
@@ -59,7 +59,7 @@ function SheetContent({
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          "fixed z-50 flex flex-col gap-gap-lg bg-background shadow-modal transition data-[state=closed]:animate-exit data-[state=open]:animate-enter",
+          "fixed z-overlay flex flex-col gap-gap-lg bg-background shadow-modal transition data-[state=closed]:animate-exit data-[state=open]:animate-enter",
           side === "right" &&
             "inset-y-0 right-0 h-full w-3/4 border-l-thin max-w-sheet",
           side === "left" &&

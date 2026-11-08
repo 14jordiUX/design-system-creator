@@ -188,7 +188,7 @@ function CarouselPrevious({
         "absolute size-control-sm rounded-pill",
         orientation === "horizontal"
           ? "top-1/2 -left-inset-3xl -translate-y-1/2"
-          : "-top-inset-3xl left-1/2 -translate-x-1/2 rotate-90",
+          : "-top-inset-3xl left-1/2 -translate-x-1/2 rotate-turn",
         className
       )}
       disabled={!canScrollPrev}
@@ -218,7 +218,7 @@ function CarouselNext({
         "absolute size-control-sm rounded-pill",
         orientation === "horizontal"
           ? "top-1/2 -right-inset-3xl -translate-y-1/2"
-          : "-bottom-inset-3xl left-1/2 -translate-x-1/2 rotate-90",
+          : "-bottom-inset-3xl left-1/2 -translate-x-1/2 rotate-turn",
         className
       )}
       disabled={!canScrollNext}
