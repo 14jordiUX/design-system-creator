@@ -11261,6 +11261,156 @@
   "scroll-my-drawer-gap": [
     "layout.drawer-gap"
   ],
+  "p-compact": [
+    "layout.compact"
+  ],
+  "px-compact": [
+    "layout.compact"
+  ],
+  "py-compact": [
+    "layout.compact"
+  ],
+  "pt-compact": [
+    "layout.compact"
+  ],
+  "pr-compact": [
+    "layout.compact"
+  ],
+  "pb-compact": [
+    "layout.compact"
+  ],
+  "pl-compact": [
+    "layout.compact"
+  ],
+  "ps-compact": [
+    "layout.compact"
+  ],
+  "pe-compact": [
+    "layout.compact"
+  ],
+  "m-compact": [
+    "layout.compact"
+  ],
+  "mx-compact": [
+    "layout.compact"
+  ],
+  "my-compact": [
+    "layout.compact"
+  ],
+  "mt-compact": [
+    "layout.compact"
+  ],
+  "mr-compact": [
+    "layout.compact"
+  ],
+  "mb-compact": [
+    "layout.compact"
+  ],
+  "ml-compact": [
+    "layout.compact"
+  ],
+  "-mx-compact": [
+    "layout.compact"
+  ],
+  "-my-compact": [
+    "layout.compact"
+  ],
+  "-mt-compact": [
+    "layout.compact"
+  ],
+  "-ml-compact": [
+    "layout.compact"
+  ],
+  "gap-compact": [
+    "layout.compact"
+  ],
+  "gap-x-compact": [
+    "layout.compact"
+  ],
+  "gap-y-compact": [
+    "layout.compact"
+  ],
+  "space-x-compact": [
+    "layout.compact"
+  ],
+  "space-y-compact": [
+    "layout.compact"
+  ],
+  "-space-x-compact": [
+    "layout.compact"
+  ],
+  "-space-y-compact": [
+    "layout.compact"
+  ],
+  "size-compact": [
+    "layout.compact"
+  ],
+  "w-compact": [
+    "layout.compact"
+  ],
+  "h-compact": [
+    "layout.compact"
+  ],
+  "min-w-compact": [
+    "layout.compact"
+  ],
+  "min-h-compact": [
+    "layout.compact"
+  ],
+  "max-w-compact": [
+    "layout.compact"
+  ],
+  "max-h-compact": [
+    "layout.compact"
+  ],
+  "top-compact": [
+    "layout.compact"
+  ],
+  "left-compact": [
+    "layout.compact"
+  ],
+  "right-compact": [
+    "layout.compact"
+  ],
+  "bottom-compact": [
+    "layout.compact"
+  ],
+  "inset-compact": [
+    "layout.compact"
+  ],
+  "inset-x-compact": [
+    "layout.compact"
+  ],
+  "inset-y-compact": [
+    "layout.compact"
+  ],
+  "-top-compact": [
+    "layout.compact"
+  ],
+  "-left-compact": [
+    "layout.compact"
+  ],
+  "-right-compact": [
+    "layout.compact"
+  ],
+  "-bottom-compact": [
+    "layout.compact"
+  ],
+  "translate-x-compact": [
+    "layout.compact"
+  ],
+  "translate-y-compact": [
+    "layout.compact"
+  ],
+  "-translate-x-compact": [
+    "layout.compact"
+  ],
+  "-translate-y-compact": [
+    "layout.compact"
+  ],
+  "scroll-my-compact": [
+    "layout.compact"
+  ],
   "text-caption": [
     "text.size.caption"
   ],

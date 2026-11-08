@@ -249,6 +249,7 @@
   --layout-sidebar-mobile: var(--dimension-288);
   --layout-drawer-max: var(--viewport-80);
   --layout-drawer-gap: var(--space-24);
+  --layout-compact: var(--dimension-512);
   --text-size-caption: var(--font-size-xs);
   --text-size-ui: var(--font-size-sm);
   --text-size-body: var(--font-size-md);

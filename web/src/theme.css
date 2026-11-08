@@ -130,6 +130,7 @@
   --spacing-sidebar-mobile: var(--layout-sidebar-mobile);
   --spacing-drawer-max: var(--layout-drawer-max);
   --spacing-drawer-gap: var(--layout-drawer-gap);
+  --spacing-compact: var(--layout-compact);
   --container-inset-3xs: var(--space-inset-3xs);
   --container-inset-2xs: var(--space-inset-2xs);
   --container-inset-xs: var(--space-inset-xs);
@@ -242,6 +243,7 @@
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
+  --container-compact: 512px;
 }
 
 /* Bordes: border-thin y sus lados (grosor = control.border-width) */

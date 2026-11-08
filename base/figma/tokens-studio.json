@@ -1089,6 +1089,10 @@
       "drawer-gap": {
         "$value": "{space.24}",
         "$description": "Distancia de un drawer al borde opuesto de la pantalla"
+      },
+      "compact": {
+        "$value": "{dimension.512}",
+        "$description": "Por debajo de este ancho, un componente usa su versión móvil (consulta de contenedor @max-compact)"
       }
     },
     "text": {

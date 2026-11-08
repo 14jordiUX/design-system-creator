@@ -82,6 +82,7 @@ def extend(primitives, semantic, light, dark):
             "sidebar-mobile": t("288px", desc="Ancho de la barra lateral en móvil"),
             "drawer-max": t("80vh", desc="Alto máximo de un drawer"),
             "drawer-gap": t("{space.24}", desc="Distancia de un drawer al borde opuesto de la pantalla"),
+            "compact": t("{dimension.512}", desc="Por debajo de este ancho, un componente usa su versión móvil (consulta de contenedor @max-compact)"),
         },
         "text": {"$description": "Tipografía por propiedades sueltas (para combinar). Para estilos completos usa typography.*",
             "size": {"$type": "dimension",

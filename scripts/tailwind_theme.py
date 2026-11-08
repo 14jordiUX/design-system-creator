@@ -13,6 +13,14 @@ def _keys(group):
     return [k for k in group if not k.startswith("$")]
 
 
+def _resolve(v, primitives):
+    while isinstance(v, str) and v.startswith("{"):
+        node = primitives
+        for part in v[1:-1].split("."): node = node[part]
+        v = node["$value"]
+    return v
+
+
 def build(primitives, semantic, light):
     L = []
     add = L.append
@@ -77,7 +85,7 @@ def build(primitives, semantic, light):
     L += [f"  --color-{k}: var({v});" for k, v in colors.items()]
     add("\n  /* Espaciado y tamaños (p-, m-, gap-, w-, h-, size-, max-w-, top-…) */")
     L += [f"  --spacing-{k}: {'0px' if v is None else f'var({v})'};" for k, v in spacing.items()]
-    L += [f"  --container-{k}: var({v});" for k, v in spacing.items() if v]
+    L += [f"  --container-{k}: var({v});" for k, v in spacing.items() if v and k != "compact"]
     add("\n  /* Tipografía (solo semánticos: text.*) */")
     tx = semantic["text"]
     L += [f"  --font-{k}: var(--text-family-{k});" for k in _keys(tx["family"])]
@@ -100,6 +108,8 @@ def build(primitives, semantic, light):
     add("/* Puntos de ruptura (las media queries no aceptan variables: se escribe el valor del token) */")
     add("@theme reference {")
     L += [f"  --breakpoint-{k}: {primitives['breakpoint'][k]['$value']};" for k in _keys(primitives["breakpoint"])]
+    if "compact" in semantic["layout"]:   # consulta de contenedor @max-compact (componentes que se adaptan a su hueco)
+        add(f"  --container-compact: {_resolve(semantic['layout']['compact']['$value'], primitives)};")
     add("}")
     add("")
 
