@@ -1,11 +1,12 @@
 // App Sidebar: la estructura de una aplicación con barra lateral de navegación.
 // Escritorio: tres estados — desplegada (iconos y textos), plegada a iconos, u oculta del todo.
-// Móvil: la barra se esconde y queda un único botón (☰) que la abre por encima del contenido.
+// Móvil: la barra se esconde y queda un único botón (☰) que la abre por encima del contenido,
+//        o bien (mobileNav="tabbar") una barra inferior con 4 accesos + «Más», que abre la barra lateral completa.
 // Decide escritorio o móvil por el ancho de su contenedor (token layout.desktop), así funciona igual a pantalla completa o dentro de un hueco.
 // Componente propio (no viene de shadcn/ui): está en base/components, así que lo tienen todos los sistemas.
 import * as React from "react"
 import { Slot } from "radix-ui"
-import { Menu, PanelLeft, PanelLeftClose, PanelLeftOpen, X } from "lucide-react"
+import { Menu, MoreHorizontal, PanelLeft, PanelLeftClose, PanelLeftOpen, X } from "lucide-react"
 import { cn, tokenPx } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -13,6 +14,7 @@ export type AppSidebarState = "expanded" | "icons" | "hidden"
 
 type Ctx = {
   mobile: boolean
+  mobileNav: "menu" | "tabbar"
   state: AppSidebarState
   setState: (s: AppSidebarState) => void
   open: boolean
@@ -28,8 +30,9 @@ export function useAppSidebar() {
 
 // Raíz: ocupa el hueco que le des (en una app, toda la pantalla: className="h-dvh").
 // state / defaultState / onStateChange: estado en escritorio. shortcut: ⌘B / Ctrl+B muestra u oculta la barra.
-function AppShell({ state, defaultState = "expanded", onStateChange, shortcut = true, className, children, ...props }:
-  React.ComponentProps<"div"> & { state?: AppSidebarState; defaultState?: AppSidebarState; onStateChange?: (s: AppSidebarState) => void; shortcut?: boolean }) {
+// mobileNav: en móvil, "menu" (un botón ☰ en la cabecera) o "tabbar" (barra inferior <AppTabBar> con «Más»).
+function AppShell({ state, defaultState = "expanded", onStateChange, shortcut = true, mobileNav = "menu", className, children, ...props }:
+  React.ComponentProps<"div"> & { state?: AppSidebarState; defaultState?: AppSidebarState; onStateChange?: (s: AppSidebarState) => void; shortcut?: boolean; mobileNav?: "menu" | "tabbar" }) {
   const ref = React.useRef<HTMLDivElement>(null)
   const [inner, setInner] = React.useState(defaultState)
   const current = state ?? inner
@@ -62,7 +65,7 @@ function AppShell({ state, defaultState = "expanded", onStateChange, shortcut = 
   }, [open, mobile, current, shortcut, setState])
 
   return (
-    <ShellContext.Provider value={{ mobile, state: current, setState, open, setOpen }}>
+    <ShellContext.Provider value={{ mobile, mobileNav, state: current, setState, open, setOpen }}>
       <div ref={ref} data-slot="app-shell" data-mode={mobile ? "mobile" : "desktop"} data-state={current} data-open={open || undefined}
         className={cn("relative flex w-full overflow-hidden bg-background text-foreground", className)} {...props}>
         {children}
@@ -179,10 +182,12 @@ function AppSidebarItem({ icon, active, badge, asChild, onClick, className, chil
 }
 
 // Botón para la cabecera del contenido: en móvil es el ☰ que abre la barra; en escritorio la oculta o la vuelve a mostrar.
+// Con mobileNav="tabbar", en móvil no se muestra (la barra se abre desde «Más»).
 function AppSidebarTrigger({ className, ...props }: React.ComponentProps<"button">) {
-  const { mobile, state, setState, open, setOpen } = useAppSidebar()
+  const { mobile, mobileNav, state, setState, open, setOpen } = useAppSidebar()
   const last = React.useRef<AppSidebarState>("expanded")
   if (state !== "hidden") last.current = state
+  if (mobile && mobileNav === "tabbar") return null
   return (
     <SidebarButton
       label={mobile ? "Abrir menú" : state === "hidden" ? "Mostrar la barra lateral" : "Ocultar la barra lateral"}
@@ -205,6 +210,53 @@ function SidebarButton({ label, className, children, ...props }: React.Component
   )
 }
 
+// Barra inferior para móvil (con mobileNav="tabbar"): ponla al final de <AppMain>. Lleva hasta 4 <AppTabBarItem>
+// y añade sola un quinto, «Más», que abre la barra lateral con todo. En escritorio no se muestra.
+// moreActive: marca «Más» como activo cuando la página actual no es uno de los 4 accesos.
+function AppTabBar({ moreLabel = "Más", moreIcon = <MoreHorizontal />, moreActive, className, children, ...props }:
+  React.ComponentProps<"nav"> & { moreLabel?: string; moreIcon?: React.ReactNode; moreActive?: boolean }) {
+  const { mobile, mobileNav, open, setOpen } = useAppSidebar()
+  if (!mobile || mobileNav !== "tabbar") return null
+  return (
+    <nav data-slot="app-tab-bar" aria-label="Navegación principal"
+      className={cn("sticky bottom-0 z-sticky mt-auto flex shrink-0 border-t-thin bg-background pb-[env(safe-area-inset-bottom)]", className)} {...props}>
+      {children}
+      <TabBarButton icon={moreIcon} active={open || moreActive} aria-expanded={open} onClick={() => setOpen(true)}>{moreLabel}</TabBarButton>
+    </nav>
+  )
+}
+
+function AppTabBarItem({ asChild, ...props }: React.ComponentProps<"button"> & { icon: React.ReactNode; active?: boolean; badge?: React.ReactNode; asChild?: boolean }) {
+  return <TabBarButton asChild={asChild} {...props} />
+}
+
+function TabBarButton({ icon, active, badge, asChild, className, children, ...props }:
+  React.ComponentProps<"button"> & { icon: React.ReactNode; active?: boolean; badge?: React.ReactNode; asChild?: boolean }) {
+  const Comp = asChild ? Slot.Root : "button"
+  const inner = (
+    <>
+      <span className="relative flex">
+        {icon}
+        {badge != null && (
+          <span className="absolute -end-inset-sm -top-inset-2xs flex min-w-icon-md items-center justify-center rounded-pill bg-primary px-inset-2xs text-caption leading-compact text-primary-foreground">{badge}</span>
+        )}
+      </span>
+      <span className="max-w-full truncate">{children}</span>
+    </>
+  )
+  return (
+    <Comp data-slot="app-tab-bar-item" data-active={active || undefined} aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex min-w-0 flex-1 flex-col items-center justify-center gap-gap-3xs px-inset-2xs py-inset-xs text-caption text-muted-foreground transition-colors outline-none",
+        "hover:text-foreground focus-visible:focus-ring-inset data-active:font-emphasis data-active:text-link",
+        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-icon-md",
+        className)}
+      {...props}>
+      {asChild ? children : inner}
+    </Comp>
+  )
+}
+
 // Zona de contenido, a la derecha de la barra.
 function AppMain({ className, ...props }: React.ComponentProps<"main">) {
   return <main data-slot="app-main" className={cn("flex min-w-0 flex-1 flex-col overflow-y-auto", className)} {...props} />
@@ -214,4 +266,4 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
   return <header data-slot="app-header" className={cn("sticky top-0 z-sticky flex h-header shrink-0 items-center gap-gap-sm border-b-thin bg-background px-inset-md", className)} {...props} />
 }
 
-export { AppShell, AppSidebar, AppSidebarHeader, AppSidebarContent, AppSidebarFooter, AppSidebarGroup, AppSidebarItem, AppSidebarTrigger, AppMain, AppHeader }
+export { AppShell, AppSidebar, AppSidebarHeader, AppSidebarContent, AppSidebarFooter, AppSidebarGroup, AppSidebarItem, AppSidebarTrigger, AppTabBar, AppTabBarItem, AppMain, AppHeader }

@@ -39,19 +39,27 @@ export function PatternPage() {
   const { slug } = useParams()
   const { ds } = useDS()
   const [view, setView] = useState("desktop")
+  const [variant, setVariant] = useState("0")
   const p = patternsFor(ds.meta.id).find((x) => x.slug === slug)
   if (!p) return <EmptyState title="Este patrón no existe" />
   return (
     <div>
       <PageHeader eyebrow="Patrones" title={p.meta.label} description={p.meta.description}
         actions={
-          <ToggleGroup type="single" variant="outline" size="sm" value={view} onValueChange={(v) => v && setView(v)}>
-            <ToggleGroupItem value="desktop" aria-label="Escritorio"><Monitor />Escritorio</ToggleGroupItem>
-            <ToggleGroupItem value="mobile" aria-label="Móvil"><Smartphone />Móvil</ToggleGroupItem>
-          </ToggleGroup>
+          <div className="flex flex-wrap items-center gap-gap-sm">
+            {p.meta.variants && (
+              <ToggleGroup type="single" variant="outline" size="sm" value={variant} onValueChange={(v) => v && setVariant(v)}>
+                {p.meta.variants.map((v, i) => <ToggleGroupItem key={v.label} value={String(i)}>{v.label}</ToggleGroupItem>)}
+              </ToggleGroup>
+            )}
+            <ToggleGroup type="single" variant="outline" size="sm" value={view} onValueChange={(v) => v && setView(v)}>
+              <ToggleGroupItem value="desktop" aria-label="Escritorio"><Monitor />Escritorio</ToggleGroupItem>
+              <ToggleGroupItem value="mobile" aria-label="Móvil"><Smartphone />Móvil</ToggleGroupItem>
+            </ToggleGroup>
+          </div>
         } />
       <div className={view === "mobile" ? "mx-auto h-content w-full max-w-sheet overflow-hidden rounded-overlay border-thick shadow-overlay" : "h-content w-full overflow-hidden rounded-card border-thin shadow-raised"}>
-        <p.Component key={view} />
+        <p.Component key={view + variant} {...(p.meta.variants?.[Number(variant)]?.props ?? {})} />
       </div>
       <Section title="Código" description="Solo usa componentes del sistema (components/ui y components/custom) y clases de tokens. Está también en el kit, en patterns/.">
         <CodeBlock code={p.source} />

@@ -18,7 +18,7 @@ import { Progress } from "../components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table"
 import {
   AppHeader, AppMain, AppShell, AppSidebar, AppSidebarContent, AppSidebarFooter, AppSidebarGroup, AppSidebarHeader,
-  AppSidebarItem, AppSidebarTrigger, useAppSidebar,
+  AppSidebarItem, AppSidebarTrigger, AppTabBar, AppTabBarItem, useAppSidebar,
 } from "../components/custom/app-sidebar"
 import { Fab, FabButton } from "../components/custom/fab"
 import { StatCard } from "../components/custom/stat-card"
@@ -27,6 +27,11 @@ import { Tab, TabContent, TabList, TabTrigger } from "../components/custom/tab"
 export const meta = {
   label: "Panel de gestión",
   description: "Una webapp de reservas completa: barra lateral, cabecera con búsqueda, resumen con datos, agenda en pestañas y actividad. Se adapta a móvil.",
+  // Dos formas de navegar en móvil (en escritorio son iguales)
+  variants: [
+    { label: "Menú ☰", props: { mobileNav: "menu" } },
+    { label: "Barra inferior", props: { mobileNav: "tabbar" } },
+  ],
 }
 
 type Status = "confirmada" | "pendiente" | "cancelada"
@@ -63,10 +68,10 @@ const NAV = [
 
 const iniciales = (n: string) => n.split(" ").map((p) => p[0]).join("").slice(0, 2)
 
-export default function PanelDeGestion() {
+export default function PanelDeGestion({ mobileNav = "menu" }: { mobileNav?: "menu" | "tabbar" }) {
   const [page, setPage] = useState("inicio")
   return (
-    <AppShell className="h-full" shortcut={false}>
+    <AppShell className="h-full" shortcut={false} mobileNav={mobileNav}>
       <AppSidebar>
         <AppSidebarHeader logo={<CalendarCheck className="text-primary" />} title="Reservas" />
         <AppSidebarContent>
@@ -80,13 +85,15 @@ export default function PanelDeGestion() {
           <AppSidebarItem icon={<Settings />}>Ajustes</AppSidebarItem>
         </AppSidebarFooter>
       </AppSidebar>
-      <Contenido titulo={NAV.find((n) => n.id === page)?.label ?? ""} />
+      <Contenido page={page} setPage={setPage} />
     </AppShell>
   )
 }
 
-function Contenido({ titulo }: { titulo: string }) {
-  const { mobile } = useAppSidebar()
+function Contenido({ page, setPage }: { page: string; setPage: (p: string) => void }) {
+  const { mobile, mobileNav } = useAppSidebar()
+  const tabbar = mobile && mobileNav === "tabbar"
+  const titulo = NAV.find((n) => n.id === page)?.label ?? ""
   return (
     <>
       <AppMain>
@@ -101,6 +108,7 @@ function Contenido({ titulo }: { titulo: string }) {
               </InputGroup>
             )}
             {mobile && <Button variant="ghost" size="icon" aria-label="Buscar"><Search /></Button>}
+            {tabbar && <Button variant="ghost" size="icon" aria-label="Nueva cita"><Plus /></Button>}
             <Button variant="ghost" size="icon" aria-label="Avisos"><Bell /></Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -185,8 +193,13 @@ function Contenido({ titulo }: { titulo: string }) {
             </div>
           </div>
         </div>
+        <AppTabBar moreActive={!NAV.slice(0, 4).some((n) => n.id === page)}>
+          {NAV.slice(0, 4).map((n) => (
+            <AppTabBarItem key={n.id} icon={n.icon} badge={n.count} active={page === n.id} onClick={() => setPage(n.id)}>{n.label}</AppTabBarItem>
+          ))}
+        </AppTabBar>
       </AppMain>
-      {mobile && <Fab vertical="bottom" horizontal="end"><FabButton aria-label="Nueva cita"><Plus /></FabButton></Fab>}
+      {mobile && !tabbar && <Fab vertical="bottom" horizontal="end"><FabButton aria-label="Nueva cita"><Plus /></FabButton></Fab>}
     </>
   )
 }

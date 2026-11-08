@@ -4,10 +4,11 @@
 // Cada archivo exporta `meta` ({ label, description }) y por defecto la pantalla. scripts/generate.py los copia a src/patterns/.
 import type { ComponentType } from "react"
 
-export type PatternMeta = { label: string; description: string }
-export type Pattern = { slug: string; scope: string; meta: PatternMeta; Component: ComponentType; source: string }
+// variants: formas de ver el mismo patrón (por ejemplo, la navegación en móvil); cada una pasa sus props a la pantalla.
+export type PatternMeta = { label: string; description: string; variants?: { label: string; props: Record<string, unknown> }[] }
+export type Pattern = { slug: string; scope: string; meta: PatternMeta; Component: ComponentType<any>; source: string }
 
-const mods = import.meta.glob("../patterns/*/*/*.tsx", { eager: true }) as Record<string, { default: ComponentType; meta?: PatternMeta }>
+const mods = import.meta.glob("../patterns/*/*/*.tsx", { eager: true }) as Record<string, { default: ComponentType<any>; meta?: PatternMeta }>
 const sources = import.meta.glob("../patterns/*/*/*.tsx", { eager: true, query: "?raw", import: "default" }) as Record<string, string>
 
 const all: Pattern[] = Object.entries(mods).flatMap(([path, m]) => {

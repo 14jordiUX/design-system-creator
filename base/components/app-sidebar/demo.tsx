@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   AppHeader, AppMain, AppShell, AppSidebar, AppSidebarContent, AppSidebarFooter, AppSidebarGroup, AppSidebarHeader,
-  AppSidebarItem, AppSidebarTrigger, type AppSidebarState,
+  AppSidebarItem, AppSidebarTrigger, AppTabBar, AppTabBarItem, type AppSidebarState,
 } from "./app-sidebar"
 
 type Item = { id: string; label: string; icon: React.ReactNode; count?: number }
@@ -14,11 +14,11 @@ const NAV: { group: string; items: Item[] }[] = [
   { group: "Trabajo", items: [{ id: "chats", label: "Conversaciones", icon: <MessageSquare /> }, { id: "docs", label: "Documentos", icon: <FileText /> }, { id: "equipo", label: "Equipo", icon: <Users /> }] },
 ]
 
-function Demo({ state, onStateChange, shortcut = false }: { state?: AppSidebarState; onStateChange?: (s: AppSidebarState) => void; shortcut?: boolean }) {
+function Demo({ state, onStateChange, shortcut = false, mobileNav }: { state?: AppSidebarState; onStateChange?: (s: AppSidebarState) => void; shortcut?: boolean; mobileNav?: "menu" | "tabbar" }) {
   const [page, setPage] = useState("inicio")
   const title = NAV.flatMap((g) => g.items).find((i) => i.id === page)?.label
   return (
-    <AppShell state={state} onStateChange={onStateChange} shortcut={shortcut} className="h-full">
+    <AppShell state={state} onStateChange={onStateChange} shortcut={shortcut} mobileNav={mobileNav} className="h-full">
       <AppSidebar>
         <AppSidebarHeader logo={<Sparkles className="text-primary" />} title="Mi app" />
         <AppSidebarContent>
@@ -43,6 +43,11 @@ function Demo({ state, onStateChange, shortcut = false }: { state?: AppSidebarSt
         <div className="grid gap-gap-md p-inset-lg">
           {[0, 1, 2].map((i) => <div key={i} className="h-avatar-2xl rounded-card bg-subtle" />)}
         </div>
+        <AppTabBar>
+          {NAV.flatMap((g) => g.items).slice(0, 4).map((i) => (
+            <AppTabBarItem key={i.id} icon={i.icon} badge={i.count} active={page === i.id} onClick={() => setPage(i.id)}>{i.label}</AppTabBarItem>
+          ))}
+        </AppTabBar>
       </AppMain>
     </AppShell>
   )
@@ -71,5 +76,8 @@ export default {
     { title: "Móvil: un solo botón que la abre", render: (
       <div className="h-sheet w-full max-w-sheet overflow-hidden rounded-card border-thin"><Demo /></div>),
       code: `// Es el mismo código: por debajo de layout.desktop la barra se esconde\n// y <AppSidebarTrigger /> se convierte en el botón ☰ que la abre.` },
+    { title: "Móvil: barra inferior con 4 accesos y «Más»", description: "Con mobileNav=\"tabbar\", en móvil aparece abajo una barra con los 4 accesos principales. El quinto, «Más», abre la barra lateral con todo. En escritorio no cambia nada.", render: (
+      <div className="h-sheet w-full max-w-sheet overflow-hidden rounded-card border-thin"><Demo mobileNav="tabbar" /></div>),
+      code: `<AppShell mobileNav="tabbar" className="h-dvh">\n  <AppSidebar>…</AppSidebar>\n  <AppMain>\n    <AppHeader>…</AppHeader>\n    …\n    <AppTabBar>\n      <AppTabBarItem icon={<Home />} active>Inicio</AppTabBarItem>\n      <AppTabBarItem icon={<Inbox />} badge={4}>Bandeja</AppTabBarItem>\n      <AppTabBarItem icon={<Calendar />}>Agenda</AppTabBarItem>\n      <AppTabBarItem icon={<MessageSquare />}>Conversaciones</AppTabBarItem>\n    </AppTabBar>\n  </AppMain>\n</AppShell>` },
   ],
 } satisfies CustomDemo
