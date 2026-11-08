@@ -22,6 +22,21 @@ systems/sereno/
 └── kit/                   ← kit de proyecto (componentes, estilos, SKILL.md)
 ```
 
+## Componentes propios
+
+Además de los de shadcn/ui, un sistema puede tener componentes propios:
+
+```
+base/components/<slug>/            ← los tienen todos los sistemas (por ejemplo stat-card)
+systems/<id>/components/<slug>/    ← solo ese sistema (por ejemplo sereno/appointment-card)
+├── <slug>.tsx                     ← el componente: solo clases de tokens semánticos y componentes de "@/components/ui/…"
+└── demo.tsx                       ← export default { label, description, examples: [{ title, render, code }] }
+```
+
+`scripts/generate.py` los copia a la web (grupo «Propios»), al kit (`kit/components/custom/`) y al registro de shadcn
+(`…/r/<id>/<slug>.json`). Si un sistema tiene uno con el mismo nombre que base, manda el del sistema.
+El nombre (`slug`) no puede coincidir con uno de shadcn/ui.
+
 ## La ficha (`system.json`)
 
 | Campo | Qué es | Ejemplo |

@@ -10,6 +10,8 @@ import { DEMOS } from "./demos"
 import { usedTokens, COMPOSED } from "@/lib/usedTokens"
 import { InspectableDemo, InspectorProvider, TokenChip } from "./inspector"
 import { InstallCommand, installCommand } from "@/components/app/install"
+import { customFor } from "@/lib/custom"
+import { MessageSquare } from "lucide-react"
 
 export function ComponentsIndex() {
   const { base, ds } = useDS()
@@ -18,6 +20,22 @@ export function ComponentsIndex() {
     <div>
       <PageHeader eyebrow="Componentes" title="Todos los componentes"
         description={`Los componentes de shadcn/ui con el estilo de ${ds.meta.name}. ${ready === ALL_COMPONENTS.length ? `Los ${ready} están listos, cada uno con su demo, su código y los tokens que usa.` : `Hay ${ready} de ${ALL_COMPONENTS.length} listos.`}`} />
+      <Section title="Propios" description={`Componentes que no vienen de shadcn/ui: los comunes a todos los sistemas y los que son solo de ${ds.meta.name}.`}>
+        {customFor(ds.meta.id).length ? (
+          <div className="grid gap-gap-md sm:grid-cols-2 lg:grid-cols-3">
+            {customFor(ds.meta.id).map((c) => (
+              <Link key={c.slug} to={`${base}/componentes/${c.slug}`}
+                className="flex items-center justify-between rounded-card border-thin p-inset-lg text-ui transition-colors hover:bg-accent">
+                <span className="font-emphasis">{c.label}</span>
+                <Badge variant="outline">{c.scope === "base" ? "Todos los sistemas" : `Solo ${ds.meta.name}`}</Badge>
+              </Link>
+            ))}
+          </div>
+        ) : null}
+        <p className="mt-gap-md flex items-center gap-gap-sm text-ui text-muted-foreground">
+          <MessageSquare className="size-icon-md" />Para añadir uno, pídemelo en el chat: «añade a {ds.meta.name} una tarjeta de producto con foto, precio y botón».
+        </p>
+      </Section>
       {COMPONENT_GROUPS.map((g) => (
         <Section key={g.group} title={g.group}>
           <div className="grid gap-gap-md sm:grid-cols-2 lg:grid-cols-3">
@@ -52,10 +70,11 @@ function CodeBlock({ code }: { code: string }) {
 
 export function ComponentPage() {
   const { slug } = useParams()
-  const item = ALL_COMPONENTS.find((c) => c.slug === slug)
-  const demo = slug ? DEMOS[slug] : undefined
-  const tokens = slug ? usedTokens(slug) : null
   const { editor, ds } = useDS()
+  const custom = customFor(ds.meta.id).find((c) => c.slug === slug)
+  const item = custom ? { slug: custom.slug, label: custom.label, group: custom.scope === "base" ? "Propios" : `Propios de ${ds.meta.name}` } : ALL_COMPONENTS.find((c) => c.slug === slug)
+  const demo = custom ? custom.demo : slug ? DEMOS[slug] : undefined
+  const tokens = slug ? usedTokens(slug, custom?.source) : null
   if (!item) return <EmptyState title="Este componente no existe" />
   return (
     <InspectorProvider key={slug} enabled={editor}>
@@ -72,9 +91,9 @@ export function ComponentPage() {
             </Section>
           ))}
           <Section title="Instalar en tu proyecto" description={`En un proyecto con shadcn/ui, este comando añade ${item.label} ya con el estilo de ${ds.meta.name}, con el tema y lo que necesite.`}>
-            <InstallCommand command={installCommand(ds.meta.id, COMPOSED[slug!] ?? [slug!])} />
+            <InstallCommand command={installCommand(ds.meta.id, custom ? [slug!] : COMPOSED[slug!] ?? [slug!])} />
           </Section>
-          <Section title="Tokens que usa" description={(editor ? "Pasa el ratón por un token para ver dónde se aplica en las demos. " : "") + (COMPOSED[slug!] ? `Se monta juntando ${COMPOSED[slug!].join(", ")}. ` : "") + "Lista calculada a partir del código del componente: cada clase apunta a un token. No hay ningún valor escrito a mano."}>
+          <Section title="Tokens que usa" description={(editor ? "Pasa el ratón por un token para ver dónde se aplica en las demos. " : "") + (!custom && COMPOSED[slug!] ? `Se monta juntando ${COMPOSED[slug!].join(", ")}. ` : "") + "Lista calculada a partir del código del componente: cada clase apunta a un token. No hay ningún valor escrito a mano."}>
             {tokens?.length ? (
               <div className="grid gap-gap-lg md:grid-cols-2">
                 {tokens.map(([group, list]) => (

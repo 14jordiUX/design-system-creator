@@ -33,9 +33,9 @@ export const COMPOSED: Record<string, string[]> = {
   "data-table": ["table", "input", "button"],
 }
 
-export function usedTokens(slug: string) {
+export function usedTokens(slug: string, customSource?: string) {
   const files = COMPOSED[slug] ?? [slug]
-  const srcs = files.map((f) => SOURCES[`../components/ui/${f}.tsx`])
+  const srcs = customSource != null ? [customSource] : files.map((f) => SOURCES[`../components/ui/${f}.tsx`])
   if (srcs.some((s) => !s)) return null
   const src = srcs.join("\n")
   const found = new Set<string>()

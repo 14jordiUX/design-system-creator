@@ -11,6 +11,9 @@ Lo ejecuta GitHub al publicar (.github/workflows/web.yml). No se guarda en el re
 """
 import json, os, re, subprocess, sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from generate import custom_components  # noqa: E402
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UI_DIR = os.path.join(ROOT, "web", "src", "components", "ui")
 HOOKS_DIR = os.path.join(ROOT, "web", "src", "hooks")
@@ -90,9 +93,17 @@ def build(out_dir, base_url):
                   "description": f"{c} de shadcn/ui con el estilo de {meta['name']} (todo sale de tokens).",
                   "dependencies": npm_deps(src), "registryDependencies": deps,
                   "files": [{"path": f"ui/{c}.tsx", "type": "registry:ui", "content": src}]})
+        custom = custom_components(sdir)
+        for c, cdir in custom.items():
+            src = read(os.path.join(cdir, c + ".tsx"))
+            deps = [url("theme"), url("utils")] + [url(x) for x in sorted(set(re.findall(r'"@/components/(?:ui|custom)/([\w-]+)"', src)))]
+            emit({"name": c, "type": "registry:component", "title": c.replace("-", " ").title(),
+                  "description": f"Componente propio de {meta['name']} (no viene de shadcn/ui).",
+                  "dependencies": npm_deps(src), "registryDependencies": deps,
+                  "files": [{"path": f"custom/{c}.tsx", "type": "registry:component", "target": f"~/src/components/custom/{c}.tsx", "content": src}]})
         emit({"name": "todo", "type": "registry:item", "title": f"{meta['name']} completo",
               "description": f"Todos los componentes de {meta['name']}, con su tema y utilidades.",
-              "registryDependencies": [url(c) for c in comps], "files": []})
+              "registryDependencies": [url(c) for c in comps + sorted(custom)], "files": []})
         with open(os.path.join(d, "registry.json"), "w", encoding="utf-8", newline="\n") as f:
             json.dump({"$schema": "https://ui.shadcn.com/schema/registry.json", "name": sid, "homepage": f"{base_url}/#/s/{sid}", "items": items}, f, ensure_ascii=False, indent=2)
         index.append(sid)

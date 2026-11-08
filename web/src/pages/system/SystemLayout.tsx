@@ -9,6 +9,7 @@ import { useGitHubConnect } from "@/components/app/github-connect"
 import { setTokenValue, type Mode, type TokenFiles } from "@/lib/tokens"
 import { useSystemTheme } from "@/lib/theme"
 import { FOUNDATIONS, COMPONENT_GROUPS } from "@/lib/nav"
+import { customFor } from "@/lib/custom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -138,7 +139,8 @@ function SystemLayout({ id }: { id?: string }) {
   }
 
   const match = (label: string) => !q || label.toLowerCase().includes(q.toLowerCase())
-  const comps = COMPONENT_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => match(i.label)) })).filter((g) => g.items.length)
+  const own = customFor(ds.meta.id).map((c) => ({ slug: c.slug, label: c.label, ready: true }))
+  const comps = [{ group: "Propios", items: own }, ...COMPONENT_GROUPS].map((g) => ({ ...g, items: g.items.filter((i) => match(i.label)) })).filter((g) => g.items.length)
   const founds = FOUNDATIONS.filter((f) => match(f.label))
 
   return (
