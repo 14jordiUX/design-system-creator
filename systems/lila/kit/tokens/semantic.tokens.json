@@ -599,5 +599,21 @@
       "$value": "{z-index.50}",
       "$description": "Menús, popovers, diálogos y paneles"
     }
+  },
+  "chart": {
+    "$type": "number",
+    "$description": "Gráficos",
+    "area-opacity": {
+      "$value": "{opacity.40}",
+      "$description": "Relleno de las áreas"
+    },
+    "gradient-start": {
+      "$value": "{opacity.80}",
+      "$description": "Opacidad arriba del degradado de un área"
+    },
+    "gradient-end": {
+      "$value": "{opacity.10}",
+      "$description": "Opacidad abajo del degradado de un área"
+    }
   }
 }

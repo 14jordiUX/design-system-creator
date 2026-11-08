@@ -246,5 +246,8 @@ Familias: sans = Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif; mono =
 | `--layer-sticky` | 20 | Partes pegadas o superpuestas dentro de un componente |
 | `--layer-floating` | 40 | Botones flotantes (fab) |
 | `--layer-overlay` | 50 | Menús, popovers, diálogos y paneles |
+| `--chart-area-opacity` | 0.4 | Relleno de las áreas |
+| `--chart-gradient-start` | 0.8 | Opacidad arriba del degradado de un área |
+| `--chart-gradient-end` | 0.1 | Opacidad abajo del degradado de un área |
 
 Archivos de referencia: `tokens/*.tokens.json` (fuente, formato W3C DTCG), `styles/tokens.css` (variables), `styles/globals.css` (tema de Tailwind).

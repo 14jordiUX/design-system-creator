@@ -31,6 +31,7 @@ export const COMPOSED: Record<string, string[]> = {
   combobox: ["popover", "command", "button"],
   "date-picker": ["popover", "calendar", "button"],
   "data-table": ["table", "input", "button"],
+  ...Object.fromEntries(["area-chart", "bar-chart", "line-chart", "pie-chart", "radar-chart", "radial-chart", "chart-tooltip"].map((s) => [s, ["chart"]])),
 }
 
 export function usedTokens(slug: string, customSource?: string) {

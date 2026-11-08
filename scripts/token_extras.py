@@ -43,6 +43,7 @@ def extend(primitives, semantic, light, dark):
         "scale": {"$type": "number", "95": t(0.95)},
         "z-index": {"$type": "number", "$description": "Orden de apilado (qué queda encima)",
                     **{str(n): t(n) for n in (10, 20, 30, 40, 50)}},
+        "opacity": {"10": t(0.1), "40": t(0.4), "80": t(0.8)},
         "angle": {"$type": "other", "45": t("45deg"), "90": t("90deg"), "180": t("180deg")},
         "color": {"scrim": t("#09090b99", "color", desc="Negro translúcido para velos")},
     })
@@ -112,6 +113,10 @@ def extend(primitives, semantic, light, dark):
                        "turn": t("{angle.90}", desc="Giro de un cuarto (flechas de submenú, iconos que cambian)"),
                        "flip": t("{angle.180}", desc="Media vuelta (flecha de un acordeón o un select abiertos)")},
         },
+        "chart": {"$type": "number", "$description": "Gráficos",
+                  "area-opacity": t("{opacity.40}", desc="Relleno de las áreas"),
+                  "gradient-start": t("{opacity.80}", desc="Opacidad arriba del degradado de un área"),
+                  "gradient-end": t("{opacity.10}", desc="Opacidad abajo del degradado de un área")},
         "layer": {"$type": "number", "$description": "Qué queda encima de qué (z-index)",
                   "raised": t("{z-index.10}", desc="Un elemento por encima de sus vecinos (foco en grupos de botones, casilla activa)"),
                   "sticky": t("{z-index.20}", desc="Partes pegadas o superpuestas dentro de un componente"),
