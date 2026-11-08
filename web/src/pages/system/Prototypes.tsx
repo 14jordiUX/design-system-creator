@@ -1,12 +1,12 @@
 // Prototipos: flujos de varias pantallas que se pueden clicar (probar, test con usuarios y presentar).
 // Toda la pantalla del prototipo sale del sistema que se está viendo: si cambias de sistema, el mismo flujo cambia de look.
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { toBlob } from "html-to-image"
-import { zipSync } from "fflate"
+import { strToU8, zipSync } from "fflate"
 import { toast } from "sonner"
 import {
-  ArrowLeft, Check, Copy, Download, ExternalLink, Image as ImageIcon, Lightbulb, Loader2, Map as MapIcon, Monitor, MousePointerClick,
+  ArrowLeft, Check, Copy, Download, ExternalLink, PenTool, Image as ImageIcon, Puzzle, Lightbulb, Loader2, Map as MapIcon, Monitor, MousePointerClick,
   Presentation, RotateCcw, Share2, Smartphone, Workflow,
 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -21,6 +21,11 @@ import { getSystem, systems } from "@/lib/systems"
 import { useSystemTheme } from "@/lib/theme"
 import { prototypesFor, prototypeUrl, type Prototype } from "@/lib/prototypes"
 import { cn } from "@/lib/utils"
+import { buildFigmaExport } from "@/lib/figma-export"
+import type { TokenFiles } from "@/lib/tokens"
+import pluginManifest from "../../../../figma-plugin/manifest.json?raw"
+import pluginCode from "../../../../figma-plugin/code.js?raw"
+import pluginUi from "../../../../figma-plugin/ui.html?raw"
 import { useDS } from "./context"
 import { CodeBlock } from "./Components"
 
@@ -72,7 +77,7 @@ function usePlayer(p: Prototype, start?: string) {
 
 export function PrototypePage() {
   const { slug } = useParams()
-  const { ds, mode, editor } = useDS()
+  const { ds, mode, editor, tokens } = useDS()
   const navigate = useNavigate()
   const p = prototypesFor(ds.meta.id).find((x) => x.slug === slug)
   const [view, setView] = useState("mobile")
@@ -102,7 +107,10 @@ export function PrototypePage() {
         </TabsList>
         <TabsContent value="probar"><Try key={ds.meta.id + view} p={p} view={view} /></TabsContent>
         <TabsContent value="mapa"><FlowMap p={p} view={view} systemId={ds.meta.id} /></TabsContent>
-        <TabsContent value="compartir"><Share p={p} systemId={ds.meta.id} systemName={ds.meta.name} mode={mode} view={view} /></TabsContent>
+        <TabsContent value="compartir">
+          <Share p={p} systemId={ds.meta.id} systemName={ds.meta.name} mode={mode} view={view} />
+          <ToFigma p={p} tokens={tokens} system={{ id: ds.meta.id, name: ds.meta.name }} mode={mode} view={view} />
+        </TabsContent>
       </Tabs>
       <Section title="Código" description="Solo usa componentes del sistema (components/ui y components/custom) y clases de tokens. Está también en el kit, en prototypes/.">
         <CodeBlock code={p.source} />
@@ -273,6 +281,71 @@ function Share({ p, systemId, systemName, mode, view }: { p: Prototype; systemId
         <CopyRow id="proto-embed" label={`Código para incrustar (${view === "mobile" ? "tamaño móvil" : "tamaño escritorio"})`} value={embed} />
       </section>
     </div>
+  )
+}
+
+/** Plugin de Figma (carpeta figma-plugin/ del proyecto) en un .zip, listo para «Importar desde manifiesto». */
+function downloadPlugin() {
+  const dir = "Plugin Design System Creator/"
+  const zip = zipSync({ [dir + "manifest.json"]: strToU8(pluginManifest), [dir + "code.js"]: strToU8(pluginCode), [dir + "ui.html"]: strToU8(pluginUi) })
+  download("Plugin Figma - Design System Creator.zip", new Blob([zip as BlobPart], { type: "application/zip" }))
+}
+
+/** Llevar a Figma: dibuja todas las pantallas fuera de la vista, las recorre y descarga el .json para el plugin. */
+function ToFigma({ p, tokens, system, mode, view }: { p: Prototype; tokens: TokenFiles; system: { id: string; name: string }; mode: "light" | "dark"; view: string }) {
+  const [busy, setBusy] = useState(false)
+  const refs = useRef<Record<string, HTMLDivElement | null>>({})
+  useEffect(() => {
+    if (!busy) return
+    let cancel = false
+    ;(async () => {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      if (cancel) return
+      try {
+        const data = buildFigmaExport({
+          tokens, mode, system, view: view === "mobile" ? "mobile" : "desktop",
+          prototype: { slug: p.slug, label: p.meta.label, description: p.meta.description, links: p.meta.links },
+          screens: p.meta.screens.map((s) => ({ id: s.id, label: s.label, el: refs.current[s.id]! })).filter((s) => s.el),
+        })
+        download(`figma-${system.id}-${p.slug}.json`, new Blob([JSON.stringify(data)], { type: "application/json" }))
+        toast.success("Archivo para Figma descargado", { description: "Ábrelo con el plugin «Design System Creator» en Figma." })
+      } catch (e: any) {
+        toast.error("No se ha podido preparar el archivo", { description: String(e.message || e) })
+      }
+      setBusy(false)
+    })()
+    return () => { cancel = true }
+  }, [busy, tokens, mode, system, view, p])
+
+  return (
+    <section className="mt-gap-2xl flex flex-col gap-gap-md rounded-card border-thin p-inset-lg">
+      <h3 className="flex items-center gap-gap-sm text-body font-strong"><PenTool className="size-icon-md text-primary" />Llevar a Figma</h3>
+      <p className="max-w-prose text-ui text-muted-foreground">
+        Dibuja este flujo en un archivo de Figma con componentes de verdad (con sus variantes) y los tokens como variables, todo enlazado.
+        Cámbialo allí y, con el mismo plugin, exporta tus cambios para que los pase al código.
+      </p>
+      <ol className="list-decimal space-y-gap-xs pl-inset-xl text-ui text-muted-foreground">
+        <li><span className="font-emphasis text-foreground">Solo la primera vez:</span> descarga el plugin y descomprímelo. En Figma de escritorio, abre un archivo y ve a <span className="font-emphasis text-foreground">Plugins → Desarrollo → Importar plugin desde manifiesto…</span> y elige el <span className="font-code">manifest.json</span> de la carpeta «Plugin Design System Creator».</li>
+        <li>Descarga el archivo del flujo. Sale con {system.name}, en modo {mode === "dark" ? "oscuro" : "claro"} y en tamaño {view === "mobile" ? "móvil" : "escritorio"} (lo que tienes elegido arriba).</li>
+        <li>En Figma: <span className="font-emphasis text-foreground">Plugins → Desarrollo → Design System Creator</span>, suelta el archivo y pulsa «Dibujar en Figma».</li>
+        <li>Cuando lo hayas cambiado, en el plugin pulsa «Exportar cambios» y súbeme ese archivo al chat (o pásame el enlace del archivo de Figma).</li>
+      </ol>
+      <div className="flex flex-wrap gap-gap-sm">
+        <Button onClick={() => setBusy(true)} disabled={busy}>{busy ? <Loader2 className="animate-spin" /> : <Download />}Descargar el flujo para Figma</Button>
+        <Button variant="outline" onClick={downloadPlugin}><Puzzle />Descargar el plugin</Button>
+      </div>
+      {busy && (
+        // Las pantallas se dibujan fuera de la vista para medirlas tal cual se ven
+        <div inert aria-hidden className="pointer-events-none fixed top-0 left-full flex gap-gap-2xl">
+          {p.meta.screens.map((s) => (
+            <div key={s.id} ref={(el) => { refs.current[s.id] = el }} className={cn("h-desktop shrink-0 overflow-hidden", view === "mobile" ? "w-sheet" : "w-content")}>
+              <p.Component screen={s.id} go={() => {}} />
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   )
 }
 

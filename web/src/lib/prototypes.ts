@@ -6,7 +6,9 @@
 import type { ComponentType } from "react"
 
 export type Screen = { id: string; label: string }
-export type PrototypeMeta = { label: string; description: string; screens: Screen[]; hints?: string[] }
+// links: a qué pantalla lleva cada botón (por su texto); sirve para conectar las pantallas como prototipo en Figma
+export type PrototypeLink = { from: string; text: string; to: string }
+export type PrototypeMeta = { label: string; description: string; screens: Screen[]; hints?: string[]; links?: PrototypeLink[] }
 export type FlowProps = { screen: string; go: (id: string) => void }
 export type Prototype = { slug: string; scope: string; meta: PrototypeMeta; Component: ComponentType<FlowProps>; source: string }
 

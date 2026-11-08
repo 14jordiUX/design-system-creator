@@ -28,6 +28,22 @@ export const meta = {
     { id: "codigo", label: "Código de verificación" },
     { id: "bienvenida", label: "Bienvenida" },
   ],
+  // A dónde lleva cada botón (para conectar las pantallas como prototipo en Figma)
+  links: [
+    { from: "entrar", text: "¿La has olvidado?", to: "recuperar" },
+    { from: "entrar", text: "Entrar con una llave", to: "codigo" },
+    { from: "entrar", text: "Entrar", to: "error" },
+    { from: "error", text: "¿La has olvidado?", to: "recuperar" },
+    { from: "error", text: "Entrar con una llave", to: "codigo" },
+    { from: "error", text: "Entrar", to: "codigo" },
+    { from: "recuperar", text: "Volver", to: "entrar" },
+    { from: "recuperar", text: "Enviar enlace", to: "enviado" },
+    { from: "enviado", text: "Volver a entrar", to: "entrar" },
+    { from: "enviado", text: "No me ha llegado", to: "recuperar" },
+    { from: "codigo", text: "Volver", to: "entrar" },
+    { from: "codigo", text: "Reenviar el código", to: "bienvenida" },
+    { from: "bienvenida", text: "Cerrar sesión", to: "entrar" },
+  ],
   // Lo que conviene saber para probarlo (sale junto al prototipo)
   hints: [
     "Una contraseña de menos de 6 caracteres da el error de contraseña.",
