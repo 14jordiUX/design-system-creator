@@ -153,6 +153,7 @@
   --dimension-384: 384px;
   --dimension-512: 512px;
   --dimension-672: 672px;
+  --dimension-768: 768px;
   --dimension-1024: 1024px;
   --dimension-1152: 1152px;
   --viewport-80: 80vh;
@@ -250,6 +251,7 @@
   --layout-drawer-max: var(--viewport-80);
   --layout-drawer-gap: var(--space-24);
   --layout-compact: var(--dimension-512);
+  --layout-desktop: var(--dimension-768);
   --text-size-caption: var(--font-size-xs);
   --text-size-ui: var(--font-size-sm);
   --text-size-body: var(--font-size-md);

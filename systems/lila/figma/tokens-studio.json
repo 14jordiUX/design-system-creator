@@ -567,6 +567,9 @@
       "672": {
         "$value": "672px"
       },
+      "768": {
+        "$value": "768px"
+      },
       "1024": {
         "$value": "1024px"
       },
@@ -1093,6 +1096,10 @@
       "compact": {
         "$value": "{dimension.512}",
         "$description": "Por debajo de este ancho, un componente usa su versión móvil (consulta de contenedor @max-compact)"
+      },
+      "desktop": {
+        "$value": "{dimension.768}",
+        "$description": "Desde este ancho, la estructura de la app es la de escritorio (sidebar fijo); por debajo, la de móvil"
       }
     },
     "text": {

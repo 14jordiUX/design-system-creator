@@ -19,7 +19,7 @@ def _merge(target, extra):
             _merge(target[k], v)
 
 
-DIMENSIONS = (32, 40, 48, 56, 128, 192, 256, 288, 300, 320, 384, 512, 672, 1024, 1152)
+DIMENSIONS = (32, 40, 48, 56, 128, 192, 256, 288, 300, 320, 384, 512, 672, 768, 1024, 1152)
 SCALE = {"3xs": "0-5", "2xs": "1", "xs": "1-5", "sm": "2", "md": "3", "lg": "4", "xl": "6", "2xl": "8", "3xl": "12", "4xl": "16"}
 
 
@@ -82,6 +82,7 @@ def extend(primitives, semantic, light, dark):
             "sidebar-mobile": t("288px", desc="Ancho de la barra lateral en móvil"),
             "drawer-max": t("80vh", desc="Alto máximo de un drawer"),
             "drawer-gap": t("{space.24}", desc="Distancia de un drawer al borde opuesto de la pantalla"),
+            "desktop": t("{dimension.768}", desc="Desde este ancho, la estructura de la app es la de escritorio (sidebar fijo); por debajo, la de móvil"),
             "compact": t("{dimension.512}", desc="Por debajo de este ancho, un componente usa su versión móvil (consulta de contenedor @max-compact)"),
         },
         "text": {"$description": "Tipografía por propiedades sueltas (para combinar). Para estilos completos usa typography.*",

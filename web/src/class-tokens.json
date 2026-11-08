@@ -11411,6 +11411,156 @@
   "scroll-my-compact": [
     "layout.compact"
   ],
+  "p-desktop": [
+    "layout.desktop"
+  ],
+  "px-desktop": [
+    "layout.desktop"
+  ],
+  "py-desktop": [
+    "layout.desktop"
+  ],
+  "pt-desktop": [
+    "layout.desktop"
+  ],
+  "pr-desktop": [
+    "layout.desktop"
+  ],
+  "pb-desktop": [
+    "layout.desktop"
+  ],
+  "pl-desktop": [
+    "layout.desktop"
+  ],
+  "ps-desktop": [
+    "layout.desktop"
+  ],
+  "pe-desktop": [
+    "layout.desktop"
+  ],
+  "m-desktop": [
+    "layout.desktop"
+  ],
+  "mx-desktop": [
+    "layout.desktop"
+  ],
+  "my-desktop": [
+    "layout.desktop"
+  ],
+  "mt-desktop": [
+    "layout.desktop"
+  ],
+  "mr-desktop": [
+    "layout.desktop"
+  ],
+  "mb-desktop": [
+    "layout.desktop"
+  ],
+  "ml-desktop": [
+    "layout.desktop"
+  ],
+  "-mx-desktop": [
+    "layout.desktop"
+  ],
+  "-my-desktop": [
+    "layout.desktop"
+  ],
+  "-mt-desktop": [
+    "layout.desktop"
+  ],
+  "-ml-desktop": [
+    "layout.desktop"
+  ],
+  "gap-desktop": [
+    "layout.desktop"
+  ],
+  "gap-x-desktop": [
+    "layout.desktop"
+  ],
+  "gap-y-desktop": [
+    "layout.desktop"
+  ],
+  "space-x-desktop": [
+    "layout.desktop"
+  ],
+  "space-y-desktop": [
+    "layout.desktop"
+  ],
+  "-space-x-desktop": [
+    "layout.desktop"
+  ],
+  "-space-y-desktop": [
+    "layout.desktop"
+  ],
+  "size-desktop": [
+    "layout.desktop"
+  ],
+  "w-desktop": [
+    "layout.desktop"
+  ],
+  "h-desktop": [
+    "layout.desktop"
+  ],
+  "min-w-desktop": [
+    "layout.desktop"
+  ],
+  "min-h-desktop": [
+    "layout.desktop"
+  ],
+  "max-w-desktop": [
+    "layout.desktop"
+  ],
+  "max-h-desktop": [
+    "layout.desktop"
+  ],
+  "top-desktop": [
+    "layout.desktop"
+  ],
+  "left-desktop": [
+    "layout.desktop"
+  ],
+  "right-desktop": [
+    "layout.desktop"
+  ],
+  "bottom-desktop": [
+    "layout.desktop"
+  ],
+  "inset-desktop": [
+    "layout.desktop"
+  ],
+  "inset-x-desktop": [
+    "layout.desktop"
+  ],
+  "inset-y-desktop": [
+    "layout.desktop"
+  ],
+  "-top-desktop": [
+    "layout.desktop"
+  ],
+  "-left-desktop": [
+    "layout.desktop"
+  ],
+  "-right-desktop": [
+    "layout.desktop"
+  ],
+  "-bottom-desktop": [
+    "layout.desktop"
+  ],
+  "translate-x-desktop": [
+    "layout.desktop"
+  ],
+  "translate-y-desktop": [
+    "layout.desktop"
+  ],
+  "-translate-x-desktop": [
+    "layout.desktop"
+  ],
+  "-translate-y-desktop": [
+    "layout.desktop"
+  ],
+  "scroll-my-desktop": [
+    "layout.desktop"
+  ],
   "text-caption": [
     "text.size.caption"
   ],
@@ -11694,6 +11844,12 @@
     "control.border-width"
   ],
   "border-y-thin": [
+    "control.border-width"
+  ],
+  "border-s-thin": [
+    "control.border-width"
+  ],
+  "border-e-thin": [
     "control.border-width"
   ],
   "border-thick": [

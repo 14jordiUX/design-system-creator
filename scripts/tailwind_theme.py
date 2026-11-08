@@ -116,7 +116,7 @@ def build(primitives, semantic, light):
     # ---------- utilidades propias ----------
     add("/* Bordes: border-thin y sus lados (grosor = control.border-width) */")
     add("@utility border-thin { border-style: solid; border-width: var(--control-border-width); }")
-    for side, prop in [("t", "top"), ("b", "bottom"), ("l", "left"), ("r", "right"), ("x", "inline"), ("y", "block")]:
+    for side, prop in [("t", "top"), ("b", "bottom"), ("l", "left"), ("r", "right"), ("x", "inline"), ("y", "block"), ("s", "inline-start"), ("e", "inline-end")]:
         add(f"@utility border-{side}-thin {{ border-{prop}-style: solid; border-{prop}-width: var(--control-border-width); }}")
     add("@utility border-thick { border-style: solid; border-width: var(--control-focus-ring-width); }")
     add("")

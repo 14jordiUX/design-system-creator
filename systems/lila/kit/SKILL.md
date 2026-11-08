@@ -24,7 +24,7 @@ Tipo de producto: Producto digital informal (app o web de consumo).
 
 ## Reglas
 
-1. **Usa siempre los componentes de `components/ui/`** (shadcn/ui ya tematizados). No crees botones, campos o tarjetas desde cero si existe el componente. Componentes disponibles: accordion, alert, alert-dialog, aspect-ratio, attachment, avatar, badge, breadcrumb, bubble, button, button-group, calendar, card, carousel, chart, checkbox, collapsible, command, context-menu, dialog, drawer, dropdown-menu, empty, field, form, hover-card, input, input-group, input-otp, item, kbd, label, marker, menubar, message, message-scroller, native-select, navigation-menu, pagination, popover, progress, radio-group, resizable, scroll-area, select, separator, sheet, sidebar, skeleton, slider, spinner, switch, table, tabs, textarea, toggle, toggle-group, tooltip. Además, componentes propios de este sistema en `components/custom/`: fab, stat-card, tab. Úsalos antes que montar algo parecido.
+1. **Usa siempre los componentes de `components/ui/`** (shadcn/ui ya tematizados). No crees botones, campos o tarjetas desde cero si existe el componente. Componentes disponibles: accordion, alert, alert-dialog, aspect-ratio, attachment, avatar, badge, breadcrumb, bubble, button, button-group, calendar, card, carousel, chart, checkbox, collapsible, command, context-menu, dialog, drawer, dropdown-menu, empty, field, form, hover-card, input, input-group, input-otp, item, kbd, label, marker, menubar, message, message-scroller, native-select, navigation-menu, pagination, popover, progress, radio-group, resizable, scroll-area, select, separator, sheet, sidebar, skeleton, slider, spinner, switch, table, tabs, textarea, toggle, toggle-group, tooltip. Además, componentes propios de este sistema en `components/custom/`: app-sidebar, fab, stat-card, tab. Úsalos antes que montar algo parecido.
 2. **Nunca escribas valores a mano**: nada de `#hex`, `px`, `rem`, `ms` ni clases con corchetes como `p-[13px]`. El tema de Tailwind de este kit solo contiene clases que apuntan a tokens; si una clase no existe (por ejemplo `h-9`, `bg-red-500` sin token o `text-white`), no genera CSS. Si necesitas un valor que no está, pide añadir un token.
 3. **Solo tokens semánticos.** Los primitivos (`space.4`, `radius.md`, `font.size.sm`, `color.brand.600`…) son la capa de gestión: no se usan en el código y no tienen clase. Usa siempre el semántico (`space.inset.lg`, `radius.control`, `text.size.ui`, `color.action.primary.default`…).
 4. Vocabulario de clases (todas salen de tokens):
@@ -218,6 +218,7 @@ Familias: sans = Quicksand, ui-sans-serif, system-ui, sans-serif; mono = JetBrai
 | `--layout-drawer-max` | 80vh | Alto máximo de un drawer |
 | `--layout-drawer-gap` | 104px | Distancia de un drawer al borde opuesto de la pantalla |
 | `--layout-compact` | 512px | Por debajo de este ancho, un componente usa su versión móvil (consulta de contenedor @max-compact) |
+| `--layout-desktop` | 768px | Desde este ancho, la estructura de la app es la de escritorio (sidebar fijo); por debajo, la de móvil |
 | `--text-size-caption` | 12px | Notas, metadatos |
 | `--text-size-ui` | 14px | Texto de controles y menús |
 | `--text-size-body` | 16px | Texto de lectura |

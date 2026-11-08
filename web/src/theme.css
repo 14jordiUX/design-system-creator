@@ -131,6 +131,7 @@
   --spacing-drawer-max: var(--layout-drawer-max);
   --spacing-drawer-gap: var(--layout-drawer-gap);
   --spacing-compact: var(--layout-compact);
+  --spacing-desktop: var(--layout-desktop);
   --container-inset-3xs: var(--space-inset-3xs);
   --container-inset-2xs: var(--space-inset-2xs);
   --container-inset-xs: var(--space-inset-xs);
@@ -190,6 +191,7 @@
   --container-sidebar-mobile: var(--layout-sidebar-mobile);
   --container-drawer-max: var(--layout-drawer-max);
   --container-drawer-gap: var(--layout-drawer-gap);
+  --container-desktop: var(--layout-desktop);
 
   /* Tipografía (solo semánticos: text.*) */
   --font-base: var(--text-family-base);
@@ -254,6 +256,8 @@
 @utility border-r-thin { border-right-style: solid; border-right-width: var(--control-border-width); }
 @utility border-x-thin { border-inline-style: solid; border-inline-width: var(--control-border-width); }
 @utility border-y-thin { border-block-style: solid; border-block-width: var(--control-border-width); }
+@utility border-s-thin { border-inline-start-style: solid; border-inline-start-width: var(--control-border-width); }
+@utility border-e-thin { border-inline-end-style: solid; border-inline-end-width: var(--control-border-width); }
 @utility border-thick { border-style: solid; border-width: var(--control-focus-ring-width); }
 
 /* Foco accesible: anillo con los tokens control.focus-ring-* y color.border.focus */
