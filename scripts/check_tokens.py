@@ -81,7 +81,7 @@ def check_css(css):
 def check_classes(css):
     sels = set(re.findall(r"\.((?:\\.|[\w-])+)", css))
     sels = {re.sub(r"\\(.)", r"\1", s) for s in sels}
-    ignore = re.compile(r"^(group|peer|group/[\w-]+|peer/[\w-]+|@container/[\w-]+|dark|checker|outline|default|destructive|secondary|ghost|link|sm|lg|md|icon.*|horizontal|vertical|item-aligned|popper|center|start|end|top|right|bottom|left|line"
+    ignore = re.compile(r"^(group|peer|group/[\w-]+|peer/[\w-]+|@container/[\w-]+|dark|checker|outline|default|destructive|secondary|ghost|link|sm|lg|md|icon.*|horizontal|vertical|item-aligned|popper|inline-start|inline-end|block-start|block-end|center|start|end|top|right|bottom|left|line"
                         r"|[:,\-]|\w+:|/.*|.*/:.*|var\(.*|calc\(.*|.*\)|\d+:\d+|\[[\w-]+(=[\w-]+)?\],?|data-[a-z-]+|sans-serif|system-ui|ui-sans-serif|bottom-right|d-in|dropdown-menu|radio-group)$")
     bad = {}
     for f in glob.glob(os.path.join(ROOT, "web", "src", "**", "*.tsx"), recursive=True):

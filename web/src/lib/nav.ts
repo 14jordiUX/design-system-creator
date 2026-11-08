@@ -18,6 +18,8 @@ export const COMPONENT_GROUPS: { group: string; items: NavItem[] }[] = [
     { slug: "dropdown-menu", label: "Dropdown Menu", ready: true },
     { slug: "context-menu", label: "Context Menu", ready: true },
     { slug: "menubar", label: "Menubar", ready: true },
+    { slug: "button-group", label: "Button Group", ready: true },
+    { slug: "kbd", label: "Kbd", ready: true },
   ]},
   { group: "Formularios", items: [
     { slug: "input", label: "Input", ready: true },
@@ -33,6 +35,9 @@ export const COMPONENT_GROUPS: { group: string; items: NavItem[] }[] = [
     { slug: "calendar", label: "Calendar", ready: true },
     { slug: "date-picker", label: "Date Picker", ready: true },
     { slug: "input-otp", label: "Input OTP", ready: true },
+    { slug: "field", label: "Field", ready: true },
+    { slug: "input-group", label: "Input Group", ready: true },
+    { slug: "native-select", label: "Native Select", ready: true },
   ]},
   { group: "Contenido", items: [
     { slug: "card", label: "Card", ready: true },
@@ -47,6 +52,9 @@ export const COMPONENT_GROUPS: { group: string; items: NavItem[] }[] = [
     { slug: "aspect-ratio", label: "Aspect Ratio", ready: true },
     { slug: "carousel", label: "Carousel", ready: true },
     { slug: "chart", label: "Chart", ready: true },
+    { slug: "item", label: "Item", ready: true },
+    { slug: "empty", label: "Empty", ready: true },
+    { slug: "resizable", label: "Resizable", ready: true },
   ]},
   { group: "Navegación", items: [
     { slug: "navigation-menu", label: "Navigation Menu", ready: true },
@@ -69,6 +77,14 @@ export const COMPONENT_GROUPS: { group: string; items: NavItem[] }[] = [
     { slug: "toast", label: "Toast (Sonner)", ready: true },
     { slug: "progress", label: "Progress", ready: true },
     { slug: "skeleton", label: "Skeleton", ready: true },
+    { slug: "spinner", label: "Spinner", ready: true },
+  ]},
+  { group: "Chat con IA", items: [
+    { slug: "message", label: "Message", ready: true },
+    { slug: "bubble", label: "Bubble", ready: true },
+    { slug: "attachment", label: "Attachment", ready: true },
+    { slug: "marker", label: "Marker", ready: true },
+    { slug: "message-scroller", label: "Message Scroller", ready: true },
   ]},
 ]
 

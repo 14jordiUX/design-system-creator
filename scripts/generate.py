@@ -15,9 +15,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UI_DIR = os.path.join(ROOT, "web", "src", "components", "ui")
 UTILS = os.path.join(ROOT, "web", "src", "lib", "utils.ts")
 DEPS = ["radix-ui", "class-variance-authority", "clsx", "tailwind-merge", "lucide-react", "sonner",
-        # solo para algunos componentes: command/combobox, calendar/date-picker, carousel, chart, drawer, input-otp, form
+        # solo para algunos componentes: command/combobox, calendar/date-picker, carousel, chart, drawer, input-otp, form, resizable, message-scroller
         "cmdk", "react-day-picker", "embla-carousel-react", "recharts", "vaul", "input-otp",
-        "react-hook-form", "@hookform/resolvers", "zod"]
+        "react-hook-form", "@hookform/resolvers", "zod",
+        # resizable y message-scroller
+        "react-resizable-panels", "@shadcn/react"]
 
 
 def load(path):

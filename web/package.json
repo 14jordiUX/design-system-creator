@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.3",
+    "@shadcn/react": "^0.3.1",
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -25,6 +26,7 @@
     "react-day-picker": "^10.0.2",
     "react-dom": "^19.3.1",
     "react-hook-form": "^7.91.0",
+    "react-resizable-panels": "^4.19.1",
     "react-router-dom": "^7.18.5",
     "recharts": "^3.10.1",
     "sonner": "^2.0.8",

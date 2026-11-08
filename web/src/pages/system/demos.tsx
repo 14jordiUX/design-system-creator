@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { DEMOS2 } from "./demos2"
+import { DEMOS3 } from "./demos3"
 import { toast } from "sonner"
 import { Bold, Italic, Underline, Info, AlertTriangle, ChevronDown, Settings, LogOut, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -198,4 +199,4 @@ export const DEMOS: Record<string, Demo> = {
   },
 }
 
-Object.assign(DEMOS, DEMOS2)
+Object.assign(DEMOS, DEMOS2, DEMOS3)
