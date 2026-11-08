@@ -59,6 +59,7 @@ python scripts/generate.py systems/<id>                      # regenera todas la
 python scripts/generate.py --all                             # regenera base y todos los sistemas
 python scripts/migrate.py --all                              # añade a los sistemas existentes los tokens nuevos
 cd web && npm run build && cp dist/index.html "../Abrir la web.html"   # actualiza la web
+python scripts/build_registry.py [web/public/r]               # publica cada sistema como registro de shadcn (lo hace GitHub al publicar)
 python scripts/check_tokens.py                               # comprueba que no hay ningún valor fijo (debe dar 0, 0 y 0)
 ```
 

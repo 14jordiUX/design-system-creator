@@ -6,6 +6,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PageHeader } from "@/components/app/common"
 import { zipSync, strToU8 } from "fflate"
 import { useDS } from "./context"
+import { InstallCommand, installCommand } from "@/components/app/install"
+import { Terminal } from "lucide-react"
 
 function download(name: string, content: string | Uint8Array, type = "application/json") {
   const url = URL.createObjectURL(new Blob([content as BlobPart], { type }))
@@ -40,6 +42,18 @@ export default function Downloads() {
     <div>
       <PageHeader eyebrow="Descargas" title="Descargas" description={`Todo lo necesario para usar ${ds.meta.name} en código, en Figma y con Claude.`} />
       {dirty && <Alert className="mb-gap-xl"><AlertDescription>Tienes cambios sin guardar en el editor. Las descargas usan la versión guardada en tu carpeta.</AlertDescription></Alert>}
+      <Card className="mb-gap-lg">
+        <CardHeader>
+          <Terminal className="size-icon-lg text-primary" />
+          <CardTitle>Instalar con shadcn/ui</CardTitle>
+          <CardDescription>
+            En un proyecto que ya use shadcn/ui, este comando instala todos los componentes con el estilo de {ds.meta.name}, el tema
+            (src/design-system/globals.css) y las utilidades. Después, importa ese globals.css una vez en tu CSS principal, en lugar de @import "tailwindcss".
+            Cada componente tiene su propio comando en su página.
+          </CardDescription>
+        </CardHeader>
+        <CardFooter className="block"><InstallCommand command={installCommand(id, ["todo"])} /></CardFooter>
+      </Card>
       <div className="grid gap-gap-lg md:grid-cols-2">
         {items.map((it) => (
           <Card key={it.title} className={it.ready ? "" : "opacity-disabled"}>

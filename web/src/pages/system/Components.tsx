@@ -9,6 +9,7 @@ import { useDS } from "./context"
 import { DEMOS } from "./demos"
 import { usedTokens, COMPOSED } from "@/lib/usedTokens"
 import { InspectableDemo, InspectorProvider, TokenChip } from "./inspector"
+import { InstallCommand, installCommand } from "@/components/app/install"
 
 export function ComponentsIndex() {
   const { base, ds } = useDS()
@@ -54,7 +55,7 @@ export function ComponentPage() {
   const item = ALL_COMPONENTS.find((c) => c.slug === slug)
   const demo = slug ? DEMOS[slug] : undefined
   const tokens = slug ? usedTokens(slug) : null
-  const { editor } = useDS()
+  const { editor, ds } = useDS()
   if (!item) return <EmptyState title="Este componente no existe" />
   return (
     <InspectorProvider key={slug} enabled={editor}>
@@ -70,6 +71,9 @@ export function ComponentPage() {
               <CodeBlock code={ex.code} />
             </Section>
           ))}
+          <Section title="Instalar en tu proyecto" description={`En un proyecto con shadcn/ui, este comando añade ${item.label} ya con el estilo de ${ds.meta.name}, con el tema y lo que necesite.`}>
+            <InstallCommand command={installCommand(ds.meta.id, COMPOSED[slug!] ?? [slug!])} />
+          </Section>
           <Section title="Tokens que usa" description={(editor ? "Pasa el ratón por un token para ver dónde se aplica en las demos. " : "") + (COMPOSED[slug!] ? `Se monta juntando ${COMPOSED[slug!].join(", ")}. ` : "") + "Lista calculada a partir del código del componente: cada clase apunta a un token. No hay ningún valor escrito a mano."}>
             {tokens?.length ? (
               <div className="grid gap-gap-lg md:grid-cols-2">
