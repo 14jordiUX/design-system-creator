@@ -20,6 +20,7 @@ Si quieres que Claude lo recuerde siempre, guarda `SKILL.md` como skill.
 | `styles/globals.css` | Tema listo para Tailwind CSS v4 y shadcn/ui. |
 | `components/ui/` | 58 componentes de shadcn/ui que toman el estilo del sistema. |
 | `components/custom/` | Componentes propios del sistema: app-sidebar, appointment-card, fab, stat-card, tab. |
+| `patterns/` | Pantallas de ejemplo hechas solo con los componentes: panel-de-gestion. |
 | `lib/utils.ts` | Función auxiliar que usan los componentes. |
 | `components.json` | Configuración para añadir más componentes con `npx shadcn add`. |
 

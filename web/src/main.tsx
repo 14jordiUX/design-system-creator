@@ -9,7 +9,7 @@ import SystemLayout from "./pages/system/SystemLayout"
 import SystemHome from "./pages/system/SystemHome"
 import Foundation from "./pages/system/Foundation"
 import { ComponentPage, ComponentsIndex } from "./pages/system/Components"
-import Patterns from "./pages/system/Patterns"
+import Patterns, { PatternPage } from "./pages/system/Patterns"
 import Downloads from "./pages/system/Downloads"
 import { TooltipProvider } from "./components/ui/tooltip"
 
@@ -22,6 +22,7 @@ const systemPages = (
     <Route path="componentes" element={<ComponentsIndex />} />
     <Route path="componentes/:slug" element={<ComponentPage />} />
     <Route path="patrones" element={<Patterns />} />
+    <Route path="patrones/:slug" element={<PatternPage />} />
     <Route path="descargas" element={<Downloads />} />
   </>
 )

@@ -10,6 +10,7 @@ import { setTokenValue, type Mode, type TokenFiles } from "@/lib/tokens"
 import { useSystemTheme } from "@/lib/theme"
 import { FOUNDATIONS, COMPONENT_GROUPS } from "@/lib/nav"
 import { customFor } from "@/lib/custom"
+import { patternsFor } from "@/lib/patterns"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -212,7 +213,8 @@ function SystemLayout({ id }: { id?: string }) {
                   </div>
                 ))}
                 {match("Patrones") && <><SideTitle icon={<LayoutGrid className="size-icon-sm" />}>Patrones</SideTitle>
-                  <SideLink to={`${base}/patrones`}>Todos los patrones</SideLink></>}
+                  <SideLink to={`${base}/patrones`} end>Todos los patrones</SideLink>
+                  {patternsFor(ds.meta.id).map((p) => <SideLink key={p.slug} to={`${base}/patrones/${p.slug}`}>{p.meta.label}</SideLink>)}</>}
                 {match("Descargas") && <><SideTitle icon={<Download className="size-icon-sm" />}>Descargas</SideTitle>
                   <SideLink to={`${base}/descargas`}>Kit, Figma y Claude</SideLink></>}
                 {q && !founds.length && !comps.length && !match("Patrones") && !match("Descargas") && (

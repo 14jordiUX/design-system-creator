@@ -37,6 +37,19 @@ systems/<id>/components/<slug>/    ← solo ese sistema (por ejemplo sereno/appo
 (`…/r/<id>/<slug>.json`). Si un sistema tiene uno con el mismo nombre que base, manda el del sistema.
 El nombre (`slug`) no puede coincidir con uno de shadcn/ui.
 
+## Patrones
+
+Pantallas hechas solo juntando componentes (de shadcn/ui y propios) y tokens, sin piezas ni valores nuevos:
+
+```
+base/patterns/<slug>/<slug>.tsx            ← los tienen todos los sistemas (por ejemplo panel-de-gestion)
+systems/<id>/patterns/<slug>/<slug>.tsx    ← solo ese sistema
+```
+
+Cada archivo exporta `meta = { label, description }` y por defecto la pantalla. Importa los componentes como en un
+proyecto real (`@/components/ui/…`, `@/components/custom/…`). `scripts/generate.py` los copia a la web (Patrones, con
+vista de escritorio y de móvil) y al kit (`kit/patterns/`).
+
 ## La ficha (`system.json`)
 
 | Campo | Qué es | Ejemplo |

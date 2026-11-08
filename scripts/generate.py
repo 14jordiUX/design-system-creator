@@ -34,6 +34,23 @@ def custom_components(sysdir):
     return out
 
 
+def system_patterns(sysdir):
+    """Patrones (pantallas hechas juntando componentes): base/patterns/<slug>/<slug>.tsx (todos) y <sistema>/patterns/<slug>/.
+    Cada <slug>.tsx exporta `meta` ({ label, description }) y por defecto la pantalla. Manda el del sistema si se llaman igual."""
+    out = {}
+    for d in [os.path.join(ROOT, "base", "patterns"), os.path.join(os.path.abspath(sysdir), "patterns")]:
+        if not os.path.isdir(d): continue
+        for slug in sorted(os.listdir(d)):
+            if os.path.isfile(os.path.join(d, slug, slug + ".tsx")): out[slug] = os.path.join(d, slug)
+    return out
+
+
+def pattern_imports(src):
+    """Rutas relativas para kit/patterns/."""
+    return (src.replace('"@/lib/utils"', '"../lib/utils"').replace('"@/hooks/', '"../hooks/')
+               .replace('"@/components/ui/', '"../components/ui/').replace('"@/components/custom/', '"../components/custom/'))
+
+
 def kit_imports(src, folder):
     """Rutas relativas para el kit (components/ui o components/custom), para que funcione sin configurar alias."""
     ui = '"./' if folder == "ui" else '"../ui/'
@@ -43,15 +60,24 @@ def kit_imports(src, folder):
 
 
 def sync_web_custom():
-    """Copia los componentes propios a web/src/custom/<base|sistema>/<slug>/ para que la web los compile (no se guarda en git)."""
-    dst = os.path.join(ROOT, "web", "src", "custom")
-    if os.path.isdir(dst): shutil.rmtree(dst)
-    sources = [("base", os.path.join(ROOT, "base", "components"))]
-    sd = os.path.join(ROOT, "systems")
-    sources += [(d, os.path.join(sd, d, "components")) for d in sorted(os.listdir(sd)) if os.path.isdir(os.path.join(sd, d, "components"))]
-    for scope, d in sources:
-        if os.path.isdir(d): shutil.copytree(d, os.path.join(dst, scope))
-    os.makedirs(dst, exist_ok=True)
+    """Copia los componentes propios a web/src/custom/<base|sistema>/<slug>/ y los patrones a web/src/patterns/…
+    para que la web los compile (no se guardan en git)."""
+    for kind, folder in (("components", "custom"), ("patterns", "patterns")):
+        dst = os.path.join(ROOT, "web", "src", folder)
+        if os.path.isdir(dst): shutil.rmtree(dst)
+        sources = [("base", os.path.join(ROOT, "base", kind))]
+        sd = os.path.join(ROOT, "systems")
+        sources += [(d, os.path.join(sd, d, kind)) for d in sorted(os.listdir(sd)) if os.path.isdir(os.path.join(sd, d, kind))]
+        for scope, d in sources:
+            if os.path.isdir(d): shutil.copytree(d, os.path.join(dst, scope))
+        os.makedirs(dst, exist_ok=True)
+    # Atajos @/components/custom/<slug> (como en un proyecto real), para que patrones y componentes puedan usarse entre sí
+    shims = os.path.join(ROOT, "web", "src", "components", "custom")
+    if os.path.isdir(shims): shutil.rmtree(shims)
+    base_dir = os.path.join(ROOT, "base", "components")
+    for slug in sorted(os.listdir(base_dir)) if os.path.isdir(base_dir) else []:
+        if os.path.isfile(os.path.join(base_dir, slug, slug + ".tsx")):
+            write(os.path.join(shims, slug + ".tsx"), f'// Generado por scripts/generate.py\nexport * from "../../custom/base/{slug}/{slug}"\n')
 
 
 def load(path):
@@ -230,7 +256,11 @@ def build_kit(sysdir, meta, primitives, sem, lf, df, table_light, table_dark, to
     for slug, d in custom.items():
         src = open(os.path.join(d, slug + ".tsx"), encoding="utf-8").read()
         write(os.path.join(kit, "components", "custom", slug + ".tsx"), kit_imports(src, "custom"))
-    meta = {**meta, "_custom": sorted(custom)}
+    pats = system_patterns(sysdir)
+    for slug, d in pats.items():
+        src = open(os.path.join(d, slug + ".tsx"), encoding="utf-8").read()
+        write(os.path.join(kit, "patterns", slug + ".tsx"), pattern_imports(src))
+    meta = {**meta, "_custom": sorted(custom), "_patterns": sorted(pats)}
     os.makedirs(os.path.join(kit, "lib"), exist_ok=True)
     shutil.copy(UTILS, os.path.join(kit, "lib", "utils.ts"))
     shutil.copytree(os.path.join(os.path.dirname(UI_DIR), "..", "hooks"), os.path.join(kit, "hooks"))
@@ -279,7 +309,7 @@ Tipo de producto: {meta.get('productType', '—')}.
 
 ## Reglas
 
-1. **Usa siempre los componentes de `components/ui/`** (shadcn/ui ya tematizados). No crees botones, campos o tarjetas desde cero si existe el componente. Componentes disponibles: {", ".join(comps)}.{(" Además, componentes propios de este sistema en `components/custom/`: " + ", ".join(meta.get("_custom", [])) + ". Úsalos antes que montar algo parecido.") if meta.get("_custom") else ""}
+1. **Usa siempre los componentes de `components/ui/`** (shadcn/ui ya tematizados). No crees botones, campos o tarjetas desde cero si existe el componente. Componentes disponibles: {", ".join(comps)}.{(" Además, componentes propios de este sistema en `components/custom/`: " + ", ".join(meta.get("_custom", [])) + ". Úsalos antes que montar algo parecido.") if meta.get("_custom") else ""}{(" Hay pantallas de ejemplo hechas solo con estos componentes en `patterns/` (" + ", ".join(meta.get("_patterns", [])) + "): tómalas como modelo de estructura.") if meta.get("_patterns") else ""}
 2. **Nunca escribas valores a mano**: nada de `#hex`, `px`, `rem`, `ms` ni clases con corchetes como `p-[13px]`. El tema de Tailwind de este kit solo contiene clases que apuntan a tokens; si una clase no existe (por ejemplo `h-9`, `bg-red-500` sin token o `text-white`), no genera CSS. Si necesitas un valor que no está, pide añadir un token.
 3. **Solo tokens semánticos.** Los primitivos (`space.4`, `radius.md`, `font.size.sm`, `color.brand.600`…) son la capa de gestión: no se usan en el código y no tienen clase. Usa siempre el semántico (`space.inset.lg`, `radius.control`, `text.size.ui`, `color.action.primary.default`…).
 4. Vocabulario de clases (todas salen de tokens):
@@ -351,7 +381,7 @@ Si quieres que Claude lo recuerde siempre, guarda `SKILL.md` como skill.
 | `tokens/` | Los tokens en formato W3C (la fuente de verdad). |
 | `styles/tokens.css` | Variables CSS, con modo claro y oscuro. |
 | `styles/globals.css` | Tema listo para Tailwind CSS v4 y shadcn/ui. |
-| `components/ui/` | {len(comps)} componentes de shadcn/ui que toman el estilo del sistema. |{chr(10) + "| `components/custom/` | Componentes propios del sistema: " + ", ".join(meta.get("_custom", [])) + ". |" if meta.get("_custom") else ""}
+| `components/ui/` | {len(comps)} componentes de shadcn/ui que toman el estilo del sistema. |{chr(10) + "| `components/custom/` | Componentes propios del sistema: " + ", ".join(meta.get("_custom", [])) + ". |" if meta.get("_custom") else ""}{chr(10) + "| `patterns/` | Pantallas de ejemplo hechas solo con los componentes: " + ", ".join(meta.get("_patterns", [])) + ". |" if meta.get("_patterns") else ""}
 | `lib/utils.ts` | Función auxiliar que usan los componentes. |
 | `components.json` | Configuración para añadir más componentes con `npx shadcn add`. |
 

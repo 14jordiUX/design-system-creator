@@ -8,3 +8,5 @@ __pycache__/
 Thumbs.db
 web/public/r/
 web/src/custom/
+web/src/patterns/
+web/src/components/custom/

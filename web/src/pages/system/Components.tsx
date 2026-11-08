@@ -53,7 +53,7 @@ export function ComponentsIndex() {
   )
 }
 
-function CodeBlock({ code }: { code: string }) {
+export function CodeBlock({ code }: { code: string }) {
   const [copied, setCopied] = useState(false)
   return (
     <div className="rounded-b-card border-thin border-t-0 bg-muted">
