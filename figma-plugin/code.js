@@ -50,7 +50,11 @@ async function upsertVariables(collections, overwrite) {
   const plan = []
   let created = 0, updated = 0
 
-  for (const col of collections) {
+  // En el plan gratis cada colección solo puede tener un modo: el resto (p. ej. «Oscuro») va a una colección aparte,
+  // «Color · Oscuro», con las mismas variables. Así no se pierde ningún valor y se exporta igual de vuelta.
+  const queue = collections.map((c) => Object.assign({ register: true }, c))
+  for (let qi = 0; qi < queue.length; qi++) {
+    const col = queue[qi]
     let fc = existingCols.find((c) => c.name === col.name)
     if (!fc) fc = figma.variables.createVariableCollection(col.name)
     // Modos: el primero se renombra; los demás se añaden (los planes gratis solo permiten uno)
@@ -60,7 +64,11 @@ async function upsertVariables(collections, overwrite) {
       let mode = fc.modes.find((x) => x.name === m)
       if (!mode) {
         try { const id = fc.addMode(m); mode = { modeId: id, name: m } }
-        catch (e) { log("Tu plan de Figma no permite el modo «" + m + "» en «" + col.name + "»: solo se crea el primero.", "warn") }
+        catch (e) {
+          log("Tu plan de Figma no permite el modo «" + m + "» dentro de «" + col.name + "»: lo guardo en la colección «" + col.name + " · " + m + "».", "warn")
+          queue.push({ name: col.name + " · " + m, modes: [m], hidden: col.hidden, register: false,
+            variables: col.variables.map((v) => { const values = {}; values[m] = v.values[m]; return Object.assign({}, v, { values }) }) })
+        }
       }
       if (mode) modeIds[m] = mode.modeId
     }
@@ -71,7 +79,7 @@ async function upsertVariables(collections, overwrite) {
       if (!fv) { fv = figma.variables.createVariable(v.name, fc, v.type); created++ }
       if (v.description && (isNew || overwrite)) fv.description = v.description
       if (col.hidden) fv.scopes = []         // los primitivos no salen en los selectores: se diseña con semánticos
-      byName[v.name] = fv
+      if (col.register) byName[v.name] = fv   // las de la colección aparte no se usan al dibujar
       plan.push({ fv, v, modeIds, write: isNew || overwrite })
     }
   }
@@ -424,7 +432,11 @@ async function draw(data, options) {
     frames[s.id] = frame
     // El modo (claro u oscuro) de la pantalla
     const colorCol = (await figma.variables.getLocalVariableCollectionsAsync()).find((c) => c.name === "Color")
-    if (colorCol) { const m = colorCol.modes.find((mm) => mm.name === data.mode); if (m) frame.setExplicitVariableModeForCollection(colorCol, m.modeId) }
+    if (colorCol) {
+      const m = colorCol.modes.find((mm) => mm.name === data.mode)
+      if (m) frame.setExplicitVariableModeForCollection(colorCol, m.modeId)
+      else if (s === data.screens[0]) log("Las pantallas se ven en claro: tu plan no permite el modo «" + data.mode + "» en la misma colección.", "warn")
+    }
   }
   combineSets(drawer)
 

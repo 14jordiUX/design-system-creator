@@ -23,6 +23,8 @@ Todo color, espacio, radio y tamaño de texto va enlazado a su variable. Si vuel
 
 Si no tienes instalada la fuente del sistema, usa Inter y te avisa.
 
+**Plan gratis de Figma:** solo permite un modo por colección. El modo oscuro se guarda entonces en otra colección, «Color · Oscuro», con las mismas variables (las pantallas se ven en claro). Al exportar los cambios vuelve igual.
+
 ## Exportar tus cambios
 
 Ve a la página del flujo (o selecciona las pantallas) y pulsa **Exportar cambios (.json)**. Súbeselo a Claude en el chat.
