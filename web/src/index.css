@@ -6,7 +6,8 @@
 @import "tailwindcss/utilities" layer(utilities) source(none);
 @source "./";
 @source "./custom";
-@source "./patterns"; /* patrones y componentes propios: los copia scripts/generate.py y git los ignora, por eso se nombran aparte */
+@source "./patterns";
+@source "./prototypes"; /* patrones, prototipos y componentes propios: los copia scripts/generate.py y git los ignora, por eso se nombran aparte */
 @source not inline("border outline border-x border-y border-t border-r border-b border-l");
 @import "../../base/css/tokens.css";
 @import "./theme.css";

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Menu, Download, Eye, Home, LayoutGrid, Moon, Pencil, Puzzle, Redo2, Save, Search, Shapes, Sun, Undo2, RotateCcw, Loader2 } from "lucide-react"
+import { ArrowLeft, Menu, Download, Eye, Home, LayoutGrid, Moon, Pencil, Puzzle, Redo2, Save, Search, Shapes, Workflow, Sun, Undo2, RotateCcw, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { getSystem } from "@/lib/systems"
 import { hasLocalServer, saveSystem } from "@/lib/localServer"
@@ -11,6 +11,7 @@ import { useSystemTheme } from "@/lib/theme"
 import { FOUNDATIONS, COMPONENT_GROUPS } from "@/lib/nav"
 import { customFor } from "@/lib/custom"
 import { patternsFor } from "@/lib/patterns"
+import { prototypesFor } from "@/lib/prototypes"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -176,9 +177,12 @@ function SystemLayout({ id }: { id?: string }) {
           {match("Patrones") && <><SideTitle icon={<LayoutGrid className="size-icon-sm" />}>Patrones</SideTitle>
             <SideLink to={`${base}/patrones`} end>Todos los patrones</SideLink>
             {patternsFor(ds.meta.id).map((p) => <SideLink key={p.slug} to={`${base}/patrones/${p.slug}`}>{p.meta.label}</SideLink>)}</>}
+          {match("Prototipos") && <><SideTitle icon={<Workflow className="size-icon-sm" />}>Prototipos</SideTitle>
+            <SideLink to={`${base}/prototipos`} end>Todos los prototipos</SideLink>
+            {prototypesFor(ds.meta.id).map((p) => <SideLink key={p.slug} to={`${base}/prototipos/${p.slug}`}>{p.meta.label}</SideLink>)}</>}
           {match("Descargas") && <><SideTitle icon={<Download className="size-icon-sm" />}>Descargas</SideTitle>
             <SideLink to={`${base}/descargas`}>Kit, Figma y Claude</SideLink></>}
-          {q && !founds.length && !comps.length && !match("Patrones") && !match("Descargas") && (
+          {q && !founds.length && !comps.length && !match("Patrones") && !match("Prototipos") && !match("Descargas") && (
             <p className="px-inset-md py-inset-xl text-ui text-muted-foreground">Nada coincide con «{q}».</p>
           )}
         </nav>
@@ -232,7 +236,7 @@ function SystemLayout({ id }: { id?: string }) {
 
         <Sheet open={menu} onOpenChange={setMenu}>
           <SheetContent side="left" className="w-sidebar gap-0 p-0">
-            <SheetHeader className="sr-only"><SheetTitle>Menú de {ds.meta.name}</SheetTitle><SheetDescription>Fundamentos, componentes y patrones</SheetDescription></SheetHeader>
+            <SheetHeader className="sr-only"><SheetTitle>Menú de {ds.meta.name}</SheetTitle><SheetDescription>Fundamentos, componentes, patrones y prototipos</SheetDescription></SheetHeader>
             <div className="flex min-h-0 flex-1 flex-col pt-inset-2xl">{sidebar}</div>
           </SheetContent>
         </Sheet>

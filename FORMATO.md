@@ -50,6 +50,21 @@ Cada archivo exporta `meta = { label, description }` y por defecto la pantalla. 
 proyecto real (`@/components/ui/…`, `@/components/custom/…`). `scripts/generate.py` los copia a la web (Patrones, con
 vista de escritorio y de móvil) y al kit (`kit/patterns/`).
 
+## Prototipos
+
+Flujos de varias pantallas que se pueden clicar (login, registro, compra…), con las mismas reglas que los patrones:
+
+```
+base/prototypes/<slug>/<slug>.tsx            ← los tienen todos los sistemas (por ejemplo login)
+systems/<id>/prototypes/<slug>/<slug>.tsx    ← solo ese sistema
+```
+
+Cada archivo exporta `meta = { label, description, screens: [{ id, label }], hints? }` (la primera pantalla es la de
+inicio) y por defecto el flujo, que recibe `screen` (la pantalla que toca) y `go(id)` para pasar a otra. La web se
+ocupa del resto: probarlo (móvil o escritorio, con cualquier sistema), el mapa con todas las pantallas y su descarga en
+PNG, y el enlace a pantalla completa `#/p/<sistema>/<slug>?pantalla=<id>&modo=oscuro` para test con usuarios o para
+incrustar. `scripts/generate.py` los copia a la web y al kit (`kit/prototypes/`).
+
 ## La ficha (`system.json`)
 
 | Campo | Qué es | Ejemplo |
