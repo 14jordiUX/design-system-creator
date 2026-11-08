@@ -105,14 +105,14 @@ export default function NewSystem() {
   return (
     <div className="flex min-h-screen flex-col bg-subtle">
       {connect.dialog}
-      <header className="flex h-header items-center gap-gap-md border-b-thin bg-background px-inset-lg">
-        <Button variant="ghost" size="sm" asChild><Link to="/"><ArrowLeft />Biblioteca</Link></Button>
-        <div className="h-icon-lg w-thin bg-border" />
+      <header className="flex h-header items-center gap-gap-sm border-b-thin bg-background px-inset-md md:gap-gap-md md:px-inset-lg">
+        <Button variant="ghost" size="sm" asChild><Link to="/" aria-label="Biblioteca"><ArrowLeft /><span className="max-md:hidden">Biblioteca</span></Link></Button>
+        <div className="h-icon-lg w-thin bg-border max-md:hidden" />
         <span className="font-strong">Nuevo sistema</span>
-        {!server && !github && <Badge variant="outline">Solo vista: para crearlo, abre «Abrir el editor.bat»</Badge>}
+        {!server && !github && <Badge variant="outline" className="max-md:hidden">Solo vista: para crearlo, abre «Abrir el editor.bat»</Badge>}
       </header>
       <div className="grid flex-1 lg:grid-cols-[var(--layout-sidebar)_1fr_1fr]">
-        <ol className="space-y-gap-2xs border-r-thin bg-background p-inset-lg">
+        <ol className="space-y-gap-2xs border-r-thin bg-background p-inset-lg max-lg:hidden">
           {STEPS.map((label, i) => (
             <li key={label}>
               <button onClick={() => setStep(i)} className={cn("flex w-full items-center gap-gap-md rounded-control px-inset-md py-inset-sm text-left text-ui",

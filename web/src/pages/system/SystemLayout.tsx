@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Download, Eye, Home, LayoutGrid, Moon, Pencil, Puzzle, Redo2, Save, Search, Shapes, Sun, Undo2, RotateCcw, Loader2 } from "lucide-react"
+import { ArrowLeft, Menu, Download, Eye, Home, LayoutGrid, Moon, Pencil, Puzzle, Redo2, Save, Search, Shapes, Sun, Undo2, RotateCcw, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { getSystem } from "@/lib/systems"
 import { hasLocalServer, saveSystem } from "@/lib/localServer"
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { EmptyState, Soon } from "@/components/app/common"
 import { cn } from "@/lib/utils"
 import { Ctx } from "./context"
@@ -46,6 +47,9 @@ function SystemLayout({ id }: { id?: string }) {
   const editor = /^\/s\/[^/]+\/editar/.test(location.pathname)
   const [mode, setMode] = useState<Mode>("light")
   const [q, setQ] = useState("")
+  const [menu, setMenu] = useState(false)
+  // En móvil el menú lateral es un panel: se cierra al cambiar de página
+  useEffect(() => { setMenu(false) }, [location.pathname])
   // Historial del editor: lista de estados y posición actual (para deshacer / rehacer)
   const [history, setHistory] = useState<TokenFiles[]>(() => (ds ? [ds.tokens] : []))
   const [pos, setPos] = useState(0)
@@ -144,19 +148,58 @@ function SystemLayout({ id }: { id?: string }) {
   const comps = [{ group: "Propios", items: own }, ...COMPONENT_GROUPS].map((g) => ({ ...g, items: g.items.filter((i) => match(i.label)) })).filter((g) => g.items.length)
   const founds = FOUNDATIONS.filter((f) => match(f.label))
 
+  const sidebar = (
+    <>
+      <div className="p-inset-md">
+        <div className="relative">
+          <Search className="absolute top-1/2 left-inset-sm size-icon-md -translate-y-1/2 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar" className="h-control-sm pl-inset-2xl" />
+        </div>
+      </div>
+      <ScrollArea className="min-h-0 flex-1">
+        <nav className="px-inset-md pb-inset-xl">
+          {!q && <SideLink to={base} end><span className="flex items-center gap-gap-sm"><Home className="size-icon-md" />Inicio</span></SideLink>}
+          {founds.length > 0 && <SideTitle icon={<Shapes className="size-icon-sm" />}>Fundamentos</SideTitle>}
+          {founds.map((f) => <SideLink key={f.slug} to={`${base}/fundamentos/${f.slug}`}>{f.label}</SideLink>)}
+          {comps.length > 0 && <SideTitle icon={<Puzzle className="size-icon-sm" />}>Componentes</SideTitle>}
+          {!q && <SideLink to={`${base}/componentes`} end>Todos</SideLink>}
+          {comps.map((g) => (
+            <div key={g.group}>
+              <div className="mt-gap-md px-inset-md pb-inset-2xs text-caption text-muted-foreground">{g.group}</div>
+              {g.items.map((i) => (
+                <SideLink key={i.slug} to={`${base}/componentes/${i.slug}`} disabled={!i.ready}>
+                  {i.label}{!i.ready && <Soon step="1.3" />}
+                </SideLink>
+              ))}
+            </div>
+          ))}
+          {match("Patrones") && <><SideTitle icon={<LayoutGrid className="size-icon-sm" />}>Patrones</SideTitle>
+            <SideLink to={`${base}/patrones`} end>Todos los patrones</SideLink>
+            {patternsFor(ds.meta.id).map((p) => <SideLink key={p.slug} to={`${base}/patrones/${p.slug}`}>{p.meta.label}</SideLink>)}</>}
+          {match("Descargas") && <><SideTitle icon={<Download className="size-icon-sm" />}>Descargas</SideTitle>
+            <SideLink to={`${base}/descargas`}>Kit, Figma y Claude</SideLink></>}
+          {q && !founds.length && !comps.length && !match("Patrones") && !match("Descargas") && (
+            <p className="px-inset-md py-inset-xl text-ui text-muted-foreground">Nada coincide con «{q}».</p>
+          )}
+        </nav>
+      </ScrollArea>
+    </>
+  )
+
   return (
     <Ctx.Provider value={ctx}>
       {connect.dialog}
       <div className="flex h-screen flex-col bg-background text-foreground">
-        <header className="flex h-header shrink-0 items-center gap-gap-md border-b-thin px-inset-lg">
-          <Button variant="ghost" size="sm" asChild><Link to="/"><ArrowLeft />Biblioteca</Link></Button>
-          <div className="h-icon-lg w-thin bg-border" />
-          <span className="font-strong">{ds.meta.name}</span>
+        <header className="flex h-header shrink-0 items-center gap-gap-sm border-b-thin px-inset-md md:gap-gap-md md:px-inset-lg">
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMenu(true)} aria-label="Abrir el menú"><Menu /></Button>
+          <Button variant="ghost" size="sm" asChild><Link to="/" aria-label="Biblioteca"><ArrowLeft /><span className="max-md:hidden">Biblioteca</span></Link></Button>
+          <div className="h-icon-lg w-thin bg-border max-md:hidden" />
+          <span className="truncate font-strong">{ds.meta.name}</span>
           <div className="flex-1" />
           <Tabs value={editor ? "editor" : "cliente"} onValueChange={(v) => switchMode(v === "editor")}>
             <TabsList>
-              <TabsTrigger value="cliente"><Eye />Modo cliente</TabsTrigger>
-              <TabsTrigger value="editor"><Pencil />Modo editor</TabsTrigger>
+              <TabsTrigger value="cliente" aria-label="Modo cliente"><Eye /><span className="max-md:hidden">Modo cliente</span></TabsTrigger>
+              <TabsTrigger value="editor" aria-label="Modo editor"><Pencil /><span className="max-md:hidden">Modo editor</span></TabsTrigger>
             </TabsList>
           </Tabs>
           <Tooltip>
@@ -173,7 +216,7 @@ function SystemLayout({ id }: { id?: string }) {
           <div className="flex shrink-0 flex-wrap items-center gap-gap-sm border-b-thin bg-muted px-inset-lg py-inset-sm text-ui">
             <Pencil className="size-icon-md" />
             <span className="font-emphasis">Modo editor</span>
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground max-md:hidden">
               {saving ? `${saving}…`
                 : server ? "Los cambios se ven al momento. Pulsa Guardar para escribirlos en tu carpeta."
                 : github ? "Los cambios se ven al momento. Pulsa Guardar para subirlos a tu repositorio de GitHub."
@@ -187,44 +230,19 @@ function SystemLayout({ id }: { id?: string }) {
           </div>
         )}
 
+        <Sheet open={menu} onOpenChange={setMenu}>
+          <SheetContent side="left" className="w-sidebar gap-0 p-0">
+            <SheetHeader className="sr-only"><SheetTitle>Menú de {ds.meta.name}</SheetTitle><SheetDescription>Fundamentos, componentes y patrones</SheetDescription></SheetHeader>
+            <div className="flex min-h-0 flex-1 flex-col pt-inset-2xl">{sidebar}</div>
+          </SheetContent>
+        </Sheet>
+
         <div className="flex min-h-0 flex-1">
-          <aside className="flex w-sidebar shrink-0 flex-col border-r-thin">
-            <div className="p-inset-md">
-              <div className="relative">
-                <Search className="absolute top-1/2 left-inset-sm size-icon-md -translate-y-1/2 text-muted-foreground" />
-                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar" className="h-control-sm pl-inset-2xl" />
-              </div>
-            </div>
-            <ScrollArea className="min-h-0 flex-1">
-              <nav className="px-inset-md pb-inset-xl">
-                {!q && <SideLink to={base} end><span className="flex items-center gap-gap-sm"><Home className="size-icon-md" />Inicio</span></SideLink>}
-                {founds.length > 0 && <SideTitle icon={<Shapes className="size-icon-sm" />}>Fundamentos</SideTitle>}
-                {founds.map((f) => <SideLink key={f.slug} to={`${base}/fundamentos/${f.slug}`}>{f.label}</SideLink>)}
-                {comps.length > 0 && <SideTitle icon={<Puzzle className="size-icon-sm" />}>Componentes</SideTitle>}
-                {!q && <SideLink to={`${base}/componentes`} end>Todos</SideLink>}
-                {comps.map((g) => (
-                  <div key={g.group}>
-                    <div className="mt-gap-md px-inset-md pb-inset-2xs text-caption text-muted-foreground">{g.group}</div>
-                    {g.items.map((i) => (
-                      <SideLink key={i.slug} to={`${base}/componentes/${i.slug}`} disabled={!i.ready}>
-                        {i.label}{!i.ready && <Soon step="1.3" />}
-                      </SideLink>
-                    ))}
-                  </div>
-                ))}
-                {match("Patrones") && <><SideTitle icon={<LayoutGrid className="size-icon-sm" />}>Patrones</SideTitle>
-                  <SideLink to={`${base}/patrones`} end>Todos los patrones</SideLink>
-                  {patternsFor(ds.meta.id).map((p) => <SideLink key={p.slug} to={`${base}/patrones/${p.slug}`}>{p.meta.label}</SideLink>)}</>}
-                {match("Descargas") && <><SideTitle icon={<Download className="size-icon-sm" />}>Descargas</SideTitle>
-                  <SideLink to={`${base}/descargas`}>Kit, Figma y Claude</SideLink></>}
-                {q && !founds.length && !comps.length && !match("Patrones") && !match("Descargas") && (
-                  <p className="px-inset-md py-inset-xl text-ui text-muted-foreground">Nada coincide con «{q}».</p>
-                )}
-              </nav>
-            </ScrollArea>
+          <aside className="hidden w-sidebar shrink-0 flex-col border-r-thin lg:flex">
+            {sidebar}
           </aside>
           <main className="min-w-0 flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-content px-inset-2xl py-inset-3xl">
+            <div className="mx-auto max-w-content px-inset-lg py-inset-xl md:px-inset-2xl md:py-inset-3xl">
               <Outlet />
             </div>
           </main>
