@@ -1,10 +1,11 @@
 // Prototipo «Iniciar sesión»: un flujo de varias pantallas que se puede clicar, montado SOLO con lo que ya tiene el sistema.
-// Componentes: Card, Field, Input, Button, Checkbox, Alert, Input OTP, Avatar y Badge (shadcn/ui). Ninguna clase fuera de los tokens.
+// Componentes: Card, Field, Input, Button, Checkbox, Alert, Avatar y Badge (shadcn/ui) y los propios Brand, Password Input,
+// Back Button, Code Input e Icon Badge. Ninguna clase fuera de los tokens.
 //
 // Cómo funciona un prototipo: recibe `screen` (la pantalla que toca) y `go(id)` (para ir a otra).
 // La web se encarga de recordar el camino, del botón «Atrás» del navegador, del mapa y de las descargas.
 import { useState } from "react"
-import { ArrowLeft, Eye, EyeOff, LockKeyhole, Mail, MailCheck, ShieldCheck, Sparkles, TriangleAlert } from "lucide-react"
+import { Mail, MailCheck, ShieldCheck, TriangleAlert } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert"
 import { Avatar, AvatarFallback } from "../components/ui/avatar"
 import { Badge } from "../components/ui/badge"
@@ -13,8 +14,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Checkbox } from "../components/ui/checkbox"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSeparator } from "../components/ui/field"
 import { Input } from "../components/ui/input"
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "../components/ui/input-group"
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "../components/ui/input-otp"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../components/ui/input-group"
+import { BackButton } from "../components/custom/back-button"
+import { Brand } from "../components/custom/brand"
+import { CodeInput } from "../components/custom/code-input"
+import { IconBadge } from "../components/custom/icon-badge"
+import { PasswordInput } from "../components/custom/password-input"
 
 export const meta = {
   label: "Iniciar sesión",
@@ -71,21 +76,9 @@ export default function Login({ screen, go }: Props) {
   )
 }
 
-function Brand() {
-  return (
-    <div className="mb-gap-lg flex items-center justify-center gap-gap-sm text-body font-strong text-foreground">
-      <span className="flex size-avatar-md items-center justify-center rounded-control bg-primary text-primary-foreground">
-        <Sparkles className="size-icon-md" />
-      </span>
-      Mi producto
-    </div>
-  )
-}
-
 function SignIn({ go, failed = false }: { go: Props["go"]; failed?: boolean }) {
   const [email, setEmail] = useState(failed ? DEMO_EMAIL : "")
   const [password, setPassword] = useState(failed ? "1234" : "")
-  const [show, setShow] = useState(false)
   const [tried, setTried] = useState(failed)
   const emailError = tried && !EMAIL.test(email) ? (email ? "Este email no parece correcto." : "Escribe tu email.") : ""
   const passError = tried && !password ? "Escribe tu contraseña." : ""
@@ -100,7 +93,7 @@ function SignIn({ go, failed = false }: { go: Props["go"]; failed?: boolean }) {
 
   return (
     <>
-      <Brand />
+      <Brand className="mb-gap-lg" />
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-title">Entra en tu cuenta</CardTitle>
@@ -132,16 +125,8 @@ function SignIn({ go, failed = false }: { go: Props["go"]; failed?: boolean }) {
                     ¿La has olvidado?
                   </Button>
                 </div>
-                <InputGroup>
-                  <InputGroupAddon><LockKeyhole /></InputGroupAddon>
-                  <InputGroupInput id="login-pass" type={show ? "text" : "password"} autoComplete="current-password"
-                    value={password} onChange={(e) => setPassword(e.target.value)} aria-invalid={!!passError || wrong || undefined} />
-                  <InputGroupAddon align="inline-end">
-                    <InputGroupButton size="icon-xs" aria-label={show ? "Ocultar contraseña" : "Ver contraseña"} onClick={() => setShow(!show)}>
-                      {show ? <EyeOff /> : <Eye />}
-                    </InputGroupButton>
-                  </InputGroupAddon>
-                </InputGroup>
+                <PasswordInput id="login-pass" value={password} onChange={(e) => setPassword(e.target.value)}
+                  aria-invalid={!!passError || wrong || undefined} />
                 {passError && <FieldError>{passError}</FieldError>}
               </Field>
               <Field orientation="horizontal">
@@ -166,10 +151,6 @@ function SignIn({ go, failed = false }: { go: Props["go"]; failed?: boolean }) {
   )
 }
 
-function Back({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
-  return <Button type="button" variant="ghost" size="sm" className="justify-self-start" onClick={onClick}><ArrowLeft />{children}</Button>
-}
-
 function Recover({ go }: { go: Props["go"] }) {
   const [email, setEmail] = useState("")
   const [tried, setTried] = useState(false)
@@ -181,10 +162,10 @@ function Recover({ go }: { go: Props["go"] }) {
   }
   return (
     <>
-      <Brand />
+      <Brand className="mb-gap-lg" />
       <Card>
         <CardHeader>
-          <Back onClick={() => go("entrar")}>Volver</Back>
+          <BackButton onClick={() => go("entrar")} />
           <CardTitle className="text-title">Recupera tu contraseña</CardTitle>
           <CardDescription>Te enviamos un enlace para crear una nueva. Caduca en 30 minutos.</CardDescription>
         </CardHeader>
@@ -209,12 +190,10 @@ function Recover({ go }: { go: Props["go"] }) {
 function Sent({ go }: { go: Props["go"] }) {
   return (
     <>
-      <Brand />
+      <Brand className="mb-gap-lg" />
       <Card>
         <CardHeader className="items-center text-center">
-          <span className="mx-auto mb-gap-sm flex size-avatar-xl items-center justify-center rounded-pill bg-accent text-accent-foreground">
-            <MailCheck className="size-icon-lg" />
-          </span>
+          <IconBadge variant="accent" className="mx-auto mb-gap-sm"><MailCheck /></IconBadge>
           <CardTitle className="text-title">Revisa tu correo</CardTitle>
           <CardDescription>
             Si hay una cuenta con ese email, te llegará un enlace en unos minutos. Mira también en la carpeta de spam.
@@ -241,29 +220,18 @@ function Code({ go }: { go: Props["go"] }) {
   }
   return (
     <>
-      <Brand />
+      <Brand className="mb-gap-lg" />
       <Card>
         <CardHeader className="text-center">
-          <Back onClick={() => go("entrar")}>Volver</Back>
+          <BackButton onClick={() => go("entrar")} />
           <CardTitle className="text-title">Confirma que eres tú</CardTitle>
           <CardDescription>Escribe el código de 6 cifras que te hemos enviado a {DEMO_EMAIL}.</CardDescription>
         </CardHeader>
         <CardContent>
           <FieldGroup>
-            <Field data-invalid={bad || undefined} className="items-center">
-              <FieldLabel htmlFor="login-code" className="sr-only">Código de verificación</FieldLabel>
-              <InputOTP id="login-code" maxLength={6} value={code} onChange={check} autoFocus aria-invalid={bad || undefined}>
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} /><InputOTPSlot index={1} /><InputOTPSlot index={2} />
-                </InputOTPGroup>
-                <InputOTPSeparator />
-                <InputOTPGroup>
-                  <InputOTPSlot index={3} /><InputOTPSlot index={4} /><InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-              {bad ? <FieldError className="text-center">Ese código no es válido. Prueba otra vez.</FieldError>
-                : <FieldDescription className="text-center">Se comprueba solo al escribir la última cifra.</FieldDescription>}
-            </Field>
+            <CodeInput id="login-code" value={code} onChange={check} autoFocus
+              description="Se comprueba solo al escribir la última cifra."
+              error={bad ? "Ese código no es válido. Prueba otra vez." : undefined} />
             <Button variant="outline" className="w-full" onClick={() => { setCode(""); setTried(false) }}>Reenviar el código</Button>
           </FieldGroup>
         </CardContent>
@@ -275,7 +243,7 @@ function Code({ go }: { go: Props["go"] }) {
 function Welcome({ go }: { go: Props["go"] }) {
   return (
     <>
-      <Brand />
+      <Brand className="mb-gap-lg" />
       <Card>
         <CardHeader className="items-center text-center">
           <Avatar className="mx-auto mb-gap-sm size-avatar-xl"><AvatarFallback>LR</AvatarFallback></Avatar>
