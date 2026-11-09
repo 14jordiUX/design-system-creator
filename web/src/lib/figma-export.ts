@@ -281,7 +281,11 @@ function layoutOf(cs: CSSStyleDeclaration, kids: DOMRect[], box: DOMRect): FNode
   } else {
     if (kids.every((k) => Math.abs((k.top - top) - (bottom - k.bottom)) < 2)) al = "CENTER"
   }
-  return { mode: stacked ? "VERTICAL" : "HORIZONTAL", gap: Math.max(0, gaps[0] ?? 0), pad, main: "MIN", cross: al }
+  // Eje principal: si el bloque de hijos queda centrado (la marca de la casilla), el auto layout centra
+  const first = kids[0], lastK = kids[kids.length - 1]
+  const before = stacked ? first.top - top : first.left - left, after = stacked ? bottom - lastK.bottom : right - lastK.right
+  const mainAl = before > 0.5 && Math.abs(before - after) < 1.5 ? "CENTER" : "MIN"
+  return { mode: stacked ? "VERTICAL" : "HORIZONTAL", gap: Math.max(0, gaps[0] ?? 0), pad, main: mainAl, cross: al }
 }
 
 const NO_BOX = { display: "block", paddingTop: "0", paddingRight: "0", paddingBottom: "0", paddingLeft: "0", borderTopWidth: "0", borderRightWidth: "0", borderBottomWidth: "0", borderLeftWidth: "0" } as unknown as CSSStyleDeclaration
