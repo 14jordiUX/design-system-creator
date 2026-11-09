@@ -177,6 +177,25 @@ function bindIf(node, field, vars, name) {
 }
 const tokenVar = (vars, token) => (token ? vars[token.replace(/\./g, "/")] : undefined)
 
+// Tamaño propio de un componente (el maestro), según cómo se usaba en la web:
+// - abraza su contenido (Hug) si en la web se adaptaba a él (un botón crece con su texto);
+// - ancho fijo si dentro hay algo que rellena (un Alert: el texto se ajusta al ancho y la altura crece);
+// - fijo si tenía un tamaño fijo (casilla, interruptor, avatar…).
+const FIXED_WIDTH = { input: 1, textarea: 1, "select-trigger": 1, "native-select": 1, "input-group": 1, "password-input": 1, "code-input": 1, slider: 1, progress: 1, separator: 1, skeleton: 1 }
+function selfSizing(frame, n) {
+  if (!n.sizing || !("layoutMode" in frame) || frame.layoutMode === "NONE") return
+  const fillsKid = (axis) => (n.children || []).some((k) => !k.absolute && k.sizing && k.sizing[axis] === "FILL")
+  const flow = (n.children || []).filter((k) => !k.absolute)
+  // Campos y barras: su ancho no depende del texto de dentro (un campo no encoge si el texto es corto)
+  const wide = n.component && FIXED_WIDTH[n.component.set]
+  const mode = (axis) => (!flow.length || n.sizing[axis] === "FIXED" || fillsKid(axis) || (axis === "h" && wide) ? "FIXED" : "AUTO")
+  const hor = frame.layoutMode === "HORIZONTAL"
+  try {
+    frame.primaryAxisSizingMode = hor ? mode("h") : mode("v")
+    frame.counterAxisSizingMode = hor ? mode("v") : mode("h")
+  } catch (e) { /* */ }
+}
+
 function paintIcon(node, paint) {
   const all = "findAll" in node ? node.findAll(() => true) : []
   for (const n of [node].concat(all)) {
@@ -352,6 +371,7 @@ class Drawer {
     this.page.appendChild(comp)
     holder.remove()
     comp.setPluginData("set", n.component.set)
+    selfSizing(comp, n)
     this.components[key] = comp
     this.done[key] = true      // recién hecho: en los demás flujos de este archivo no se vuelve a rehacer
     return comp
@@ -373,6 +393,7 @@ class Drawer {
     }
     comp.name = name
     try { comp.resize(Math.max(1, n.w), Math.max(1, n.h)) } catch (e) { /* */ }
+    selfSizing(comp, n)
     this.refreshed++
   }
 

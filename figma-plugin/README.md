@@ -55,3 +55,16 @@ valores sueltos (sin variable), y lo pasa al código siguiendo las reglas del si
 - Formato de entrada `dsc-figma@1`: lo genera `web/src/lib/figma-export.ts` midiendo las pantallas tal como se ven en la web.
 - Formato de salida `dsc-figma-changes@1`: lo genera `code.js` (`exportChanges`).
 - Sin compilación: `code.js` es JavaScript tal cual (sin `?.` ni `??`, por compatibilidad con el entorno de plugins).
+
+## Reglas de auto layout (las aplica la exportación y el plugin, siempre)
+
+Pedidas por Jordi al revisar el catálogo en Figma. Cualquier componente o pantalla nueva las cumple sin hacer nada:
+
+1. **Nada en freeform.** Las rejillas (`grid`) se pasan a auto layouts anidados. El Alert, por ejemplo, queda así: fila [icono, columna [título, descripción]]. Una pila con huecos distintos se corta por el hueco mayor, y cada trozo va en su propio auto layout.
+2. **Un marco en Hug nunca tiene hijos en Fill** en ese eje. Si los tiene, ese eje va fijo; si no, se encoge.
+3. **Alineación.** Si el contenido está centrado en la caja (la marca de la casilla), el auto layout centra.
+4. **Tamaño propio del componente maestro:**
+   - Se adapta al contenido (Hug) si en la web también lo hacía. Por ejemplo, un botón crece con su texto.
+   - Ancho fijo y alto Hug si dentro hay algo que rellena, como el texto del Alert: el texto se ajusta al ancho y la caja crece hacia abajo.
+   - Los campos (input, textarea, select…) y las barras (progress, slider, separator) tienen ancho fijo.
+   - Los que no escalan tienen tamaño fijo: casilla, interruptor, avatar, botón de icono… (lista `FIXED_SIZE` en `web/src/lib/figma-export.ts`).
