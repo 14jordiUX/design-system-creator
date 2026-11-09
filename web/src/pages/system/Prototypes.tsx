@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import {
   ArrowLeft, BadgeCheck, Check, Code2, Copy, Download, ExternalLink, PenTool, Image as ImageIcon, Puzzle, Lightbulb, Loader2, Map as MapIcon, Monitor, MousePointerClick,
   Presentation, RotateCcw, Share2, Smartphone, Workflow,
+  Plus as PlusIcon, ArrowRight as ArrowRightIcon,
 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -465,6 +466,27 @@ async function measureOpened(card: HTMLElement, slug: string, tokens: TokenFiles
   return out
 }
 
+/** Para Figma: todas las combinaciones del botón (variante × tamaño, normal y desactivado), aunque no salgan en los ejemplos.
+ *  Van primero en su tarjeta: de aquí salen los componentes maestros (con los dos iconos, que en Figma son interruptores). */
+const BTN_VARIANTS = ["default", "secondary", "outline", "ghost", "destructive", "link"] as const
+const BTN_SIZES = ["xs", "sm", "default", "lg"] as const
+const BTN_ICON_SIZES = ["xs", "sm", "", "lg"].map((s) => (s ? `icon-${s}` : "icon")) as ("icon")[]
+function AllButtons() {
+  return (
+    <div className="flex flex-col gap-gap-sm">
+      <p className="text-ui font-emphasis text-muted-foreground">Todas las variantes</p>
+      <div className="flex flex-col gap-gap-md rounded-card border-thin p-inset-2xl">
+        {BTN_VARIANTS.map((v) => [false, true].map((off) => (
+          <div key={v + off} className="flex flex-wrap items-center gap-gap-md">
+            {BTN_SIZES.map((s) => <Button key={s} variant={v} size={s} disabled={off}><PlusIcon />Botón<ArrowRightIcon /></Button>)}
+            {BTN_ICON_SIZES.map((s) => <Button key={s} variant={v} size={s} disabled={off} aria-label="Añadir"><PlusIcon /></Button>)}
+          </div>
+        )))}
+      </div>
+    </div>
+  )
+}
+
 function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens: TokenFiles; system: { id: string; name: string }; mode: "light" | "dark" }) {
   const catalog = useMemo(() => catalogFor(system.id), [system.id])
   const [busy, setBusy] = useState(false)
@@ -536,6 +558,7 @@ function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens:
                 <p className="text-caption text-muted-foreground">{c.group}</p>
                 <h2 className="text-h2 font-strong tracking-heading">{c.label}</h2>
               </div>
+              {c.slug === "button" && <AllButtons />}
               {c.examples.map((ex) => (
                 <div key={ex.title} className="flex flex-col gap-gap-sm">
                   <p className="text-ui font-emphasis text-muted-foreground">{ex.title}</p>

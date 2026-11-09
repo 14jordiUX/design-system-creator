@@ -99,10 +99,12 @@ export type FNode = {
   opacity?: number
   clip?: boolean
   bind?: Bind
-  text?: { chars: string; family: string; weight: number; size: number; lineHeight?: number; letterSpacing?: number; align: string; upper?: boolean; color: Paint; bind: Bind; single: boolean }
+  text?: { chars: string; family: string; weight: number; size: number; lineHeight?: number; letterSpacing?: number; align: string; upper?: boolean; underline?: boolean; color: Paint; bind: Bind; single: boolean }
   svg?: string
   icon?: string                                        // nombre del icono (lucide) → componente icon/<nombre>
-  component?: { set: string; props: Record<string, string>; slot?: string }
+  // toggles: interruptores del componente (icono izquierda/derecha del botón) → si se ven en esta instancia
+  component?: { set: string; props: Record<string, string>; slot?: string; toggles?: Record<string, boolean> }
+  role?: string                                        // capa con propiedad en Figma: «icono izquierda», «icono derecha», «texto»
   states?: Record<string, StatePatch>                 // solo mientras se mide: cómo cambia en cada estado // slot: lo que va en su slot (otro componente)
   link?: string                                        // al clicar, va a esta pantalla
   _h?: { grow: boolean; wClass: boolean; hClass: boolean; fillW: boolean; fillH: boolean } // solo mientras se mide
@@ -137,7 +139,7 @@ const STATEFUL = new Set(["button", "toggle", "toggle-group-item", "tabs-trigger
   "checkbox", "switch", "radio-group-item", "pagination-link", "breadcrumb-link", "back-button", "fab-button", "app-sidebar-item", "app-tab-bar-item",
   "sidebar-menu-button", "command-item", "navigation-menu-link", "choice-card", "dropdown-menu-item", "context-menu-item", "menubar-item", "select-item"])
 const STATE_PREFIX: [string, string][] = [["hover", "hover"], ["active", "pulsado"], ["focus-visible", "foco"], ["focus", "foco"], ["disabled", "deshabilitado"], ["aria-invalid", "error"]]
-type StatePatch = { fill?: Paint; text?: Paint; stroke?: Paint; opacity?: number; focusRing?: { color: Paint; width: number } }
+type StatePatch = { fill?: Paint; text?: Paint; stroke?: Paint; opacity?: number; focusRing?: { color: Paint; width: number }; underline?: boolean }
 
 function rgba(c: string): [number, number, number, number] | null {
   if (!c) return null
@@ -571,16 +573,33 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
       contenido: icons && texts ? "icono y texto" : icons ? "icono" : texts ? "texto" : "vacío",
       estado: stateOf(el, slot),
     }
+    if (NO_STATE[slot]?.includes(props.estado)) props.estado = "normal"
     // Pegado a otro (en un Button Group o un campo con prefijo): sin borde o sin esquinas redondeadas en un lado → su propia variante
     const pos = JOINABLE.has(slot) ? joinedSide(node) : undefined
     if (pos) props.posición = pos
     node.component = { set: slot, props }
+    // Botón con texto: el icono no es una variante, son interruptores (izquierda/derecha) con el icono intercambiable
+    if (WITH_TOGGLES.has(slot) && !props.tamaño.startsWith("icon") && texts) {
+      delete props.contenido
+      const kids = node.children ?? []
+      const ti = kids.findIndex((k) => k.type === "TEXT")
+      const left = kids.findIndex((k, i) => k.type === "SVG" && i < ti), right = kids.findIndex((k, i) => k.type === "SVG" && i > ti)
+      if (ti >= 0) kids[ti].role = "texto"
+      if (left >= 0) kids[left].role = "icono izquierda"
+      if (right >= 0) kids[right].role = "icono derecha"
+      node.component.toggles = { "icono izquierda": left >= 0, "icono derecha": right >= 0 }
+    } else if (WITH_TOGGLES.has(slot)) delete props.contenido
     if (slot in SLOT_LISTS) { node.component.slot = SLOT_LISTS[slot]; props.contenido = SLOT_LISTS[slot] ? "lista" : "caja" }
-    if (STATEFUL.has(slot) && props.estado === "normal") { const st = statePatches(ctx, el); if (Object.keys(st).length) node.states = st }
+    if (STATEFUL.has(slot) && props.estado === "normal") { const st = statePatches(ctx, el); for (const k of NO_STATE[slot] ?? []) delete st[k]; if (Object.keys(st).length) node.states = st }
     node.name = slot
   }
   return node
 }
+
+/** Componentes cuyo icono va con interruptores en Figma, no como variante */
+const WITH_TOGGLES = new Set(["button"])
+/** Estados que no tienen sentido en una pieza (un botón no tiene error) */
+const NO_STATE: Record<string, string[]> = { button: ["error"] }
 
 // Componentes que llevan dentro su control (casilla, interruptor…): su estado es el del control
 const CONTAINS_CONTROL = new Set(["choice-card", "setting-row"])
@@ -624,6 +643,7 @@ function statePatches(ctx: Ctx, el: Element): Record<string, StatePatch> {
     } else if (core.startsWith("bg-") && col) patch.fill = color(col)
     else if (core.startsWith("text-") && col) patch.text = color(col)
     else if (core.startsWith("border-") && col) patch.stroke = color(col)
+    else if (core === "underline") patch.underline = true
     else if (core.startsWith("opacity-")) { const v = Number(ctx.resolved[toks[0]]); if (!isNaN(v)) patch.opacity = v }
   }
   for (const k of Object.keys(out)) if (!Object.keys(out[k]).length) delete out[k]
@@ -635,6 +655,7 @@ function applyState(n: FNode, p: StatePatch) {
   if (p.stroke) n.stroke = { ...p.stroke, weights: n.stroke?.weights ?? [1, 1, 1, 1] }
   if (p.focusRing) { const w = p.focusRing.width; n.stroke = { ...p.focusRing.color, weights: [w, w, w, w], outside: true } }
   if (p.opacity !== undefined) n.opacity = p.opacity
+  if (p.underline) { const walk = (k: FNode) => { if (k.type === "TEXT" && k.text) k.text.underline = true; (k.children ?? []).forEach(walk) }; walk(n) }
   if (p.text) {
     const walk = (k: FNode) => {
       if (k.type === "TEXT" && k.text) k.text.color = { ...p.text! }

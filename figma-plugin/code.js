@@ -247,6 +247,7 @@ class Drawer {
     this.components = {}        // set|props → ComponentNode
     this.icons = {}             // icon/<nombre> → ComponentNode
     this.links = []             // { node, to }
+    this.toggled = []           // instancias con interruptores (icono izquierda/derecha, texto): se ajustan al final
     this.compX = 0; this.compY = 0
   }
 
@@ -271,6 +272,7 @@ class Drawer {
     if (n.text.lineHeight) t.lineHeight = { value: n.text.lineHeight, unit: "PIXELS" }
     if (n.text.letterSpacing) t.letterSpacing = { value: n.text.letterSpacing, unit: "PIXELS" }
     if (n.text.upper) t.textCase = "UPPER"
+    t.textDecoration = n.text.underline ? "UNDERLINE" : "NONE"
     t.textAlignHorizontal = n.text.align
     t.fills = [solid(n.text.color.color, tokenVar(this.vars, n.text.color.token))]
     const len = t.characters.length
@@ -397,6 +399,7 @@ class Drawer {
     const holder = figma.createFrame()
     this.page.appendChild(holder)
     const frame = await this.node(Object.assign({}, n, { sizing: undefined, link: undefined }), holder, null, true)
+    if (n.component.toggles) await this.ensureRoles(frame, n)
     const comp = figma.createComponentFromNode(frame)
     comp.name = props(n.component.props) || "default"
     this.page.appendChild(comp)
@@ -417,11 +420,12 @@ class Drawer {
   async refresh(comp, n) {
     const def = Object.assign({}, n, { sizing: undefined, link: undefined })
     const name = comp.name     // el nombre es la variante (variante=…, tamaño=…): no se toca
-    if (this.sameShape(comp, def, true)) await this.patch(comp, def, true)
+    if (this.sameShape(comp, def, true) && (!n.component.toggles || this.hasRoles(comp))) await this.patch(comp, def, true)
     else {
       for (const c of comp.children.slice()) c.remove()
       await this.box(def, comp)
       for (const c of n.children || []) await this.node(c, comp, n, false)
+      if (n.component.toggles) await this.ensureRoles(comp, n)
       this.rebuilt.push(n.component.set)
     }
     comp.name = name
@@ -505,7 +509,10 @@ class Drawer {
     if (k === "INSTANCE" && node.type === "INSTANCE") {
       if (n.type === "SVG") { try { node.resize(n.w, n.h) } catch (e) { /* */ } paintIcon(node, solid(n.fill.color, tokenVar(this.vars, n.fill.token))); return }
       const comp = await this.definition(n)
-      if (comp) { const cur = await node.getMainComponentAsync(); if (cur !== comp) node.swapComponent(comp); await this.overrides(node, n) }
+      if (comp) {
+        const cur = await node.getMainComponentAsync(); if (cur !== comp) node.swapComponent(comp)
+        if (n.component && n.component.toggles) this.toggled.push({ inst: node, n: n }); else await this.overrides(node, n)
+      }
       return
     }
     await this.box(n, node)
@@ -525,13 +532,85 @@ class Drawer {
     }
   }
 
+  // Botón: [icono izquierda] texto [icono derecha]. Los iconos que no lleva se añaden ocultos, para encenderlos
+  // con su interruptor (y cambiar el icono por otro). Así no hace falta una variante por cada combinación.
+  hasRoles(comp) {
+    return !!comp.children.find((x) => x.name === "icono izquierda") && !!comp.children.find((x) => x.name === "icono derecha")
+  }
+
+  async ensureRoles(frame, n) {
+    const kids = n.children || [], layers = frame.children.slice()
+    let L = null, T = null, R = null
+    kids.forEach((k, i) => { const l = layers[i]; if (!l) return; if (k.role === "icono izquierda") L = l; else if (k.role === "icono derecha") R = l; else if (k.role === "texto") T = l })
+    if (T) T.name = "texto"
+    const size = L || R ? (L || R).width : this.iconSizeFor(n)
+    const make = async () => {
+      const ic = await this.placeholderIcon()
+      const inst = ic.createInstance()
+      inst.resize(size, size)
+      if (T && T.fills !== figma.mixed && T.fills.length) paintIcon(inst, T.fills[0])
+      try { inst.layoutSizingHorizontal = "FIXED"; inst.layoutSizingVertical = "FIXED" } catch (e) { /* */ }
+      return inst
+    }
+    if (!L) { L = await make(); frame.insertChild(T ? frame.children.indexOf(T) : 0, L) }
+    if (!R) { R = await make(); frame.insertChild(T ? frame.children.indexOf(T) + 1 : frame.children.length, R) }
+    L.name = "icono izquierda"; R.name = "icono derecha"
+    L.visible = false; R.visible = false     // el maestro, sin iconos: cada botón enciende los suyos
+  }
+
+  // Tamaño del icono para un botón que no lleva: el de otra variante del mismo tamaño
+  iconSizeFor(n) {
+    for (const key of Object.keys(this.components)) {
+      if (key.split("|")[0] !== n.component.set || key.indexOf("tamaño=" + n.component.props["tamaño"] + ",") < 0 && !key.endsWith("tamaño=" + n.component.props["tamaño"])) continue
+      const c = this.components[key]
+      const l = c && !c.removed && c.children.find((x) => x.name === "icono izquierda" || x.name === "icono derecha")
+      if (l) return l.width
+    }
+    return 16
+  }
+
+  async placeholderIcon() {
+    const names = Object.keys(this.icons)
+    if (this.icons["icon/plus"]) return this.icons["icon/plus"]
+    if (names.length) return this.icons[names[0]]
+    await figma.loadAllPagesAsync()
+    const found = figma.root.findAllWithCriteria({ types: ["COMPONENT"] }).find((c) => c.name.indexOf("icon/") === 0)
+    if (found) { this.icons[found.name] = found; return found }
+    const comp = figma.createComponent()
+    comp.name = "icon/circle"; comp.resize(16, 16); comp.fills = []
+    const e = figma.createEllipse(); e.resize(12, 12); e.x = 2; e.y = 2; e.fills = []; e.strokes = [solid("#000000")]; e.strokeWeight = 2
+    comp.appendChild(e)
+    this.place(comp)
+    this.icons[comp.name] = comp
+    return comp
+  }
+
+  // Al final (cuando el componente ya tiene sus propiedades): qué iconos se ven, cuáles son y el texto
+  async setToggles(inst, n) {
+    if (inst.removed) return
+    const defs = inst.componentProperties
+    const find = (name, type) => Object.keys(defs).find((k) => k.split("#")[0] === name && defs[k].type === type)
+    const want = {}
+    for (const side of ["icono izquierda", "icono derecha"]) {
+      const k = find(side, "BOOLEAN")
+      if (k) want[k] = !!n.component.toggles[side]
+      const svg = (n.children || []).find((c) => c.role === side)
+      const sk = find(side + " · cuál", "INSTANCE_SWAP")
+      if (sk && svg && svg.icon) { await this.icon(svg); want[sk] = this.icons[svg.name].id }
+    }
+    const t = (n.children || []).find((c) => c.role === "texto"), tk = find("texto", "TEXT")
+    if (t && tk) want[tk] = t.text.chars
+    try { inst.setProperties(want) } catch (e) { log("No he podido ajustar los iconos o el texto de un «" + n.component.set + "»: " + e.message, "warn") }
+  }
+
   async instance(n) {
     const comp = await this.definition(n)
     if (!comp) return null
     // Misma variante pero otra forma (otro número de textos, iconos o capas): se dibuja tal cual, no como instancia
-    if (!this.sameShape(comp, Object.assign({}, n, { sizing: undefined }), true)) return null
+    if (!n.component.toggles && !this.sameShape(comp, Object.assign({}, n, { sizing: undefined }), true)) return null
     const inst = comp.createInstance()
-    await this.overrides(inst, n)
+    if (n.component.toggles) this.toggled.push({ inst: inst, n: n })
+    else await this.overrides(inst, n)
     inst.name = n.component.set
     return inst
   }
@@ -579,7 +658,95 @@ async function findComponent(set, p) {
       for (const c of s.children) componentIndex[s.name + "|" + c.name] = c
     }
   }
-  return componentIndex[set + "|" + props(p)] || null
+  const exact = componentIndex[set + "|" + props(p)]
+  if (exact) return exact
+  // La variante del archivo puede tener propiedades de más con su valor por defecto (posición=sola en un botón suelto)
+  for (const key of Object.keys(componentIndex)) {
+    if (key.split("|")[0] !== set) continue
+    const cur = {}
+    key.slice(set.length + 1).split(", ").forEach((kv) => { const [k, v] = kv.split("="); if (k) cur[k] = v })
+    if (Object.keys(p).some((k) => cur[k] !== p[k])) continue
+    if (Object.keys(cur).every((k) => k in p || cur[k] === defaultOf(k))) return componentIndex[key]
+  }
+  return null
+}
+const defaultOf = (k) => (k === "estado" ? "normal" : k === "posición" ? "sola" : "default")
+
+// Propiedades que ya no son variantes (el icono del botón ahora va con interruptores): se quitan del archivo.
+// Las variantes que quedan repetidas se juntan en una (sus instancias pasan a la que se queda).
+const DROPPED = { button: ["contenido"] }
+const NO_STATE = { button: ["error"] }
+async function migrateDropped() {
+  await figma.loadAllPagesAsync()
+  for (const set of figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })) {
+    const drop = DROPPED[set.name]
+    if (!drop || !set.children.some((c) => drop.some((k) => c.name.indexOf(k + "=") >= 0))) continue
+    const parse = (name) => { const o = {}; name.split(", ").forEach((kv) => { const [k, v] = kv.split("="); if (k) o[k] = v }); return o }
+    // Se queda la de solo texto (las demás se rehacen igual al poner al día)
+    const kids = set.children.slice().sort((a, b) => (parse(a.name).contenido === "texto" ? 0 : 1) - (parse(b.name).contenido === "texto" ? 0 : 1))
+    const kept = {}
+    for (const c of kids) {
+      const cur = parse(c.name)
+      drop.forEach((k) => delete cur[k])
+      const name = props(cur)
+      if (kept[name]) {
+        for (const i of await c.getInstancesAsync()) { try { i.swapComponent(kept[name]) } catch (e) { /* */ } }
+        c.remove()
+      } else { kept[name] = c; c.name = name }
+    }
+    log("«" + set.name + "»: " + drop.join(", ") + " ya no es una variante (ahora son interruptores).")
+  }
+  // Estados que una pieza no tiene (un botón no tiene error): sus variantes se quitan y sus instancias pasan a «normal»
+  for (const set of figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })) {
+    const gone = NO_STATE[set.name]
+    if (!gone) continue
+    for (const c of set.children.slice()) {
+      const cur = {}
+      c.name.split(", ").forEach((kv) => { const [k, v] = kv.split("="); if (k) cur[k] = v })
+      if (gone.indexOf(cur.estado) < 0) continue
+      cur.estado = "normal"
+      const to = set.children.find((x) => x.name === props(cur))
+      if (to) { for (const i of await c.getInstancesAsync()) { try { i.swapComponent(to) } catch (e) { /* */ } } c.remove() }
+    }
+  }
+  componentIndex = null
+}
+
+// Interruptores del botón: «icono izquierda» e «icono derecha» (sí/no), qué icono va en cada lado y el texto.
+// Se crean en el conjunto (no en cada variante) y se enlazan con las capas de todas las variantes.
+async function bindToggles() {
+  for (const set of figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })) {
+    const variants = set.children.filter((c) => c.type === "COMPONENT")
+    const layer = (c, name) => c.children.find((x) => x.name === name)
+    if (!variants.some((c) => layer(c, "icono izquierda"))) continue
+    try {
+      const keyOf = (name, type) => Object.keys(set.componentPropertyDefinitions).find((k) => k.split("#")[0] === name && set.componentPropertyDefinitions[k].type === type)
+      const ensure = (name, type, def) => keyOf(name, type) || set.addComponentProperty(name, type, def)
+      let icon = null
+      for (const c of variants) for (const r of ["icono izquierda", "icono derecha"]) { const l = layer(c, r); if (!icon && l && l.type === "INSTANCE") icon = await l.getMainComponentAsync() }
+      const keys = {}
+      for (const side of ["icono izquierda", "icono derecha"]) {
+        keys[side] = ensure(side, "BOOLEAN", false)
+        if (icon) keys[side + " · cuál"] = ensure(side + " · cuál", "INSTANCE_SWAP", icon.id)
+      }
+      const firstText = variants.map((c) => layer(c, "texto")).find((t) => t && t.type === "TEXT")
+      const tk = firstText ? ensure("texto", "TEXT", firstText.characters) : null
+      for (const c of variants) {
+        for (const side of ["icono izquierda", "icono derecha"]) {
+          const l = layer(c, side)
+          if (!l) continue
+          const refs = { visible: keys[side] }
+          if (l.type === "INSTANCE" && keys[side + " · cuál"]) refs.mainComponent = keys[side + " · cuál"]
+          l.componentPropertyReferences = refs
+        }
+        const t = layer(c, "texto")
+        if (t && t.type === "TEXT" && tk) {
+          await figma.loadFontAsync(t.fontName === figma.mixed ? { family: "Inter", style: "Regular" } : t.fontName)
+          t.componentPropertyReferences = { characters: tk }
+        }
+      }
+    } catch (e) { log("No he podido crear los interruptores de «" + set.name + "»: " + e.message, "warn") }
+  }
 }
 
 // Junta los componentes sueltos de cada tipo en un conjunto con variantes (button → variante, tamaño, contenido…)
@@ -664,6 +831,7 @@ async function pageNamed(name, reuse) {
 async function draw(data, options) {
   if (!data || data.format !== "dsc-figma@1") throw new Error("Este archivo no es de la web Design System Creator (Llevar a Figma).")
   componentIndex = null
+  await migrateDropped()
   const update = !!options.update
   log((update ? "Actualizando con " : "Sistema ") + data.system.name + " · " + data.prototype.label + " (" + data.mode + ")")
   const vars = await upsertVariables(data.collections, update || !!options.overwrite)
@@ -735,6 +903,8 @@ async function draw(data, options) {
   }
   combineSets(drawer)
   preferInSlots(drawer)
+  await bindToggles()
+  for (const t of drawer.toggled) await drawer.setToggles(t.inst, t.n)
 
   // Prototipo: cada botón lleva a su pantalla
   for (const l of drawer.links) {
