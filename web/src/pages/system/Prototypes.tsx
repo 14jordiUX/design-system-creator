@@ -6,10 +6,11 @@ import { toBlob } from "html-to-image"
 import { strToU8, zipSync } from "fflate"
 import { toast } from "sonner"
 import {
-  ArrowLeft, Check, Copy, Download, ExternalLink, PenTool, Image as ImageIcon, Puzzle, Lightbulb, Loader2, Map as MapIcon, Monitor, MousePointerClick,
+  ArrowLeft, BadgeCheck, Check, Code2, Copy, Download, ExternalLink, PenTool, Image as ImageIcon, Puzzle, Lightbulb, Loader2, Map as MapIcon, Monitor, MousePointerClick,
   Presentation, RotateCcw, Share2, Smartphone, Workflow,
 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -27,6 +28,7 @@ import pluginManifest from "../../../../figma-plugin/manifest.json?raw"
 import pluginCode from "../../../../figma-plugin/code.js?raw"
 import pluginUi from "../../../../figma-plugin/ui.html?raw"
 import { useDS } from "./context"
+import { InstallCommand, installCommand, siteUrl } from "@/components/app/install"
 import { CodeBlock } from "./Components"
 import { DEMOS } from "./demos"
 import { ALL_COMPONENTS } from "@/lib/nav"
@@ -43,7 +45,10 @@ export default function Prototypes() {
         <div className="grid gap-gap-lg md:grid-cols-2">
           {list.map((p) => (
             <Link key={p.slug} to={p.slug} className="rounded-card border-thin p-inset-lg transition-colors hover:bg-subtle focus-visible:focus-ring">
-              <div className="mb-gap-xs flex items-center gap-gap-sm text-body font-strong"><Workflow className="size-icon-md text-primary" />{p.meta.label}</div>
+              <div className="mb-gap-xs flex items-center gap-gap-sm text-body font-strong">
+                <Workflow className="size-icon-md text-primary" />{p.meta.label}
+                {p.dev && <Badge variant="secondary" className="ml-auto"><BadgeCheck />Validado</Badge>}
+              </div>
               <p className="text-ui text-muted-foreground">{p.meta.description}</p>
               <p className="mt-gap-sm text-caption text-muted-foreground">{p.meta.screens.length} pantallas</p>
             </Link>
@@ -93,6 +98,7 @@ export function PrototypePage() {
       <PageHeader eyebrow="Prototipos" title={p.meta.label} description={p.meta.description}
         actions={
           <div className="flex flex-wrap items-center gap-gap-sm">
+            {p.dev && <Badge variant="secondary"><BadgeCheck />Validado{p.dev.validated ? ` · ${p.dev.validated}` : ""}</Badge>}
             <Select value={ds.meta.id} onValueChange={(id) => navigate(`/s/${id}${editor ? "/editar" : ""}/prototipos/${p.slug}`)}>
               <SelectTrigger size="sm" aria-label="Ver con el sistema"><SelectValue /></SelectTrigger>
               <SelectContent>{others.map((s) => <SelectItem key={s.meta.id} value={s.meta.id}>Con {s.meta.name}</SelectItem>)}</SelectContent>
@@ -108,6 +114,7 @@ export function PrototypePage() {
           <TabsTrigger value="probar"><MousePointerClick />Probar</TabsTrigger>
           <TabsTrigger value="mapa"><MapIcon />Mapa</TabsTrigger>
           <TabsTrigger value="compartir"><Share2 />Compartir</TabsTrigger>
+          {p.dev && <TabsTrigger value="desarrollo"><Code2 />Para desarrollo</TabsTrigger>}
         </TabsList>
         <TabsContent value="probar"><Try key={ds.meta.id + view} p={p} view={view} /></TabsContent>
         <TabsContent value="mapa"><FlowMap p={p} view={view} systemId={ds.meta.id} /></TabsContent>
@@ -115,6 +122,7 @@ export function PrototypePage() {
           <Share p={p} systemId={ds.meta.id} systemName={ds.meta.name} mode={mode} view={view} />
           <ToFigma p={p} tokens={tokens} system={{ id: ds.meta.id, name: ds.meta.name }} mode={mode} view={view} />
         </TabsContent>
+        {p.dev && <TabsContent value="desarrollo"><ForDev p={p} systemId={ds.meta.id} /></TabsContent>}
       </Tabs>
       <Section title="Código" description="Solo usa componentes del sistema (components/ui y components/custom) y clases de tokens. Está también en el kit, en prototypes/.">
         <CodeBlock code={p.source} />
@@ -156,6 +164,54 @@ function Try({ p, view }: { p: Prototype; view: string }) {
           {p.meta.hints.map((h) => <li key={h}>{h}</li>)}
         </ul>
       ) : null}
+    </div>
+  )
+}
+
+/** Flujo validado: lo que se lleva el desarrollo (comando de instalación, .zip y ficha de entrega). */
+function ForDev({ p, systemId }: { p: Prototype; systemId: string }) {
+  const dev = p.dev!
+  const item = `flow-${p.slug}`
+  const handoff = dev.handoff.replaceAll("{{URL}}", `${siteUrl()}/r/${systemId}/${item}.json`)
+  const [file, setFile] = useState(dev.files.find((f) => f.name.endsWith(".tsx"))?.name ?? dev.files[0].name)
+  const zip = () => {
+    const files: Record<string, Uint8Array> = {}
+    for (const f of dev.files) files[`${p.slug}/${f.name}`] = strToU8(f.name === "HANDOFF.md" ? handoff : f.code)
+    download(`${systemId}-${p.slug}-desarrollo.zip`, new Blob([zipSync(files) as BlobPart], { type: "application/zip" }))
+  }
+  return (
+    <div className="flex flex-col gap-gap-xl">
+      <Alert>
+        <BadgeCheck />
+        <AlertTitle>Flujo validado{dev.validated ? ` el ${dev.validated}` : ""}</AlertTitle>
+        <AlertDescription>
+          Esta es la versión para producción: las mismas pantallas, sin datos de ejemplo. Reciben los datos por props y avisan de cada acción
+          (entrar, enviar el código…) para que el desarrollo conecte su servidor. El prototipo de «Probar» se queda igual para seguir testeando.
+        </AlertDescription>
+      </Alert>
+      <div className="flex flex-col gap-gap-sm">
+        <h3 className="text-body font-strong">Instalar en un proyecto</h3>
+        <p className="text-ui text-muted-foreground">Con un comando se instalan las pantallas en components/flows/{p.slug}/, los componentes que usan y el tema de este sistema.</p>
+        <InstallCommand command={installCommand(systemId, [item])} />
+        <div><Button variant="outline" size="sm" onClick={zip}><Download />Descargar .zip</Button></div>
+      </div>
+      <div className="flex flex-col gap-gap-sm">
+        <h3 className="text-body font-strong">Ficha de entrega</h3>
+        <div className="rounded-card border-thin bg-muted">
+          <pre className="overflow-auto p-inset-lg font-code text-caption leading-prose whitespace-pre-wrap">{handoff}</pre>
+        </div>
+      </div>
+      <div className="flex flex-col gap-gap-sm">
+        <div className="flex flex-wrap items-center justify-between gap-gap-sm">
+          <h3 className="text-body font-strong">Código</h3>
+          <Select value={file} onValueChange={setFile}>
+            <SelectTrigger size="sm" aria-label="Archivo"><SelectValue /></SelectTrigger>
+            <SelectContent>{dev.files.filter((f) => f.name !== "HANDOFF.md").map((f) => <SelectItem key={f.name} value={f.name}>{f.name}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div className="rounded-t-card border-thin border-b-0" />
+        <CodeBlock code={dev.files.find((f) => f.name === file)?.code ?? ""} />
+      </div>
     </div>
   )
 }

@@ -12,7 +12,7 @@ Lo ejecuta GitHub al publicar (.github/workflows/web.yml). No se guarda en el re
 import json, os, re, subprocess, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from generate import custom_components  # noqa: E402
+from generate import custom_components, system_prototypes, prototype_dev  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UI_DIR = os.path.join(ROOT, "web", "src", "components", "ui")
@@ -101,6 +101,18 @@ def build(out_dir, base_url):
                   "description": f"Componente propio de {meta['name']} (no viene de shadcn/ui).",
                   "dependencies": npm_deps(src), "registryDependencies": deps,
                   "files": [{"path": f"custom/{c}.tsx", "type": "registry:component", "target": f"~/src/components/custom/{c}.tsx", "content": src}]})
+        # Flujos validados: la versión para desarrollo, con sus pantallas, los componentes que usan y el tema
+        for slug, pdir in system_prototypes(sdir).items():
+            files = prototype_dev(pdir)
+            if not files: continue
+            code = "\n".join(t for f, t in files.items() if f.endswith((".ts", ".tsx")))
+            deps = [url("theme"), url("utils")] + [url(x) for x in sorted(set(re.findall(r'"@/components/(?:ui|custom)/([\w-]+)"', code)))]
+            emit({"name": f"flow-{slug}", "type": "registry:block", "title": f"Flujo {slug} (validado)",
+                  "description": f"Flujo validado de {meta['name']}, listo para producción: pantallas, flujo montado y ficha de entrega (HANDOFF.md).",
+                  "dependencies": npm_deps(code), "registryDependencies": deps,
+                  "files": [{"path": f"flows/{slug}/{f}", "type": "registry:component" if f.endswith((".ts", ".tsx")) else "registry:file",
+                             "target": f"~/src/components/flows/{slug}/{f}",
+                             "content": t.replace("{{URL}}", url(f"flow-{slug}")) if f == "HANDOFF.md" else t} for f, t in files.items()]})
         emit({"name": "todo", "type": "registry:item", "title": f"{meta['name']} completo",
               "description": f"Todos los componentes de {meta['name']}, con su tema y utilidades.",
               "registryDependencies": [url(c) for c in comps + sorted(custom)], "files": []})
