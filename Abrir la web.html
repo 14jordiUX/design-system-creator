@@ -66343,7 +66343,8 @@ class Drawer {
       if (k) want[k] = !!n.component.toggles[side]
       const svg = (n.children || []).find((c) => c.role === side)
       const sk = find(side + " · cuál", "INSTANCE_SWAP")
-      if (sk && svg && svg.icon) { await this.icon(svg); want[sk] = this.icons[svg.name].id }
+      // Solo si cambia: «cambiar» al mismo icono hace que Figma lo deje con el color del icono original
+      if (sk && svg && svg.icon) { await this.icon(svg); const id = this.icons[svg.name].id; if (defs[sk].value !== id) want[sk] = id }
     }
     const t = (n.children || []).find((c) => c.role === "texto"), tk = find("texto", "TEXT")
     if (t && tk) want[tk] = t.text.chars
@@ -66351,7 +66352,9 @@ class Drawer {
     // Al cambiar el icono, Figma puede quedarse con el color del icono original: se pinta con el del botón
     for (const side of ["icono izquierda", "icono derecha"]) {
       const svg = (n.children || []).find((c) => c.role === side)
-      const l = inst.children.find((x) => x.name === side)
+      // La capa por su interruptor (al cambiar de icono, Figma le puede cambiar el nombre)
+      const bk = find(side, "BOOLEAN")
+      const l = inst.children.find((x) => x.componentPropertyReferences && bk && x.componentPropertyReferences.visible === bk) || inst.children.find((x) => x.name === side)
       if (svg && svg.fill && l) paintIcon(l, solid(svg.fill.color, tokenVar(this.vars, svg.fill.token)))
     }
   }
