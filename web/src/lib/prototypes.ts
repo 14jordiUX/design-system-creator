@@ -10,15 +10,28 @@ export type Screen = { id: string; label: string }
 export type PrototypeLink = { from: string; text: string; to: string }
 export type PrototypeMeta = { label: string; description: string; screens: Screen[]; hints?: string[]; links?: PrototypeLink[] }
 export type FlowProps = { screen: string; go: (id: string) => void }
-export type Prototype = { slug: string; scope: string; meta: PrototypeMeta; Component: ComponentType<FlowProps>; source: string }
+// dev: versión para desarrollo de un flujo validado (<prototipo>/dev/): pantallas limpias, sin datos de ejemplo, y la ficha de entrega
+export type DevFile = { name: string; code: string }
+export type DevPackage = { files: DevFile[]; handoff: string; validated?: string }
+export type Prototype = { slug: string; scope: string; meta: PrototypeMeta; Component: ComponentType<FlowProps>; source: string; dev?: DevPackage }
 
 const mods = import.meta.glob("../prototypes/*/*/*.tsx", { eager: true }) as Record<string, { default: ComponentType<FlowProps>; meta?: PrototypeMeta }>
 const sources = import.meta.glob("../prototypes/*/*/*.tsx", { eager: true, query: "?raw", import: "default" }) as Record<string, string>
 
+const devSources = import.meta.glob(["../prototypes/*/*/dev/*.tsx", "../prototypes/*/*/dev/*.ts", "../prototypes/*/*/dev/*.md"], { eager: true, query: "?raw", import: "default" }) as Record<string, string>
+
+function devFor(scope: string, slug: string): DevPackage | undefined {
+  const prefix = `../prototypes/${scope}/${slug}/dev/`
+  const files = Object.entries(devSources).filter(([k]) => k.startsWith(prefix)).map(([k, code]) => ({ name: k.slice(prefix.length), code }))
+  const handoff = files.find((f) => f.name === "HANDOFF.md")?.code
+  if (!handoff) return undefined
+  return { files: files.sort((a, b) => a.name.localeCompare(b.name)), handoff, validated: handoff.match(/validado[^0-9]*(\d{4}-\d{2}-\d{2})/i)?.[1] }
+}
+
 const all: Prototype[] = Object.entries(mods).flatMap(([path, m]) => {
   const [, , scope, slug, file] = path.split("/")
   if (file !== `${slug}.tsx` || !m.meta?.screens?.length) return []
-  return [{ slug, scope, meta: m.meta, Component: m.default, source: sources[path] ?? "" }]
+  return [{ slug, scope, meta: m.meta, Component: m.default, source: sources[path] ?? "", dev: devFor(scope, slug) }]
 })
 
 /** Prototipos que tiene un sistema: los de base más los suyos. */

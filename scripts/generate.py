@@ -56,6 +56,34 @@ def system_prototypes(sysdir):
     return out
 
 
+def site_url():
+    """Dirección de la web publicada (GitHub Pages), para los comandos de instalación."""
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    if not repo:
+        try:
+            import subprocess
+            remote = subprocess.run(["git", "remote", "get-url", "origin"], cwd=ROOT, capture_output=True, text=True).stdout
+            m = re.search(r"github\.com[/:]([^/]+/[^/.\s]+)", remote)
+            repo = m.group(1) if m else None
+        except Exception: repo = None
+    if not repo: return "https://14jordiux.github.io/design-system-creator"
+    owner, name = repo.split("/")
+    return f"https://{owner.lower()}.github.io/{name}"
+
+
+def prototype_dev(proto_dir):
+    """Versión para desarrollo de un flujo validado: <prototipo>/dev/ (pantallas limpias, index.ts y HANDOFF.md). {archivo: texto}."""
+    d = os.path.join(proto_dir, "dev")
+    if not os.path.isdir(d): return {}
+    return {f: open(os.path.join(d, f), encoding="utf-8").read() for f in sorted(os.listdir(d)) if os.path.isfile(os.path.join(d, f))}
+
+
+def flow_imports(src):
+    """Rutas relativas para kit/flows/<flujo>/."""
+    return (src.replace('"@/lib/utils"', '"../../lib/utils"').replace('"@/hooks/', '"../../hooks/')
+               .replace('"@/components/ui/', '"../../components/ui/').replace('"@/components/custom/', '"../../components/custom/'))
+
+
 def pattern_imports(src):
     """Rutas relativas para kit/patterns/."""
     return (src.replace('"@/lib/utils"', '"../lib/utils"').replace('"@/hooks/', '"../hooks/')
@@ -275,6 +303,11 @@ def build_kit(sysdir, meta, primitives, sem, lf, df, table_light, table_dark, to
     for slug, d in protos.items():
         src = open(os.path.join(d, slug + ".tsx"), encoding="utf-8").read()
         write(os.path.join(kit, "prototypes", slug + ".tsx"), pattern_imports(src))
+        # Flujo validado: la versión para desarrollo va en flows/<flujo>/
+        sid = "base" if os.path.abspath(sysdir) == os.path.join(ROOT, "base") else os.path.basename(os.path.abspath(sysdir))
+        for f, text in prototype_dev(d).items():
+            if f == "HANDOFF.md": text = text.replace("{{URL}}", f"{site_url()}/r/{sid}/flow-{slug}.json")
+            write(os.path.join(kit, "flows", slug, f), flow_imports(text) if f.endswith((".ts", ".tsx")) else text)
     meta = {**meta, "_custom": sorted(custom), "_patterns": sorted(pats), "_prototypes": sorted(protos)}
     os.makedirs(os.path.join(kit, "lib"), exist_ok=True)
     shutil.copy(UTILS, os.path.join(kit, "lib", "utils.ts"))
