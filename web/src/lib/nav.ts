@@ -1,6 +1,7 @@
 export type NavItem = { slug: string; label: string; ready?: boolean }
 
 export const FOUNDATIONS: NavItem[] = [
+  { slug: "estructura", label: "Estructura de tokens", ready: true },
   { slug: "color", label: "Color", ready: true },
   { slug: "tipografia", label: "Tipografía", ready: true },
   { slug: "espaciado", label: "Espaciado", ready: true },
