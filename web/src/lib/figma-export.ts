@@ -110,7 +110,7 @@ export type FNode = {
 
 const CT = classTokens as Record<string, string[]>
 // Componentes de shadcn/ui que pasan a ser componentes de Figma (las piezas «hoja»; los contenedores quedan como marcos)
-const COMPONENT_SLOTS = new Set(["button", "badge", "checkbox", "input", "input-group", "avatar", "alert", "input-otp-slot", "separator", "label", "field-label", "switch", "kbd", "spinner"])
+const COMPONENT_SLOTS = new Set(["button", "badge", "checkbox", "input", "input-group", "avatar", "alert", "input-otp-slot", "separator", "label", "field-label", "switch", "kbd", "spinner", "steps"])
 
 function rgba(c: string): [number, number, number, number] | null {
   if (!c) return null
@@ -180,6 +180,15 @@ function inherited(el: Element | null, stop: Element, prefix: RegExp, test: (t: 
 }
 
 const num = (v: string) => parseFloat(v) || 0
+// Desplazado en horizontal con transform (la barra de Progress, la bolita de Switch): en Figma va suelto en su sitio, si no el auto layout lo recoloca
+const moved = (cs: CSSStyleDeclaration) => {
+  // Solo en horizontal (los iconos llevan pequeños ajustes verticales que no cuentan).
+  // Tailwind usa la propiedad `translate`; los componentes con style={{transform}}, `transform`.
+  const tr = cs.translate && cs.translate !== "none" ? parseFloat(cs.translate) : 0
+  const m = cs.transform.match(/^matrix\(([^)]+)\)$/)
+  const tx = m ? parseFloat(m[1].split(",")[4]) : 0
+  return Math.abs(tr) > 0.5 || Math.abs(tx) > 0.5
+}
 const visible = (el: Element, cs: CSSStyleDeclaration, r: DOMRect) =>
   !classesOf(el).includes("sr-only") && cs.opacity !== "0" && cs.display !== "none" && cs.visibility !== "hidden" && r.width > 0 && r.height > 0 && !(r.width <= 1 && r.height <= 1)
 
@@ -277,7 +286,7 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
   }
 
   const node: FNode = { type: "FRAME", name: el.getAttribute("data-slot") ?? el.tagName.toLowerCase(), ...base }
-  if (cs.position === "absolute" || cs.position === "fixed") node.absolute = true
+  if (cs.position === "absolute" || cs.position === "fixed" || moved(cs)) node.absolute = true
 
   // Caja: fondo, borde, radio, sombra, opacidad
   const bind: Bind = {}
@@ -347,7 +356,7 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
         const ccs = getComputedStyle(child)
         const cr = child.getBoundingClientRect()
         if (!visible(child, ccs, cr)) continue
-        kids.push({ rect: cr, absolute: ccs.position === "absolute" || ccs.position === "fixed", make: () => serialize(ctx, child, root, r) })
+        kids.push({ rect: cr, absolute: ccs.position === "absolute" || ccs.position === "fixed" || moved(ccs), make: () => serialize(ctx, child, root, r) })
       }
     }
     flush()
@@ -417,7 +426,8 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
       variante: el.getAttribute("data-variant") || "default",
       tamaño: el.getAttribute("data-size") || "default",
       contenido: icons && texts ? "icono y texto" : icons ? "icono" : texts ? "texto" : "vacío",
-      estado: el.getAttribute("aria-invalid") === "true" || el.closest("[data-invalid=true]") ? "error"
+      estado: el.getAttribute("data-step") ? `paso ${el.getAttribute("data-step")} de ${el.getAttribute("data-total")}`
+        : el.getAttribute("aria-invalid") === "true" || el.closest("[data-invalid=true]") ? "error"
         : el.getAttribute("data-state") === "checked" ? "marcado" : el.getAttribute("data-active") === "true" ? "activo" : "normal",
     }
     node.component = { set: slot, props }
