@@ -161,7 +161,7 @@ async function toAnswers(m, url, name) {
   const mainBtn = m.buttons.filter((b) => b.rgb && near(b.rgb, brand) && b.text).sort((a, b) => b.w - a.w)[0]
   const overrides = {}
   if (mainBtn && oklch(mainBtn.text).L < 0.5 && contrast(brand, [255, 255, 255]) < 4.5) {
-    for (const mode of ["light", "dark"]) overrides[mode] = { "color.action.primary.on": "{color.brand.950}" }
+    for (const mode of ["light", "dark"]) overrides[mode] = { "color.text.on-action.primary": "{color.brand.950}" }
     notes.color.push("Los botones de la web llevan el texto oscuro encima del color de marca; se mantiene igual.")
   }
 

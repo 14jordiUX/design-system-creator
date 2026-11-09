@@ -24,6 +24,7 @@ SCALE = {"3xs": "0-5", "2xs": "1", "xs": "1-5", "sm": "2", "md": "3", "lg": "4",
 
 
 def extend(primitives, semantic, light, dark):
+    color_roles(light, dark)
     # v0.5: escala semántica completa de espaciado (los componentes ya no usan space.N directamente).
     # Se reescribe una sola vez: si ya tiene "3xs", no se toca (así se respetan los cambios del editor).
     for grp, desc in (("inset", "Relleno interior (padding) y distancias a los bordes"),
@@ -126,7 +127,7 @@ def extend(primitives, semantic, light, dark):
     _to_primitives(primitives, semantic, light, dark)
     for colors, dark_mode in ((light, False), (dark, True)):
         _merge(colors["color"], {
-            "feedback": {"danger": {"hover": t("{color.red.700}", desc="Fondo sólido de peligro al pasar el ratón")}},
+            "bg": {"feedback": {"danger": {"hover": t("{color.red.700}", desc="Fondo de peligro al pasar el ratón")}}},
             "surface": {"sidebar": t("{color.neutral.900}" if dark_mode else "{color.neutral.50}", desc="Fondo de la barra lateral")},
             "chart": {"$description": "Colores de series en gráficos",
                 **{str(i + 1): t("{color.%s}" % c) for i, c in enumerate(
@@ -162,3 +163,67 @@ def _to_primitives(primitives, semantic, light, dark):
     d = primitives["dimension"]
     primitives["dimension"] = {**{k: v for k, v in d.items() if k.startswith("$")},
                                **dict(sorted(((k, v) for k, v in d.items() if not k.startswith("$")), key=lambda kv: int(kv[0])))}
+
+
+# ---------- v0.7: los colores dicen dónde se aplican ----------
+# color . dónde (bg / text / border) . función (action / feedback) . variante . estado
+# Antes: color.action.primary.default / .on, color.feedback.danger.solid / .on-solid / .text / .border
+FEEDBACK = ("success", "warning", "danger", "info")
+
+
+def color_roles(light, dark):
+    """Pasa action.* y feedback.* a bg.* / text.* / border.* (una sola vez; si ya está hecho, no toca nada)."""
+    for colors in (light, dark):
+        c = colors["color"]
+        if "action" not in c and "feedback" not in c: continue
+        act, fb = c.pop("action", {}), c.pop("feedback", {})
+        bg, text, border = c.setdefault("bg", {}), c.setdefault("text", {}), c.setdefault("border", {})
+        def take(node, key, desc=None):
+            tok = node.get(key)
+            if tok is None: return None
+            tok = dict(tok)
+            if desc: tok["$description"] = desc
+            return tok
+        b_act, t_on, b_fb, t_onfb, t_fb, br_fb = {}, {}, {}, {}, {}, {}
+        LABEL = {"primary": "principal", "secondary": "secundaria", "ghost": "sin fondo", "disabled": "desactivada"}
+        for v in ("primary", "secondary", "ghost", "disabled"):
+            node = act.get(v)
+            if not node: continue
+            if v == "disabled":
+                if "default" in node: b_act["disabled"] = take(node, "default", "Fondo de una acción desactivada")
+            else:
+                grp = {}
+                for st, d in (("default", "Fondo de la acción %s" % LABEL[v]), ("hover", "Al pasar el ratón"),
+                              ("active", "Al pulsar"), ("subtle", "Fondo suave (tags, selección)")):
+                    if st in node: grp[st] = take(node, st, d)
+                if grp: b_act[v] = grp
+            if "on" in node: t_on[v] = take(node, "on", "Texto/icono encima de la acción %s" % LABEL[v])
+        for f in FEEDBACK:
+            node = fb.get(f)
+            if not node: continue
+            grp = {}
+            if "solid" in node: grp["default"] = take(node, "solid", "Fondo lleno (badges, botones)")
+            if "hover" in node: grp["hover"] = take(node, "hover", "Fondo lleno al pasar el ratón")
+            if "subtle" in node: grp["subtle"] = take(node, "subtle", "Fondo suave de alertas")
+            b_fb[f] = grp
+            if "on-solid" in node: t_onfb[f] = take(node, "on-solid", "Texto/icono encima del fondo lleno")
+            if "text" in node: t_fb[f] = take(node, "text", "Texto de un aviso sobre fondo normal o suave")
+            br = {}
+            if "solid" in node: br["default"] = take(node, "solid", "Borde fuerte (campo con error, selección)")
+            if "border" in node: br["subtle"] = take(node, "border", "Borde suave de un aviso")
+            if br: br_fb[f] = br
+        # nuevos: texto y borde en color de la acción principal
+        prim = b_act.get("primary", {})
+        if "link" in text and prim:
+            t_act = {"primary": {"$value": text["link"]["$value"], "$description": "Texto o icono en el color principal (legible sobre el fondo)"}}
+        else:
+            t_act = {}
+        br_act = {"primary": {"$value": prim["default"]["$value"], "$description": "Borde en el color principal (casillas, selección)"}} if "default" in prim else {}
+        bg.update({"action": b_act, "feedback": b_fb})
+        text.update({k: v for k, v in (("action", t_act), ("on-action", t_on), ("feedback", t_fb), ("on-feedback", t_onfb)) if v})
+        border.update({k: v for k, v in (("action", br_act), ("feedback", br_fb)) if v})
+        # orden: bg, surface, text, border, chart…
+        order = ["bg", "surface", "text", "border"]
+        rest = {k: v for k, v in c.items() if k not in order}
+        colors["color"] = {**{k: v for k, v in rest.items() if k.startswith("$")}, **{k: c[k] for k in order if k in c},
+                           **{k: v for k, v in rest.items() if not k.startswith("$")}}

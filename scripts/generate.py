@@ -177,11 +177,11 @@ SHADCN = {
     "background": "color.bg.default", "foreground": "color.text.default",
     "card": "color.surface.card", "card-foreground": "color.text.default",
     "popover": "color.surface.popover", "popover-foreground": "color.text.default",
-    "primary": "color.action.primary.default", "primary-foreground": "color.action.primary.on",
-    "secondary": "color.action.secondary.default", "secondary-foreground": "color.action.secondary.on",
+    "primary": "color.bg.action.primary.default", "primary-foreground": "color.text.on-action.primary",
+    "secondary": "color.bg.action.secondary.default", "secondary-foreground": "color.text.on-action.secondary",
     "muted": "color.bg.muted", "muted-foreground": "color.text.muted",
-    "accent": "color.action.ghost.hover", "accent-foreground": "color.action.ghost.on",
-    "destructive": "color.feedback.danger.solid", "destructive-foreground": "color.feedback.danger.on-solid",
+    "accent": "color.bg.action.ghost.hover", "accent-foreground": "color.text.on-action.ghost",
+    "destructive": "color.bg.feedback.danger.default", "destructive-foreground": "color.text.on-feedback.danger",
     "border": "color.border.default", "input": "color.border.input", "ring": "color.border.focus",
     "radius": "radius.control",
 }
@@ -359,7 +359,7 @@ Tipo de producto: {meta.get('productType', '—')}.
 
 1. **Usa siempre los componentes de `components/ui/`** (shadcn/ui ya tematizados). No crees botones, campos o tarjetas desde cero si existe el componente. Componentes disponibles: {", ".join(comps)}.{(" Además, componentes propios de este sistema en `components/custom/`: " + ", ".join(meta.get("_custom", [])) + ". Úsalos antes que montar algo parecido.") if meta.get("_custom") else ""}{(" Hay pantallas de ejemplo hechas solo con estos componentes en `patterns/` (" + ", ".join(meta.get("_patterns", [])) + "): tómalas como modelo de estructura.") if meta.get("_patterns") else ""}{(" Y flujos de varias pantallas que se pueden clicar en `prototypes/` (" + ", ".join(meta.get("_prototypes", [])) + "): cada uno recibe `screen` y `go(id)`; tómalos como modelo para montar flujos completos.") if meta.get("_prototypes") else ""}
 2. **Nunca escribas valores a mano**: nada de `#hex`, `px`, `rem`, `ms` ni clases con corchetes como `p-[13px]`. El tema de Tailwind de este kit solo contiene clases que apuntan a tokens; si una clase no existe (por ejemplo `h-9`, `bg-red-500` sin token o `text-white`), no genera CSS. Si necesitas un valor que no está, pide añadir un token.
-3. **Solo tokens semánticos.** Los primitivos (`space.4`, `radius.md`, `font.size.sm`, `color.brand.600`…) son la capa de gestión: no se usan en el código y no tienen clase. Usa siempre el semántico (`space.inset.lg`, `radius.control`, `text.size.ui`, `color.action.primary.default`…).
+3. **Solo tokens semánticos.** Los primitivos (`space.4`, `radius.md`, `font.size.sm`, `color.brand.600`…) son la capa de gestión: no se usan en el código y no tienen clase. Usa siempre el semántico (`space.inset.lg`, `radius.control`, `text.size.ui`, `color.bg.action.primary.default`…).
 4. Vocabulario de clases (todas salen de tokens):
    - Color: `bg-`/`text-`/`border-` + `background`, `foreground`, `card`, `popover`, `primary`, `primary-hover`, `primary-subtle`, `secondary`, `secondary-hover`, `muted`, `muted-foreground`, `subtle`, `accent`, `destructive`, `destructive-hover`, `border`, `border-strong`, `input`, `ring`, `overlay`, `inverse`, `link`, `success`/`warning`/`danger`/`info` (+ `-foreground`, `-subtle`, `-border`, `-text`), `chart-1…5`, `sidebar-*`.
    - Relleno y distancias a bordes: `p-inset-*`, `px-inset-*`, `top-inset-*`… con la escala `3xs, 2xs, xs, sm, md, lg, xl, 2xl, 3xl, 4xl`.

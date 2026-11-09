@@ -216,328 +216,328 @@
     "color.text.default"
   ],
   "bg-primary": [
-    "color.action.primary.default"
+    "color.bg.action.primary.default"
   ],
   "text-primary": [
-    "color.action.primary.default"
+    "color.text.action.primary"
   ],
   "border-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "border-t-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "border-b-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "border-l-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "border-r-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "fill-primary": [
-    "color.action.primary.default"
+    "color.text.action.primary"
   ],
   "stroke-primary": [
-    "color.action.primary.default"
+    "color.text.action.primary"
   ],
   "outline-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "ring-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "decoration-primary": [
-    "color.action.primary.default"
+    "color.text.action.primary"
   ],
   "bg-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "text-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "border-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "border-t-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "border-b-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "border-l-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "border-r-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "fill-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "stroke-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "outline-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "ring-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "decoration-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "bg-primary-hover": [
-    "color.action.primary.hover"
+    "color.bg.action.primary.hover"
   ],
   "text-primary-hover": [
-    "color.action.primary.hover"
+    "color.bg.action.primary.hover"
   ],
   "border-primary-hover": [
-    "color.action.primary.hover"
+    "color.bg.action.primary.hover"
   ],
   "border-t-primary-hover": [
-    "color.action.primary.hover"
+    "color.bg.action.primary.hover"
   ],
   "border-b-primary-hover": [
-    "color.action.primary.hover"
+    "color.bg.action.primary.hover"
   ],
   "border-l-primary-hover": [
-    "color.action.primary.hover"
+    "color.bg.action.primary.hover"
   ],
   "border-r-primary-hover": [
-    "color.action.primary.hover"
+    "color.bg.action.primary.hover"
   ],
   "fill-primary-hover": [
-    "color.action.primary.hover"
+    "color.bg.action.primary.hover"
   ],
   "stroke-primary-hover": [
-    "color.action.primary.hover"
+    "color.bg.action.primary.hover"
   ],
   "outline-primary-hover": [
-    "color.action.primary.hover"
+    "color.bg.action.primary.hover"
   ],
   "ring-primary-hover": [
-    "color.action.primary.hover"
+    "color.bg.action.primary.hover"
   ],
   "decoration-primary-hover": [
-    "color.action.primary.hover"
+    "color.bg.action.primary.hover"
   ],
   "bg-primary-active": [
-    "color.action.primary.active"
+    "color.bg.action.primary.active"
   ],
   "text-primary-active": [
-    "color.action.primary.active"
+    "color.bg.action.primary.active"
   ],
   "border-primary-active": [
-    "color.action.primary.active"
+    "color.bg.action.primary.active"
   ],
   "border-t-primary-active": [
-    "color.action.primary.active"
+    "color.bg.action.primary.active"
   ],
   "border-b-primary-active": [
-    "color.action.primary.active"
+    "color.bg.action.primary.active"
   ],
   "border-l-primary-active": [
-    "color.action.primary.active"
+    "color.bg.action.primary.active"
   ],
   "border-r-primary-active": [
-    "color.action.primary.active"
+    "color.bg.action.primary.active"
   ],
   "fill-primary-active": [
-    "color.action.primary.active"
+    "color.bg.action.primary.active"
   ],
   "stroke-primary-active": [
-    "color.action.primary.active"
+    "color.bg.action.primary.active"
   ],
   "outline-primary-active": [
-    "color.action.primary.active"
+    "color.bg.action.primary.active"
   ],
   "ring-primary-active": [
-    "color.action.primary.active"
+    "color.bg.action.primary.active"
   ],
   "decoration-primary-active": [
-    "color.action.primary.active"
+    "color.bg.action.primary.active"
   ],
   "bg-primary-subtle": [
-    "color.action.primary.subtle"
+    "color.bg.action.primary.subtle"
   ],
   "text-primary-subtle": [
-    "color.action.primary.subtle"
+    "color.bg.action.primary.subtle"
   ],
   "border-primary-subtle": [
-    "color.action.primary.subtle"
+    "color.bg.action.primary.subtle"
   ],
   "border-t-primary-subtle": [
-    "color.action.primary.subtle"
+    "color.bg.action.primary.subtle"
   ],
   "border-b-primary-subtle": [
-    "color.action.primary.subtle"
+    "color.bg.action.primary.subtle"
   ],
   "border-l-primary-subtle": [
-    "color.action.primary.subtle"
+    "color.bg.action.primary.subtle"
   ],
   "border-r-primary-subtle": [
-    "color.action.primary.subtle"
+    "color.bg.action.primary.subtle"
   ],
   "fill-primary-subtle": [
-    "color.action.primary.subtle"
+    "color.bg.action.primary.subtle"
   ],
   "stroke-primary-subtle": [
-    "color.action.primary.subtle"
+    "color.bg.action.primary.subtle"
   ],
   "outline-primary-subtle": [
-    "color.action.primary.subtle"
+    "color.bg.action.primary.subtle"
   ],
   "ring-primary-subtle": [
-    "color.action.primary.subtle"
+    "color.bg.action.primary.subtle"
   ],
   "decoration-primary-subtle": [
-    "color.action.primary.subtle"
+    "color.bg.action.primary.subtle"
   ],
   "bg-secondary": [
-    "color.action.secondary.default"
+    "color.bg.action.secondary.default"
   ],
   "text-secondary": [
-    "color.action.secondary.default"
+    "color.bg.action.secondary.default"
   ],
   "border-secondary": [
-    "color.action.secondary.default"
+    "color.bg.action.secondary.default"
   ],
   "border-t-secondary": [
-    "color.action.secondary.default"
+    "color.bg.action.secondary.default"
   ],
   "border-b-secondary": [
-    "color.action.secondary.default"
+    "color.bg.action.secondary.default"
   ],
   "border-l-secondary": [
-    "color.action.secondary.default"
+    "color.bg.action.secondary.default"
   ],
   "border-r-secondary": [
-    "color.action.secondary.default"
+    "color.bg.action.secondary.default"
   ],
   "fill-secondary": [
-    "color.action.secondary.default"
+    "color.bg.action.secondary.default"
   ],
   "stroke-secondary": [
-    "color.action.secondary.default"
+    "color.bg.action.secondary.default"
   ],
   "outline-secondary": [
-    "color.action.secondary.default"
+    "color.bg.action.secondary.default"
   ],
   "ring-secondary": [
-    "color.action.secondary.default"
+    "color.bg.action.secondary.default"
   ],
   "decoration-secondary": [
-    "color.action.secondary.default"
+    "color.bg.action.secondary.default"
   ],
   "bg-secondary-foreground": [
-    "color.action.secondary.on"
+    "color.text.on-action.secondary"
   ],
   "text-secondary-foreground": [
-    "color.action.secondary.on"
+    "color.text.on-action.secondary"
   ],
   "border-secondary-foreground": [
-    "color.action.secondary.on"
+    "color.text.on-action.secondary"
   ],
   "border-t-secondary-foreground": [
-    "color.action.secondary.on"
+    "color.text.on-action.secondary"
   ],
   "border-b-secondary-foreground": [
-    "color.action.secondary.on"
+    "color.text.on-action.secondary"
   ],
   "border-l-secondary-foreground": [
-    "color.action.secondary.on"
+    "color.text.on-action.secondary"
   ],
   "border-r-secondary-foreground": [
-    "color.action.secondary.on"
+    "color.text.on-action.secondary"
   ],
   "fill-secondary-foreground": [
-    "color.action.secondary.on"
+    "color.text.on-action.secondary"
   ],
   "stroke-secondary-foreground": [
-    "color.action.secondary.on"
+    "color.text.on-action.secondary"
   ],
   "outline-secondary-foreground": [
-    "color.action.secondary.on"
+    "color.text.on-action.secondary"
   ],
   "ring-secondary-foreground": [
-    "color.action.secondary.on"
+    "color.text.on-action.secondary"
   ],
   "decoration-secondary-foreground": [
-    "color.action.secondary.on"
+    "color.text.on-action.secondary"
   ],
   "bg-secondary-hover": [
-    "color.action.secondary.hover"
+    "color.bg.action.secondary.hover"
   ],
   "text-secondary-hover": [
-    "color.action.secondary.hover"
+    "color.bg.action.secondary.hover"
   ],
   "border-secondary-hover": [
-    "color.action.secondary.hover"
+    "color.bg.action.secondary.hover"
   ],
   "border-t-secondary-hover": [
-    "color.action.secondary.hover"
+    "color.bg.action.secondary.hover"
   ],
   "border-b-secondary-hover": [
-    "color.action.secondary.hover"
+    "color.bg.action.secondary.hover"
   ],
   "border-l-secondary-hover": [
-    "color.action.secondary.hover"
+    "color.bg.action.secondary.hover"
   ],
   "border-r-secondary-hover": [
-    "color.action.secondary.hover"
+    "color.bg.action.secondary.hover"
   ],
   "fill-secondary-hover": [
-    "color.action.secondary.hover"
+    "color.bg.action.secondary.hover"
   ],
   "stroke-secondary-hover": [
-    "color.action.secondary.hover"
+    "color.bg.action.secondary.hover"
   ],
   "outline-secondary-hover": [
-    "color.action.secondary.hover"
+    "color.bg.action.secondary.hover"
   ],
   "ring-secondary-hover": [
-    "color.action.secondary.hover"
+    "color.bg.action.secondary.hover"
   ],
   "decoration-secondary-hover": [
-    "color.action.secondary.hover"
+    "color.bg.action.secondary.hover"
   ],
   "bg-secondary-active": [
-    "color.action.secondary.active"
+    "color.bg.action.secondary.active"
   ],
   "text-secondary-active": [
-    "color.action.secondary.active"
+    "color.bg.action.secondary.active"
   ],
   "border-secondary-active": [
-    "color.action.secondary.active"
+    "color.bg.action.secondary.active"
   ],
   "border-t-secondary-active": [
-    "color.action.secondary.active"
+    "color.bg.action.secondary.active"
   ],
   "border-b-secondary-active": [
-    "color.action.secondary.active"
+    "color.bg.action.secondary.active"
   ],
   "border-l-secondary-active": [
-    "color.action.secondary.active"
+    "color.bg.action.secondary.active"
   ],
   "border-r-secondary-active": [
-    "color.action.secondary.active"
+    "color.bg.action.secondary.active"
   ],
   "fill-secondary-active": [
-    "color.action.secondary.active"
+    "color.bg.action.secondary.active"
   ],
   "stroke-secondary-active": [
-    "color.action.secondary.active"
+    "color.bg.action.secondary.active"
   ],
   "outline-secondary-active": [
-    "color.action.secondary.active"
+    "color.bg.action.secondary.active"
   ],
   "ring-secondary-active": [
-    "color.action.secondary.active"
+    "color.bg.action.secondary.active"
   ],
   "decoration-secondary-active": [
-    "color.action.secondary.active"
+    "color.bg.action.secondary.active"
   ],
   "bg-muted": [
     "color.bg.muted"
@@ -684,184 +684,184 @@
     "color.text.subtle"
   ],
   "bg-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "text-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "border-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "border-t-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "border-b-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "border-l-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "border-r-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "fill-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "stroke-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "outline-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "ring-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "decoration-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "bg-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "text-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "border-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "border-t-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "border-b-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "border-l-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "border-r-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "fill-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "stroke-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "outline-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "ring-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "decoration-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "bg-destructive": [
-    "color.feedback.danger.solid"
+    "color.bg.feedback.danger.default"
   ],
   "text-destructive": [
-    "color.feedback.danger.solid"
+    "color.text.feedback.danger"
   ],
   "border-destructive": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "border-t-destructive": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "border-b-destructive": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "border-l-destructive": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "border-r-destructive": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "fill-destructive": [
-    "color.feedback.danger.solid"
+    "color.text.feedback.danger"
   ],
   "stroke-destructive": [
-    "color.feedback.danger.solid"
+    "color.text.feedback.danger"
   ],
   "outline-destructive": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "ring-destructive": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "decoration-destructive": [
-    "color.feedback.danger.solid"
+    "color.text.feedback.danger"
   ],
   "bg-destructive-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "text-destructive-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "border-destructive-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "border-t-destructive-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "border-b-destructive-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "border-l-destructive-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "border-r-destructive-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "fill-destructive-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "stroke-destructive-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "outline-destructive-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "ring-destructive-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "decoration-destructive-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "bg-destructive-hover": [
-    "color.feedback.danger.hover"
+    "color.bg.feedback.danger.hover"
   ],
   "text-destructive-hover": [
-    "color.feedback.danger.hover"
+    "color.bg.feedback.danger.hover"
   ],
   "border-destructive-hover": [
-    "color.feedback.danger.hover"
+    "color.bg.feedback.danger.hover"
   ],
   "border-t-destructive-hover": [
-    "color.feedback.danger.hover"
+    "color.bg.feedback.danger.hover"
   ],
   "border-b-destructive-hover": [
-    "color.feedback.danger.hover"
+    "color.bg.feedback.danger.hover"
   ],
   "border-l-destructive-hover": [
-    "color.feedback.danger.hover"
+    "color.bg.feedback.danger.hover"
   ],
   "border-r-destructive-hover": [
-    "color.feedback.danger.hover"
+    "color.bg.feedback.danger.hover"
   ],
   "fill-destructive-hover": [
-    "color.feedback.danger.hover"
+    "color.bg.feedback.danger.hover"
   ],
   "stroke-destructive-hover": [
-    "color.feedback.danger.hover"
+    "color.bg.feedback.danger.hover"
   ],
   "outline-destructive-hover": [
-    "color.feedback.danger.hover"
+    "color.bg.feedback.danger.hover"
   ],
   "ring-destructive-hover": [
-    "color.feedback.danger.hover"
+    "color.bg.feedback.danger.hover"
   ],
   "decoration-destructive-hover": [
-    "color.feedback.danger.hover"
+    "color.bg.feedback.danger.hover"
   ],
   "bg-border": [
     "color.border.default"
@@ -1152,76 +1152,76 @@
     "color.text.link"
   ],
   "bg-disabled": [
-    "color.action.disabled.default"
+    "color.bg.action.disabled"
   ],
   "text-disabled": [
-    "color.action.disabled.default"
+    "color.bg.action.disabled"
   ],
   "border-disabled": [
-    "color.action.disabled.default"
+    "color.bg.action.disabled"
   ],
   "border-t-disabled": [
-    "color.action.disabled.default"
+    "color.bg.action.disabled"
   ],
   "border-b-disabled": [
-    "color.action.disabled.default"
+    "color.bg.action.disabled"
   ],
   "border-l-disabled": [
-    "color.action.disabled.default"
+    "color.bg.action.disabled"
   ],
   "border-r-disabled": [
-    "color.action.disabled.default"
+    "color.bg.action.disabled"
   ],
   "fill-disabled": [
-    "color.action.disabled.default"
+    "color.bg.action.disabled"
   ],
   "stroke-disabled": [
-    "color.action.disabled.default"
+    "color.bg.action.disabled"
   ],
   "outline-disabled": [
-    "color.action.disabled.default"
+    "color.bg.action.disabled"
   ],
   "ring-disabled": [
-    "color.action.disabled.default"
+    "color.bg.action.disabled"
   ],
   "decoration-disabled": [
-    "color.action.disabled.default"
+    "color.bg.action.disabled"
   ],
   "bg-disabled-foreground": [
-    "color.action.disabled.on"
+    "color.text.on-action.disabled"
   ],
   "text-disabled-foreground": [
-    "color.action.disabled.on"
+    "color.text.on-action.disabled"
   ],
   "border-disabled-foreground": [
-    "color.action.disabled.on"
+    "color.text.on-action.disabled"
   ],
   "border-t-disabled-foreground": [
-    "color.action.disabled.on"
+    "color.text.on-action.disabled"
   ],
   "border-b-disabled-foreground": [
-    "color.action.disabled.on"
+    "color.text.on-action.disabled"
   ],
   "border-l-disabled-foreground": [
-    "color.action.disabled.on"
+    "color.text.on-action.disabled"
   ],
   "border-r-disabled-foreground": [
-    "color.action.disabled.on"
+    "color.text.on-action.disabled"
   ],
   "fill-disabled-foreground": [
-    "color.action.disabled.on"
+    "color.text.on-action.disabled"
   ],
   "stroke-disabled-foreground": [
-    "color.action.disabled.on"
+    "color.text.on-action.disabled"
   ],
   "outline-disabled-foreground": [
-    "color.action.disabled.on"
+    "color.text.on-action.disabled"
   ],
   "ring-disabled-foreground": [
-    "color.action.disabled.on"
+    "color.text.on-action.disabled"
   ],
   "decoration-disabled-foreground": [
-    "color.action.disabled.on"
+    "color.text.on-action.disabled"
   ],
   "bg-sidebar": [
     "color.surface.sidebar"
@@ -1296,148 +1296,148 @@
     "color.text.default"
   ],
   "bg-sidebar-primary": [
-    "color.action.primary.default"
+    "color.bg.action.primary.default"
   ],
   "text-sidebar-primary": [
-    "color.action.primary.default"
+    "color.text.action.primary"
   ],
   "border-sidebar-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "border-t-sidebar-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "border-b-sidebar-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "border-l-sidebar-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "border-r-sidebar-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "fill-sidebar-primary": [
-    "color.action.primary.default"
+    "color.text.action.primary"
   ],
   "stroke-sidebar-primary": [
-    "color.action.primary.default"
+    "color.text.action.primary"
   ],
   "outline-sidebar-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "ring-sidebar-primary": [
-    "color.action.primary.default"
+    "color.border.action.primary"
   ],
   "decoration-sidebar-primary": [
-    "color.action.primary.default"
+    "color.text.action.primary"
   ],
   "bg-sidebar-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "text-sidebar-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "border-sidebar-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "border-t-sidebar-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "border-b-sidebar-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "border-l-sidebar-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "border-r-sidebar-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "fill-sidebar-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "stroke-sidebar-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "outline-sidebar-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "ring-sidebar-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "decoration-sidebar-primary-foreground": [
-    "color.action.primary.on"
+    "color.text.on-action.primary"
   ],
   "bg-sidebar-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "text-sidebar-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "border-sidebar-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "border-t-sidebar-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "border-b-sidebar-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "border-l-sidebar-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "border-r-sidebar-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "fill-sidebar-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "stroke-sidebar-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "outline-sidebar-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "ring-sidebar-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "decoration-sidebar-accent": [
-    "color.action.ghost.hover"
+    "color.bg.action.ghost.hover"
   ],
   "bg-sidebar-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "text-sidebar-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "border-sidebar-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "border-t-sidebar-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "border-b-sidebar-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "border-l-sidebar-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "border-r-sidebar-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "fill-sidebar-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "stroke-sidebar-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "outline-sidebar-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "ring-sidebar-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "decoration-sidebar-accent-foreground": [
-    "color.action.ghost.on"
+    "color.text.on-action.ghost"
   ],
   "bg-sidebar-border": [
     "color.border.default"
@@ -1692,724 +1692,724 @@
     "color.chart.5"
   ],
   "bg-success": [
-    "color.feedback.success.solid"
+    "color.bg.feedback.success.default"
   ],
   "text-success": [
-    "color.feedback.success.solid"
+    "color.text.feedback.success"
   ],
   "border-success": [
-    "color.feedback.success.solid"
+    "color.border.feedback.success.default"
   ],
   "border-t-success": [
-    "color.feedback.success.solid"
+    "color.border.feedback.success.default"
   ],
   "border-b-success": [
-    "color.feedback.success.solid"
+    "color.border.feedback.success.default"
   ],
   "border-l-success": [
-    "color.feedback.success.solid"
+    "color.border.feedback.success.default"
   ],
   "border-r-success": [
-    "color.feedback.success.solid"
+    "color.border.feedback.success.default"
   ],
   "fill-success": [
-    "color.feedback.success.solid"
+    "color.text.feedback.success"
   ],
   "stroke-success": [
-    "color.feedback.success.solid"
+    "color.text.feedback.success"
   ],
   "outline-success": [
-    "color.feedback.success.solid"
+    "color.border.feedback.success.default"
   ],
   "ring-success": [
-    "color.feedback.success.solid"
+    "color.border.feedback.success.default"
   ],
   "decoration-success": [
-    "color.feedback.success.solid"
+    "color.text.feedback.success"
   ],
   "bg-success-foreground": [
-    "color.feedback.success.on-solid"
+    "color.text.on-feedback.success"
   ],
   "text-success-foreground": [
-    "color.feedback.success.on-solid"
+    "color.text.on-feedback.success"
   ],
   "border-success-foreground": [
-    "color.feedback.success.on-solid"
+    "color.text.on-feedback.success"
   ],
   "border-t-success-foreground": [
-    "color.feedback.success.on-solid"
+    "color.text.on-feedback.success"
   ],
   "border-b-success-foreground": [
-    "color.feedback.success.on-solid"
+    "color.text.on-feedback.success"
   ],
   "border-l-success-foreground": [
-    "color.feedback.success.on-solid"
+    "color.text.on-feedback.success"
   ],
   "border-r-success-foreground": [
-    "color.feedback.success.on-solid"
+    "color.text.on-feedback.success"
   ],
   "fill-success-foreground": [
-    "color.feedback.success.on-solid"
+    "color.text.on-feedback.success"
   ],
   "stroke-success-foreground": [
-    "color.feedback.success.on-solid"
+    "color.text.on-feedback.success"
   ],
   "outline-success-foreground": [
-    "color.feedback.success.on-solid"
+    "color.text.on-feedback.success"
   ],
   "ring-success-foreground": [
-    "color.feedback.success.on-solid"
+    "color.text.on-feedback.success"
   ],
   "decoration-success-foreground": [
-    "color.feedback.success.on-solid"
+    "color.text.on-feedback.success"
   ],
   "bg-success-subtle": [
-    "color.feedback.success.subtle"
+    "color.bg.feedback.success.subtle"
   ],
   "text-success-subtle": [
-    "color.feedback.success.subtle"
+    "color.bg.feedback.success.subtle"
   ],
   "border-success-subtle": [
-    "color.feedback.success.subtle"
+    "color.bg.feedback.success.subtle"
   ],
   "border-t-success-subtle": [
-    "color.feedback.success.subtle"
+    "color.bg.feedback.success.subtle"
   ],
   "border-b-success-subtle": [
-    "color.feedback.success.subtle"
+    "color.bg.feedback.success.subtle"
   ],
   "border-l-success-subtle": [
-    "color.feedback.success.subtle"
+    "color.bg.feedback.success.subtle"
   ],
   "border-r-success-subtle": [
-    "color.feedback.success.subtle"
+    "color.bg.feedback.success.subtle"
   ],
   "fill-success-subtle": [
-    "color.feedback.success.subtle"
+    "color.bg.feedback.success.subtle"
   ],
   "stroke-success-subtle": [
-    "color.feedback.success.subtle"
+    "color.bg.feedback.success.subtle"
   ],
   "outline-success-subtle": [
-    "color.feedback.success.subtle"
+    "color.bg.feedback.success.subtle"
   ],
   "ring-success-subtle": [
-    "color.feedback.success.subtle"
+    "color.bg.feedback.success.subtle"
   ],
   "decoration-success-subtle": [
-    "color.feedback.success.subtle"
+    "color.bg.feedback.success.subtle"
   ],
   "bg-success-border": [
-    "color.feedback.success.border"
+    "color.border.feedback.success.subtle"
   ],
   "text-success-border": [
-    "color.feedback.success.border"
+    "color.border.feedback.success.subtle"
   ],
   "border-success-border": [
-    "color.feedback.success.border"
+    "color.border.feedback.success.subtle"
   ],
   "border-t-success-border": [
-    "color.feedback.success.border"
+    "color.border.feedback.success.subtle"
   ],
   "border-b-success-border": [
-    "color.feedback.success.border"
+    "color.border.feedback.success.subtle"
   ],
   "border-l-success-border": [
-    "color.feedback.success.border"
+    "color.border.feedback.success.subtle"
   ],
   "border-r-success-border": [
-    "color.feedback.success.border"
+    "color.border.feedback.success.subtle"
   ],
   "fill-success-border": [
-    "color.feedback.success.border"
+    "color.border.feedback.success.subtle"
   ],
   "stroke-success-border": [
-    "color.feedback.success.border"
+    "color.border.feedback.success.subtle"
   ],
   "outline-success-border": [
-    "color.feedback.success.border"
+    "color.border.feedback.success.subtle"
   ],
   "ring-success-border": [
-    "color.feedback.success.border"
+    "color.border.feedback.success.subtle"
   ],
   "decoration-success-border": [
-    "color.feedback.success.border"
+    "color.border.feedback.success.subtle"
   ],
   "bg-success-text": [
-    "color.feedback.success.text"
+    "color.text.feedback.success"
   ],
   "text-success-text": [
-    "color.feedback.success.text"
+    "color.text.feedback.success"
   ],
   "border-success-text": [
-    "color.feedback.success.text"
+    "color.text.feedback.success"
   ],
   "border-t-success-text": [
-    "color.feedback.success.text"
+    "color.text.feedback.success"
   ],
   "border-b-success-text": [
-    "color.feedback.success.text"
+    "color.text.feedback.success"
   ],
   "border-l-success-text": [
-    "color.feedback.success.text"
+    "color.text.feedback.success"
   ],
   "border-r-success-text": [
-    "color.feedback.success.text"
+    "color.text.feedback.success"
   ],
   "fill-success-text": [
-    "color.feedback.success.text"
+    "color.text.feedback.success"
   ],
   "stroke-success-text": [
-    "color.feedback.success.text"
+    "color.text.feedback.success"
   ],
   "outline-success-text": [
-    "color.feedback.success.text"
+    "color.text.feedback.success"
   ],
   "ring-success-text": [
-    "color.feedback.success.text"
+    "color.text.feedback.success"
   ],
   "decoration-success-text": [
-    "color.feedback.success.text"
+    "color.text.feedback.success"
   ],
   "bg-warning": [
-    "color.feedback.warning.solid"
+    "color.bg.feedback.warning.default"
   ],
   "text-warning": [
-    "color.feedback.warning.solid"
+    "color.text.feedback.warning"
   ],
   "border-warning": [
-    "color.feedback.warning.solid"
+    "color.border.feedback.warning.default"
   ],
   "border-t-warning": [
-    "color.feedback.warning.solid"
+    "color.border.feedback.warning.default"
   ],
   "border-b-warning": [
-    "color.feedback.warning.solid"
+    "color.border.feedback.warning.default"
   ],
   "border-l-warning": [
-    "color.feedback.warning.solid"
+    "color.border.feedback.warning.default"
   ],
   "border-r-warning": [
-    "color.feedback.warning.solid"
+    "color.border.feedback.warning.default"
   ],
   "fill-warning": [
-    "color.feedback.warning.solid"
+    "color.text.feedback.warning"
   ],
   "stroke-warning": [
-    "color.feedback.warning.solid"
+    "color.text.feedback.warning"
   ],
   "outline-warning": [
-    "color.feedback.warning.solid"
+    "color.border.feedback.warning.default"
   ],
   "ring-warning": [
-    "color.feedback.warning.solid"
+    "color.border.feedback.warning.default"
   ],
   "decoration-warning": [
-    "color.feedback.warning.solid"
+    "color.text.feedback.warning"
   ],
   "bg-warning-foreground": [
-    "color.feedback.warning.on-solid"
+    "color.text.on-feedback.warning"
   ],
   "text-warning-foreground": [
-    "color.feedback.warning.on-solid"
+    "color.text.on-feedback.warning"
   ],
   "border-warning-foreground": [
-    "color.feedback.warning.on-solid"
+    "color.text.on-feedback.warning"
   ],
   "border-t-warning-foreground": [
-    "color.feedback.warning.on-solid"
+    "color.text.on-feedback.warning"
   ],
   "border-b-warning-foreground": [
-    "color.feedback.warning.on-solid"
+    "color.text.on-feedback.warning"
   ],
   "border-l-warning-foreground": [
-    "color.feedback.warning.on-solid"
+    "color.text.on-feedback.warning"
   ],
   "border-r-warning-foreground": [
-    "color.feedback.warning.on-solid"
+    "color.text.on-feedback.warning"
   ],
   "fill-warning-foreground": [
-    "color.feedback.warning.on-solid"
+    "color.text.on-feedback.warning"
   ],
   "stroke-warning-foreground": [
-    "color.feedback.warning.on-solid"
+    "color.text.on-feedback.warning"
   ],
   "outline-warning-foreground": [
-    "color.feedback.warning.on-solid"
+    "color.text.on-feedback.warning"
   ],
   "ring-warning-foreground": [
-    "color.feedback.warning.on-solid"
+    "color.text.on-feedback.warning"
   ],
   "decoration-warning-foreground": [
-    "color.feedback.warning.on-solid"
+    "color.text.on-feedback.warning"
   ],
   "bg-warning-subtle": [
-    "color.feedback.warning.subtle"
+    "color.bg.feedback.warning.subtle"
   ],
   "text-warning-subtle": [
-    "color.feedback.warning.subtle"
+    "color.bg.feedback.warning.subtle"
   ],
   "border-warning-subtle": [
-    "color.feedback.warning.subtle"
+    "color.bg.feedback.warning.subtle"
   ],
   "border-t-warning-subtle": [
-    "color.feedback.warning.subtle"
+    "color.bg.feedback.warning.subtle"
   ],
   "border-b-warning-subtle": [
-    "color.feedback.warning.subtle"
+    "color.bg.feedback.warning.subtle"
   ],
   "border-l-warning-subtle": [
-    "color.feedback.warning.subtle"
+    "color.bg.feedback.warning.subtle"
   ],
   "border-r-warning-subtle": [
-    "color.feedback.warning.subtle"
+    "color.bg.feedback.warning.subtle"
   ],
   "fill-warning-subtle": [
-    "color.feedback.warning.subtle"
+    "color.bg.feedback.warning.subtle"
   ],
   "stroke-warning-subtle": [
-    "color.feedback.warning.subtle"
+    "color.bg.feedback.warning.subtle"
   ],
   "outline-warning-subtle": [
-    "color.feedback.warning.subtle"
+    "color.bg.feedback.warning.subtle"
   ],
   "ring-warning-subtle": [
-    "color.feedback.warning.subtle"
+    "color.bg.feedback.warning.subtle"
   ],
   "decoration-warning-subtle": [
-    "color.feedback.warning.subtle"
+    "color.bg.feedback.warning.subtle"
   ],
   "bg-warning-border": [
-    "color.feedback.warning.border"
+    "color.border.feedback.warning.subtle"
   ],
   "text-warning-border": [
-    "color.feedback.warning.border"
+    "color.border.feedback.warning.subtle"
   ],
   "border-warning-border": [
-    "color.feedback.warning.border"
+    "color.border.feedback.warning.subtle"
   ],
   "border-t-warning-border": [
-    "color.feedback.warning.border"
+    "color.border.feedback.warning.subtle"
   ],
   "border-b-warning-border": [
-    "color.feedback.warning.border"
+    "color.border.feedback.warning.subtle"
   ],
   "border-l-warning-border": [
-    "color.feedback.warning.border"
+    "color.border.feedback.warning.subtle"
   ],
   "border-r-warning-border": [
-    "color.feedback.warning.border"
+    "color.border.feedback.warning.subtle"
   ],
   "fill-warning-border": [
-    "color.feedback.warning.border"
+    "color.border.feedback.warning.subtle"
   ],
   "stroke-warning-border": [
-    "color.feedback.warning.border"
+    "color.border.feedback.warning.subtle"
   ],
   "outline-warning-border": [
-    "color.feedback.warning.border"
+    "color.border.feedback.warning.subtle"
   ],
   "ring-warning-border": [
-    "color.feedback.warning.border"
+    "color.border.feedback.warning.subtle"
   ],
   "decoration-warning-border": [
-    "color.feedback.warning.border"
+    "color.border.feedback.warning.subtle"
   ],
   "bg-warning-text": [
-    "color.feedback.warning.text"
+    "color.text.feedback.warning"
   ],
   "text-warning-text": [
-    "color.feedback.warning.text"
+    "color.text.feedback.warning"
   ],
   "border-warning-text": [
-    "color.feedback.warning.text"
+    "color.text.feedback.warning"
   ],
   "border-t-warning-text": [
-    "color.feedback.warning.text"
+    "color.text.feedback.warning"
   ],
   "border-b-warning-text": [
-    "color.feedback.warning.text"
+    "color.text.feedback.warning"
   ],
   "border-l-warning-text": [
-    "color.feedback.warning.text"
+    "color.text.feedback.warning"
   ],
   "border-r-warning-text": [
-    "color.feedback.warning.text"
+    "color.text.feedback.warning"
   ],
   "fill-warning-text": [
-    "color.feedback.warning.text"
+    "color.text.feedback.warning"
   ],
   "stroke-warning-text": [
-    "color.feedback.warning.text"
+    "color.text.feedback.warning"
   ],
   "outline-warning-text": [
-    "color.feedback.warning.text"
+    "color.text.feedback.warning"
   ],
   "ring-warning-text": [
-    "color.feedback.warning.text"
+    "color.text.feedback.warning"
   ],
   "decoration-warning-text": [
-    "color.feedback.warning.text"
+    "color.text.feedback.warning"
   ],
   "bg-danger": [
-    "color.feedback.danger.solid"
+    "color.bg.feedback.danger.default"
   ],
   "text-danger": [
-    "color.feedback.danger.solid"
+    "color.text.feedback.danger"
   ],
   "border-danger": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "border-t-danger": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "border-b-danger": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "border-l-danger": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "border-r-danger": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "fill-danger": [
-    "color.feedback.danger.solid"
+    "color.text.feedback.danger"
   ],
   "stroke-danger": [
-    "color.feedback.danger.solid"
+    "color.text.feedback.danger"
   ],
   "outline-danger": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "ring-danger": [
-    "color.feedback.danger.solid"
+    "color.border.feedback.danger.default"
   ],
   "decoration-danger": [
-    "color.feedback.danger.solid"
+    "color.text.feedback.danger"
   ],
   "bg-danger-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "text-danger-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "border-danger-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "border-t-danger-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "border-b-danger-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "border-l-danger-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "border-r-danger-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "fill-danger-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "stroke-danger-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "outline-danger-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "ring-danger-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "decoration-danger-foreground": [
-    "color.feedback.danger.on-solid"
+    "color.text.on-feedback.danger"
   ],
   "bg-danger-subtle": [
-    "color.feedback.danger.subtle"
+    "color.bg.feedback.danger.subtle"
   ],
   "text-danger-subtle": [
-    "color.feedback.danger.subtle"
+    "color.bg.feedback.danger.subtle"
   ],
   "border-danger-subtle": [
-    "color.feedback.danger.subtle"
+    "color.bg.feedback.danger.subtle"
   ],
   "border-t-danger-subtle": [
-    "color.feedback.danger.subtle"
+    "color.bg.feedback.danger.subtle"
   ],
   "border-b-danger-subtle": [
-    "color.feedback.danger.subtle"
+    "color.bg.feedback.danger.subtle"
   ],
   "border-l-danger-subtle": [
-    "color.feedback.danger.subtle"
+    "color.bg.feedback.danger.subtle"
   ],
   "border-r-danger-subtle": [
-    "color.feedback.danger.subtle"
+    "color.bg.feedback.danger.subtle"
   ],
   "fill-danger-subtle": [
-    "color.feedback.danger.subtle"
+    "color.bg.feedback.danger.subtle"
   ],
   "stroke-danger-subtle": [
-    "color.feedback.danger.subtle"
+    "color.bg.feedback.danger.subtle"
   ],
   "outline-danger-subtle": [
-    "color.feedback.danger.subtle"
+    "color.bg.feedback.danger.subtle"
   ],
   "ring-danger-subtle": [
-    "color.feedback.danger.subtle"
+    "color.bg.feedback.danger.subtle"
   ],
   "decoration-danger-subtle": [
-    "color.feedback.danger.subtle"
+    "color.bg.feedback.danger.subtle"
   ],
   "bg-danger-border": [
-    "color.feedback.danger.border"
+    "color.border.feedback.danger.subtle"
   ],
   "text-danger-border": [
-    "color.feedback.danger.border"
+    "color.border.feedback.danger.subtle"
   ],
   "border-danger-border": [
-    "color.feedback.danger.border"
+    "color.border.feedback.danger.subtle"
   ],
   "border-t-danger-border": [
-    "color.feedback.danger.border"
+    "color.border.feedback.danger.subtle"
   ],
   "border-b-danger-border": [
-    "color.feedback.danger.border"
+    "color.border.feedback.danger.subtle"
   ],
   "border-l-danger-border": [
-    "color.feedback.danger.border"
+    "color.border.feedback.danger.subtle"
   ],
   "border-r-danger-border": [
-    "color.feedback.danger.border"
+    "color.border.feedback.danger.subtle"
   ],
   "fill-danger-border": [
-    "color.feedback.danger.border"
+    "color.border.feedback.danger.subtle"
   ],
   "stroke-danger-border": [
-    "color.feedback.danger.border"
+    "color.border.feedback.danger.subtle"
   ],
   "outline-danger-border": [
-    "color.feedback.danger.border"
+    "color.border.feedback.danger.subtle"
   ],
   "ring-danger-border": [
-    "color.feedback.danger.border"
+    "color.border.feedback.danger.subtle"
   ],
   "decoration-danger-border": [
-    "color.feedback.danger.border"
+    "color.border.feedback.danger.subtle"
   ],
   "bg-danger-text": [
-    "color.feedback.danger.text"
+    "color.text.feedback.danger"
   ],
   "text-danger-text": [
-    "color.feedback.danger.text"
+    "color.text.feedback.danger"
   ],
   "border-danger-text": [
-    "color.feedback.danger.text"
+    "color.text.feedback.danger"
   ],
   "border-t-danger-text": [
-    "color.feedback.danger.text"
+    "color.text.feedback.danger"
   ],
   "border-b-danger-text": [
-    "color.feedback.danger.text"
+    "color.text.feedback.danger"
   ],
   "border-l-danger-text": [
-    "color.feedback.danger.text"
+    "color.text.feedback.danger"
   ],
   "border-r-danger-text": [
-    "color.feedback.danger.text"
+    "color.text.feedback.danger"
   ],
   "fill-danger-text": [
-    "color.feedback.danger.text"
+    "color.text.feedback.danger"
   ],
   "stroke-danger-text": [
-    "color.feedback.danger.text"
+    "color.text.feedback.danger"
   ],
   "outline-danger-text": [
-    "color.feedback.danger.text"
+    "color.text.feedback.danger"
   ],
   "ring-danger-text": [
-    "color.feedback.danger.text"
+    "color.text.feedback.danger"
   ],
   "decoration-danger-text": [
-    "color.feedback.danger.text"
+    "color.text.feedback.danger"
   ],
   "bg-info": [
-    "color.feedback.info.solid"
+    "color.bg.feedback.info.default"
   ],
   "text-info": [
-    "color.feedback.info.solid"
+    "color.text.feedback.info"
   ],
   "border-info": [
-    "color.feedback.info.solid"
+    "color.border.feedback.info.default"
   ],
   "border-t-info": [
-    "color.feedback.info.solid"
+    "color.border.feedback.info.default"
   ],
   "border-b-info": [
-    "color.feedback.info.solid"
+    "color.border.feedback.info.default"
   ],
   "border-l-info": [
-    "color.feedback.info.solid"
+    "color.border.feedback.info.default"
   ],
   "border-r-info": [
-    "color.feedback.info.solid"
+    "color.border.feedback.info.default"
   ],
   "fill-info": [
-    "color.feedback.info.solid"
+    "color.text.feedback.info"
   ],
   "stroke-info": [
-    "color.feedback.info.solid"
+    "color.text.feedback.info"
   ],
   "outline-info": [
-    "color.feedback.info.solid"
+    "color.border.feedback.info.default"
   ],
   "ring-info": [
-    "color.feedback.info.solid"
+    "color.border.feedback.info.default"
   ],
   "decoration-info": [
-    "color.feedback.info.solid"
+    "color.text.feedback.info"
   ],
   "bg-info-foreground": [
-    "color.feedback.info.on-solid"
+    "color.text.on-feedback.info"
   ],
   "text-info-foreground": [
-    "color.feedback.info.on-solid"
+    "color.text.on-feedback.info"
   ],
   "border-info-foreground": [
-    "color.feedback.info.on-solid"
+    "color.text.on-feedback.info"
   ],
   "border-t-info-foreground": [
-    "color.feedback.info.on-solid"
+    "color.text.on-feedback.info"
   ],
   "border-b-info-foreground": [
-    "color.feedback.info.on-solid"
+    "color.text.on-feedback.info"
   ],
   "border-l-info-foreground": [
-    "color.feedback.info.on-solid"
+    "color.text.on-feedback.info"
   ],
   "border-r-info-foreground": [
-    "color.feedback.info.on-solid"
+    "color.text.on-feedback.info"
   ],
   "fill-info-foreground": [
-    "color.feedback.info.on-solid"
+    "color.text.on-feedback.info"
   ],
   "stroke-info-foreground": [
-    "color.feedback.info.on-solid"
+    "color.text.on-feedback.info"
   ],
   "outline-info-foreground": [
-    "color.feedback.info.on-solid"
+    "color.text.on-feedback.info"
   ],
   "ring-info-foreground": [
-    "color.feedback.info.on-solid"
+    "color.text.on-feedback.info"
   ],
   "decoration-info-foreground": [
-    "color.feedback.info.on-solid"
+    "color.text.on-feedback.info"
   ],
   "bg-info-subtle": [
-    "color.feedback.info.subtle"
+    "color.bg.feedback.info.subtle"
   ],
   "text-info-subtle": [
-    "color.feedback.info.subtle"
+    "color.bg.feedback.info.subtle"
   ],
   "border-info-subtle": [
-    "color.feedback.info.subtle"
+    "color.bg.feedback.info.subtle"
   ],
   "border-t-info-subtle": [
-    "color.feedback.info.subtle"
+    "color.bg.feedback.info.subtle"
   ],
   "border-b-info-subtle": [
-    "color.feedback.info.subtle"
+    "color.bg.feedback.info.subtle"
   ],
   "border-l-info-subtle": [
-    "color.feedback.info.subtle"
+    "color.bg.feedback.info.subtle"
   ],
   "border-r-info-subtle": [
-    "color.feedback.info.subtle"
+    "color.bg.feedback.info.subtle"
   ],
   "fill-info-subtle": [
-    "color.feedback.info.subtle"
+    "color.bg.feedback.info.subtle"
   ],
   "stroke-info-subtle": [
-    "color.feedback.info.subtle"
+    "color.bg.feedback.info.subtle"
   ],
   "outline-info-subtle": [
-    "color.feedback.info.subtle"
+    "color.bg.feedback.info.subtle"
   ],
   "ring-info-subtle": [
-    "color.feedback.info.subtle"
+    "color.bg.feedback.info.subtle"
   ],
   "decoration-info-subtle": [
-    "color.feedback.info.subtle"
+    "color.bg.feedback.info.subtle"
   ],
   "bg-info-border": [
-    "color.feedback.info.border"
+    "color.border.feedback.info.subtle"
   ],
   "text-info-border": [
-    "color.feedback.info.border"
+    "color.border.feedback.info.subtle"
   ],
   "border-info-border": [
-    "color.feedback.info.border"
+    "color.border.feedback.info.subtle"
   ],
   "border-t-info-border": [
-    "color.feedback.info.border"
+    "color.border.feedback.info.subtle"
   ],
   "border-b-info-border": [
-    "color.feedback.info.border"
+    "color.border.feedback.info.subtle"
   ],
   "border-l-info-border": [
-    "color.feedback.info.border"
+    "color.border.feedback.info.subtle"
   ],
   "border-r-info-border": [
-    "color.feedback.info.border"
+    "color.border.feedback.info.subtle"
   ],
   "fill-info-border": [
-    "color.feedback.info.border"
+    "color.border.feedback.info.subtle"
   ],
   "stroke-info-border": [
-    "color.feedback.info.border"
+    "color.border.feedback.info.subtle"
   ],
   "outline-info-border": [
-    "color.feedback.info.border"
+    "color.border.feedback.info.subtle"
   ],
   "ring-info-border": [
-    "color.feedback.info.border"
+    "color.border.feedback.info.subtle"
   ],
   "decoration-info-border": [
-    "color.feedback.info.border"
+    "color.border.feedback.info.subtle"
   ],
   "bg-info-text": [
-    "color.feedback.info.text"
+    "color.text.feedback.info"
   ],
   "text-info-text": [
-    "color.feedback.info.text"
+    "color.text.feedback.info"
   ],
   "border-info-text": [
-    "color.feedback.info.text"
+    "color.text.feedback.info"
   ],
   "border-t-info-text": [
-    "color.feedback.info.text"
+    "color.text.feedback.info"
   ],
   "border-b-info-text": [
-    "color.feedback.info.text"
+    "color.text.feedback.info"
   ],
   "border-l-info-text": [
-    "color.feedback.info.text"
+    "color.text.feedback.info"
   ],
   "border-r-info-text": [
-    "color.feedback.info.text"
+    "color.text.feedback.info"
   ],
   "fill-info-text": [
-    "color.feedback.info.text"
+    "color.text.feedback.info"
   ],
   "stroke-info-text": [
-    "color.feedback.info.text"
+    "color.text.feedback.info"
   ],
   "outline-info-text": [
-    "color.feedback.info.text"
+    "color.text.feedback.info"
   ],
   "ring-info-text": [
-    "color.feedback.info.text"
+    "color.text.feedback.info"
   ],
   "decoration-info-text": [
-    "color.feedback.info.text"
+    "color.text.feedback.info"
   ],
   "p-inset-3xs": [
     "space.inset.3xs"

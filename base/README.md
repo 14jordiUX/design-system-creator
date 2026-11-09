@@ -19,9 +19,9 @@ Plantilla genérica de tokens de la que parte cada sistema de diseño nuevo. Abr
 Dos capas, siguiendo el estándar W3C de design tokens (DTCG):
 
 1. **Primitivos**: qué valor es (`color.brand.600`, `space.4`). Nunca se usan directamente en componentes.
-2. **Semánticos**: para qué sirve (`color.action.primary.default`, `color.text.muted`, `radius.card`). Apuntan a primitivos. Los componentes solo usan esta capa, así que el modo oscuro o una marca nueva se hacen cambiando a qué primitivo apunta cada rol.
+2. **Semánticos**: para qué sirve (`color.bg.action.primary.default`, `color.text.muted`, `radius.card`). Apuntan a primitivos. Los componentes solo usan esta capa, así que el modo oscuro o una marca nueva se hacen cambiando a qué primitivo apunta cada rol.
 
-Grupos semánticos de color: `bg`, `surface`, `text`, `border`, `action` (primary, secondary, ghost, disabled) y `feedback` (success, warning, danger, info).
+Colores semánticos: `color . dónde . función . variante . estado`. «Dónde» es `bg` (fondo), `text` (texto e iconos) o `border` (borde), más `surface` (tarjetas, menús) y `chart` (gráficos). Funciones: `action` (primary, secondary, ghost, disabled) y `feedback` (success, warning, danger, info); `on-action` / `on-feedback` es el texto que va encima de su fondo. Ejemplos: `color.bg.action.primary.hover`, `color.text.on-action.primary`, `color.border.feedback.danger.subtle`.
 
 Todos los pares texto/fondo cumplen contraste WCAG AA (4.5:1) en claro y oscuro.
 

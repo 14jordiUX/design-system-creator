@@ -19,7 +19,7 @@ body { margin: 0; background: var(--color-bg-default); color: var(--color-text-d
 .layout { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
 nav { position: sticky; top: 0; height: 100vh; padding: var(--space-inset-lg); border-right: 1px solid var(--color-border-default); background: var(--color-bg-subtle); }
 nav a { display: block; padding: var(--space-1-5) var(--space-2); border-radius: var(--radius-control); color: var(--color-text-muted); text-decoration: none; font-size: var(--font-size-sm); }
-nav a:hover { background: var(--color-action-ghost-hover); color: var(--color-text-default); }
+nav a:hover { background: var(--color-bg-action-ghost-hover); color: var(--color-text-default); }
 nav h1 { font-size: var(--font-size-md); margin: 0 0 var(--space-4); }
 main { padding: var(--space-10) var(--space-12); max-width: 1100px; }
 section { margin-bottom: var(--space-section); }
@@ -39,15 +39,15 @@ code { font-family: var(--font-family-mono); font-size: 12px; }
 .card { background: var(--color-surface-card); border: 1px solid var(--color-border-default); border-radius: var(--radius-card); padding: var(--space-inset-lg); }
 .btn { font: inherit; font-size: var(--font-size-sm); font-weight: 500; height: var(--control-height-md); padding: 0 var(--space-inset-md); border-radius: var(--radius-control); border: 1px solid transparent; cursor: pointer; transition: background var(--motion-duration-micro) var(--motion-easing-default); }
 .btn:focus-visible { outline: var(--control-focus-ring-width) solid var(--color-border-focus); outline-offset: 2px; }
-.btn-primary { background: var(--color-action-primary-default); color: var(--color-action-primary-on); }
-.btn-primary:hover { background: var(--color-action-primary-hover); }
-.btn-secondary { background: var(--color-action-secondary-default); color: var(--color-action-secondary-on); }
-.btn-secondary:hover { background: var(--color-action-secondary-hover); }
-.btn-ghost { background: transparent; color: var(--color-action-ghost-on); }
-.btn-ghost:hover { background: var(--color-action-ghost-hover); }
+.btn-primary { background: var(--color-bg-action-primary-default); color: var(--color-text-on-action-primary); }
+.btn-primary:hover { background: var(--color-bg-action-primary-hover); }
+.btn-secondary { background: var(--color-bg-action-secondary-default); color: var(--color-text-on-action-secondary); }
+.btn-secondary:hover { background: var(--color-bg-action-secondary-hover); }
+.btn-ghost { background: transparent; color: var(--color-text-on-action-ghost); }
+.btn-ghost:hover { background: var(--color-bg-action-ghost-hover); }
 .btn-outline { background: transparent; color: var(--color-text-default); border-color: var(--color-border-strong); }
-.btn-danger { background: var(--color-feedback-danger-solid); color: var(--color-feedback-danger-on-solid); }
-.btn:disabled { background: var(--color-action-disabled-default); color: var(--color-action-disabled-on); cursor: not-allowed; }
+.btn-danger { background: var(--color-bg-feedback-danger-default); color: var(--color-text-on-feedback-danger); }
+.btn:disabled { background: var(--color-bg-action-disabled); color: var(--color-text-on-action-disabled); cursor: not-allowed; }
 .input { font: inherit; font-size: var(--font-size-sm); height: var(--control-height-md); padding: 0 var(--space-3); border-radius: var(--radius-control); border: 1px solid var(--color-border-input); background: var(--color-bg-default); color: var(--color-text-default); width: 100%; }
 .input::placeholder { color: var(--color-text-subtle); }
 .input:focus { outline: var(--control-focus-ring-width) solid var(--color-border-focus); outline-offset: 1px; }
@@ -57,7 +57,7 @@ code { font-family: var(--font-family-mono); font-size: 12px; }
 .toggle { position: fixed; top: var(--space-4); right: var(--space-4); z-index: 10; }
 .typo-row { display: flex; gap: var(--space-6); align-items: baseline; padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border-default); }
 .typo-row code { width: 170px; flex: none; color: var(--color-text-muted); }
-.bar { height: 16px; background: var(--color-action-primary-subtle); border: 1px solid var(--color-border-focus); border-radius: 2px; }
+.bar { height: 16px; background: var(--color-bg-action-primary-subtle); border: 1px solid var(--color-border-focus); border-radius: 2px; }
 .elev { height: 90px; background: var(--color-surface-card); border-radius: var(--radius-card); display: grid; place-items: center; font-size: var(--font-size-sm); color: var(--color-text-muted); }
 .dialog { background: var(--color-surface-popover); border-radius: var(--radius-overlay); box-shadow: var(--elevation-modal); padding: var(--space-inset-xl); max-width: 420px; border: 1px solid var(--color-border-default); }
 </style></head>
@@ -131,8 +131,9 @@ for (const p of D.elevation) {
 }
 const fb = {success:'Éxito', warning:'Aviso', danger:'Error', info:'Info'};
 for (const [k, label] of Object.entries(fb)) {
-  const v = n => `var(--color-feedback-${k}-${n})`;
-  $('badges').insertAdjacentHTML('beforeend', `<span class="badge" style="background:${v('solid')};color:${v('on-solid')}">${label}</span><span class="badge" style="background:${v('subtle')};color:${v('text')};border:1px solid ${v('border')}">${label}</span>`);
-  $('alerts').insertAdjacentHTML('beforeend', `<div class="alert" style="background:${v('subtle')};color:${v('text')};border-color:${v('border')}"><b>${label}.</b> Mensaje de ejemplo usando los tokens de feedback.</div>`);
+  const v = () => `var(--color-text-feedback-${k})`;
+  const bg = n => `var(--color-bg-feedback-${k}-${n})`;
+  $('badges').insertAdjacentHTML('beforeend', `<span class="badge" style="background:${bg('default')};color:var(--color-text-on-feedback-${k})">${label}</span><span class="badge" style="background:${bg('subtle')};color:${v('text')};border:1px solid var(--color-border-feedback-${k}-subtle)">${label}</span>`);
+  $('alerts').insertAdjacentHTML('beforeend', `<div class="alert" style="background:${bg('subtle')};color:${v('text')};border-color:var(--color-border-feedback-${k}-subtle)"><b>${label}.</b> Mensaje de ejemplo usando los tokens de feedback.</div>`);
 }
 </script></body></html>"""
