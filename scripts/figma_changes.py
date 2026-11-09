@@ -48,9 +48,9 @@ def norm(v):
         if v.startswith("{"): return v
         if v.startswith("#"): return v.lower()[:7] if v.lower().endswith("ff") and len(v) == 9 else v.lower()
         m = re.match(r"^(-?\d*\.?\d+)px$", v)
-        if m: return float(m.group(1))
+        if m: return round(float(m.group(1)), 4)
         return v
-    if isinstance(v, (int, float)): return float(v)
+    if isinstance(v, (int, float)): return round(float(v), 4)   # Figma guarda decimales con poca precisión (1.15 → 1.1499999)
     return v
 
 
@@ -65,6 +65,63 @@ def texts(n):
     for x in walk(n, []):
         if x.get("text"): out.append(x["text"]["chars"])
         out += x.get("texts", []) or []
+    return out
+
+
+def flat_orig(n, path="", out=None):
+    """Nodo del archivo original (web → Figma) en una lista comparable: ruta, tipo, tamaño, texto, color, tamaño de letra, borde."""
+    out = [] if out is None else out
+    if n.get("component") and path:
+        out.append((path, "INST", n["component"]["set"])); return out
+    t = n.get("text") or {}
+    color = (t.get("color") or {}).get("token") or ((n.get("fill") or {}).get("token") if n["type"] != "SVG" else None)
+    out.append((path, "ICON" if n["type"] == "SVG" else n["type"], n.get("w"), n.get("h"), t.get("chars"), color, t.get("size"), (n.get("stroke") or {}).get("token")))
+    for i, c in enumerate(n.get("children") or []): flat_orig(c, f"{path}/{i}", out)
+    return out
+
+
+def flat_figma(n, path="", out=None):
+    """Lo mismo para un nodo exportado desde Figma."""
+    out = [] if out is None else out
+    if n["type"] == "INSTANCE" and path:
+        nm = (n.get("component") or {}).get("set") or (n.get("component") or {}).get("name") or n["name"]
+        out.append((path, "ICON", n.get("w"), n.get("h")) if nm.startswith("icon/") else (path, "INST", nm)); return out
+    t = n.get("text") or {}
+    f = (n.get("fills") or [None])[0] or {}
+    out.append((path, n["type"].replace("COMPONENT", "FRAME"), n.get("w"), n.get("h"), t.get("chars"), f.get("token") if n["type"] != "VECTOR" else None, t.get("fontSize"), ((n.get("strokes") or [None])[0] or {}).get("token")))
+    for i, c in enumerate(n.get("children") or []): flat_figma(c, f"{path}/{i}", out)
+    return out
+
+
+def component_changes(orig, comps):
+    """Compara cada variante de Figma con su primera aparición en el flujo original: colores, bordes, textos y estructura.
+    Las diferencias de tamaño de pocos píxeles (cómo mide el texto cada programa) no cuentan."""
+    occ = {}
+    for s in orig["screens"]:
+        for n in walk(s["node"], []):
+            if n.get("component"):
+                p = n["component"]["props"]
+                occ.setdefault(n["component"]["set"] + "|" + ", ".join(f"{k}={p[k]}" for k in sorted(p)), n)
+    out = []
+    for c in comps:
+        if "set" not in c: continue
+        for v in c["variants"]:
+            key = c["set"] + "|" + v["name"]
+            on = occ.get(key)
+            if not on: continue
+            a, b = flat_orig(on), flat_figma(v)
+            if len(a) != len(b):
+                out.append(f"- **{c['set']}** ({v['name']}): ha cambiado la estructura ({len(a)} → {len(b)} capas)"); continue
+            for x, y in zip(a, b):
+                if x[1] in ("INST", "ICON") or y[1] in ("INST", "ICON"):
+                    if x[1] != y[1] or (x[1] == "INST" and x[2] != y[2]): out.append(f"- **{c['set']}** ({v['name']}) {x[0] or 'raíz'}: {x[2]} → {y[2]}")
+                    continue
+                d = []
+                if x[4] != y[4]: d.append(f"texto «{x[4]}» → «{y[4]}»")
+                if (x[5] or "").replace(".", "/") != (y[5] or ""): d.append(f"color `{x[5]}` → `{y[5]}`")
+                if x[6] and y[6] and abs(x[6] - y[6]) > 0.5: d.append(f"tamaño de letra {x[6]} → {y[6]}")
+                if (x[7] or "").replace(".", "/") != (y[7] or ""): d.append(f"borde `{x[7]}` → `{y[7]}`")
+                if d: out.append(f"- **{c['set']}** ({v['name']}) capa {x[0] or 'raíz'}: " + "; ".join(d))
     return out
 
 
@@ -125,6 +182,9 @@ def main():
             lines.append(f"- **{c['set']}** ({label}): {len(vs)} variantes" + (f"; nuevas: {', '.join(extra)}" if extra else ""))
         else:
             lines.append(f"- **{c['name']}** (componente suelto, nuevo)")
+    if orig:
+        cc = component_changes(orig, ch.get("components", []))
+        lines += ["", "### Cambios dentro de los componentes", ""] + (cc or ["- Ninguno"])
     lines.append("")
 
     # ---- Pantallas
