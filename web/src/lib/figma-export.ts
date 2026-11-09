@@ -200,6 +200,8 @@ function iconName(svg: Element) {
 function slotName(el: Element) {
   const slot = el.getAttribute("data-slot")
   if (!slot || !COMPONENT_SLOTS.has(slot)) return null
+  // Una etiqueta que envuelve un campo entero es una tarjeta de opción (con su casilla o interruptor), no una etiqueta
+  if (slot === "field-label" && el.querySelector(":scope > [data-slot=field]")) return "choice-card"
   return slot === "field-label" ? "label" : slot
 }
 
@@ -428,7 +430,7 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
       contenido: icons && texts ? "icono y texto" : icons ? "icono" : texts ? "texto" : "vacío",
       estado: el.getAttribute("data-step") ? `paso ${el.getAttribute("data-step")} de ${el.getAttribute("data-total")}`
         : el.getAttribute("aria-invalid") === "true" || el.closest("[data-invalid=true]") ? "error"
-        : el.getAttribute("data-state") === "checked" ? "marcado" : el.getAttribute("data-active") === "true" ? "activo" : "normal",
+        : el.getAttribute("data-state") === "checked" || (slot === "choice-card" && el.querySelector("[data-state=checked]")) ? "marcado" : el.getAttribute("data-active") === "true" ? "activo" : "normal",
     }
     node.component = { set: slot, props }
     node.name = slot

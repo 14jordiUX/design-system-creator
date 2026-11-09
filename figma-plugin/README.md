@@ -30,8 +30,10 @@ Si no tienes instalada la fuente del sistema, usa Inter y te avisa.
 Cuando Claude cambia algo (un color, un componente, un texto de pantalla…), descarga otra vez el .json en la web
 («Llevar a Figma»), suéltalo en el plugin y pulsa **Actualizar este archivo**. En el mismo archivo:
 - pisa los valores de las variables y estilos con los nuevos (y añade los que falten);
-- rehace por dentro los componentes que ya existen, sin borrarlos: todas sus instancias reciben el cambio;
-- sustituye las pantallas del flujo en el mismo sitio (y rehace los enlaces del prototipo).
+- pone al día los componentes que ya existen, capa a capa y sin borrarlos: todas sus instancias reciben el cambio
+  y conservan sus textos (si un componente ha cambiado de forma, se rehace entero y te avisa);
+- sustituye las pantallas del flujo en el mismo sitio (y rehace los enlaces del prototipo). Si una pantalla falla
+  a medias, se deja la anterior y te lo dice.
 
 Lo que no viene en el .json (otras páginas, otros componentes) no se toca. Si has cambiado algo en Figma que Claude
 aún no tiene, expórtalo antes, porque se sustituye.
