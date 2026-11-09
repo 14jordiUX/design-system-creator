@@ -19,10 +19,11 @@ figma.ui.onmessage = async (msg) => {
     if (msg.type === "draw") {
       const d = msg.data
       if (d && d.format === "dsc-figma-bundle@1") {
+        const opts = Object.assign({}, msg.options || {}, { done: {} })
         // Todo el sistema: cada flujo se dibuja (o actualiza) en su página, con los mismos tokens y componentes
         for (let i = 0; i < d.flows.length; i++) {
           const f = d.flows[i]
-          await draw({ format: "dsc-figma@1", system: d.system, mode: d.mode, view: d.view, collections: d.collections, effects: d.effects, prototype: f.prototype, screens: f.screens }, msg.options || {})
+          await draw({ format: "dsc-figma@1", system: d.system, mode: d.mode, view: d.view, collections: d.collections, effects: d.effects, prototype: f.prototype, screens: f.screens }, opts)
         }
       } else await draw(d, msg.options || {})
     }
@@ -189,6 +190,7 @@ class Drawer {
   constructor(vars, effects, componentsPage, update) {
     this.vars = vars; this.effects = effects; this.page = componentsPage
     this.update = !!update      // poner al día los componentes que ya existen
+    this.done = {}              // componentes ya puestos al día (compartido entre los flujos de un mismo archivo)
     this.refreshed = 0
     this.rebuilt = []           // componentes que han cambiado de estructura (se rehacen enteros)
     this.defining = {}          // componentes que se están creando ahora (un componente no puede llevarse dentro a sí mismo)
@@ -339,7 +341,8 @@ class Drawer {
   async defineNew(n, key) {
     // ¿Ya existe en el archivo (quizá cambiado por ti)? Entonces se reutiliza tal cual
     const existing = await findComponent(n.component.set, n.component.props)
-    if (existing && this.update) { this.components[key] = existing; await this.refresh(existing, n); return existing }
+    // Al actualizar, cada componente se pone al día una sola vez por archivo .json (aunque salga en varios flujos)
+    if (existing && this.update && !this.done[key]) { this.done[key] = true; this.components[key] = existing; await this.refresh(existing, n); return existing }
     if (existing) { this.components[key] = existing; return existing }
     const holder = figma.createFrame()
     this.page.appendChild(holder)
@@ -382,7 +385,10 @@ class Drawer {
   sameShape(node, n, top) {
     const k = this.kindOf(n, top)
     if (k === "SVG") return true
-    if (k === "TEXT" || k === "INSTANCE") return node.type === k
+    if (k === "TEXT") return node.type === k
+    if (node.type === "INSTANCE") return k === "INSTANCE"
+    if (k === "INSTANCE" && n.type === "SVG") return false
+    // Una pieza que debía ser instancia pero se dibujó tal cual (otra forma) se compara capa a capa
     if (node.type !== "FRAME" && node.type !== "COMPONENT") return false
     const kids = n.children || []
     if (node.children.length !== kids.length) return false
@@ -394,7 +400,7 @@ class Drawer {
     const k = this.kindOf(n, top)
     if (k === "SVG") return
     if (k === "TEXT") { await this.textStyle(node, n); return }
-    if (k === "INSTANCE") {
+    if (k === "INSTANCE" && node.type === "INSTANCE") {
       if (n.type === "SVG") { try { node.resize(n.w, n.h) } catch (e) { /* */ } paintIcon(node, solid(n.fill.color, tokenVar(this.vars, n.fill.token))); return }
       const comp = await this.definition(n)
       if (comp) { const cur = await node.getMainComponentAsync(); if (cur !== comp) node.swapComponent(comp); await this.overrides(node, n) }
@@ -411,6 +417,8 @@ class Drawer {
   async instance(n) {
     const comp = await this.definition(n)
     if (!comp) return null
+    // Misma variante pero otra forma (otro número de textos, iconos o capas): se dibuja tal cual, no como instancia
+    if (!this.sameShape(comp, Object.assign({}, n, { sizing: undefined }), true)) return null
     const inst = comp.createInstance()
     await this.overrides(inst, n)
     inst.name = n.component.set
@@ -512,6 +520,7 @@ async function draw(data, options) {
   // Al actualizar se usa la página del flujo que ya existe; al dibujar, una nueva
   const flowPage = await pageNamed(data.prototype.label + " · " + data.system.name, update)
   const drawer = new Drawer(vars, effects, compPage, update)
+  if (options.done) drawer.done = options.done
   drawer.compY = compPage.children.reduce((m, n) => Math.max(m, n.y + n.height + 120), 0)
 
   await figma.setCurrentPageAsync(flowPage)
@@ -519,6 +528,7 @@ async function draw(data, options) {
   let x = flowPage.children.reduce((m, n) => Math.max(m, n.x + n.width + 160), 0)
   const gap = 160
   let replaced = 0
+  let rowY = 0, rowH = 0
   for (const s of data.screens) {
     log((update ? "Actualizando «" : "Dibujando «") + s.label + "»…")
     // Al actualizar, la pantalla que ya existe se sustituye en el mismo sitio (los enlaces se rehacen después)
@@ -541,7 +551,11 @@ async function draw(data, options) {
     frame.name = s.label
     frame.clipsContent = true
     if (old) { frame.x = old.x; frame.y = old.y; old.remove(); replaced++ }
-    else { frame.x = x; frame.y = 0; x += frame.width + gap }
+    else {
+      // Muchas pantallas (el catálogo): en filas, para que no quede una tira infinita
+      if (x > 0 && x + frame.width > 9000) { x = 0; rowY += rowH + gap; rowH = 0 }
+      frame.x = x; frame.y = rowY; x += frame.width + gap; rowH = Math.max(rowH, frame.height)
+    }
     frames[s.id] = frame
     // El modo (claro u oscuro) de la pantalla
     const colorCol = (await figma.variables.getLocalVariableCollectionsAsync()).find((c) => c.name === "Color")

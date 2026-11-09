@@ -111,6 +111,9 @@ export type FNode = {
 const CT = classTokens as Record<string, string[]>
 // Componentes de shadcn/ui que pasan a ser componentes de Figma (las piezas «hoja»; los contenedores quedan como marcos)
 const COMPONENT_SLOTS = new Set(["button", "badge", "checkbox", "input", "input-group", "avatar", "alert", "input-otp-slot", "separator", "label", "field-label", "switch", "kbd", "spinner", "steps",
+  // piezas de shadcn/ui que salen en el catálogo (siempre con la misma forma)
+  "textarea", "select-trigger", "native-select", "radio-group-item", "toggle", "toggle-group-item", "tabs-trigger", "slider",
+  "progress", "skeleton", "pagination-link", "breadcrumb-link",
   // propios
   "choice-card", "setting-row", "password-input", "icon-badge", "brand", "back-button", "step-footer", "code-input"])
 
@@ -183,7 +186,7 @@ function inherited(el: Element | null, stop: Element, prefix: RegExp, test: (t: 
 
 const num = (v: string) => parseFloat(v) || 0
 // Componentes que no escalan nunca: van con ancho y alto fijos en el auto layout (no «hug» ni «fill»)
-const FIXED_SIZE = new Set(["switch", "checkbox", "avatar", "input-otp-slot", "spinner", "icon-badge"])
+const FIXED_SIZE = new Set(["switch", "checkbox", "avatar", "input-otp-slot", "spinner", "icon-badge", "radio-group-item"])
 const fixedSize = (c: FNode) => !!c.component && (FIXED_SIZE.has(c.component.set) || (c.component.set === "button" && c.component.props.tamaño.startsWith("icon")))
 // Desplazado en horizontal con transform (la barra de Progress, la bolita de Switch): en Figma va suelto en su sitio, si no el auto layout lo recoloca
 const moved = (cs: CSSStyleDeclaration) => {
@@ -451,7 +454,7 @@ function stateOf(el: Element, slot: string) {
   if (el.hasAttribute("data-disabled") || el.hasAttribute("disabled")) return "deshabilitado"
   if (el.getAttribute("data-state") === "checked" || (CONTAINS_CONTROL.has(slot) && el.querySelector("[data-state=checked]"))) return "marcado"
   if (el.getAttribute("data-state") === "visible") return "visible"
-  if (el.getAttribute("data-active") === "true") return "activo"
+  if (el.getAttribute("data-active") === "true" || el.getAttribute("data-state") === "active" || el.getAttribute("data-state") === "on" || el.getAttribute("aria-current") === "page") return "activo"
   return "normal"
 }
 
@@ -485,7 +488,13 @@ export type FigmaExport = {
 type FlowInput = { prototype: { slug: string; label: string; description: string; links?: PrototypeLink[] }; screens: { id: string; label: string; el: HTMLElement }[] }
 
 function flowScreens(ctx: Ctx, flow: FlowInput) {
-  return flow.screens.map((s) => {
+  return flow.screens.flatMap((s) => {
+    try { return [oneScreen(ctx, flow, s)] } catch (e) { console.warn("No se ha podido medir", s.label, e); return [] }
+  })
+}
+
+function oneScreen(ctx: Ctx, flow: FlowInput, s: FlowInput["screens"][number]) {
+  {
     const r = s.el.getBoundingClientRect()
     const node = serialize(ctx, s.el, s.el, r) ?? { type: "FRAME", name: s.label, x: 0, y: 0, w: Math.round(r.width), h: Math.round(r.height) }
     node.name = s.label
@@ -495,7 +504,7 @@ function flowScreens(ctx: Ctx, flow: FlowInput) {
     delete node._h
     markLinks(node, (flow.prototype.links ?? []).filter((l) => l.from === s.id))
     return { id: s.id, label: s.label, node }
-  })
+  }
 }
 
 function makeCtx(tokens: TokenFiles, mode: Mode): Ctx {
