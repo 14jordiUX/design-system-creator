@@ -93,7 +93,7 @@ export type FNode = {
   absolute?: boolean
   sizing?: { h: "FIXED" | "FILL" | "HUG"; v: "FIXED" | "FILL" | "HUG" }
   fill?: Paint
-  stroke?: Paint & { weights: [number, number, number, number] }
+  stroke?: Paint & { weights: [number, number, number, number]; outside?: boolean }
   radius?: [number, number, number, number]
   effect?: string
   opacity?: number
@@ -102,7 +102,8 @@ export type FNode = {
   text?: { chars: string; family: string; weight: number; size: number; lineHeight?: number; letterSpacing?: number; align: string; upper?: boolean; color: Paint; bind: Bind; single: boolean }
   svg?: string
   icon?: string                                        // nombre del icono (lucide) → componente icon/<nombre>
-  component?: { set: string; props: Record<string, string>; slot?: string } // slot: lo que va en su slot (otro componente)
+  component?: { set: string; props: Record<string, string>; slot?: string }
+  states?: Record<string, StatePatch>                 // solo mientras se mide: cómo cambia en cada estado // slot: lo que va en su slot (otro componente)
   link?: string                                        // al clicar, va a esta pantalla
   _h?: { grow: boolean; wClass: boolean; hClass: boolean; fillW: boolean; fillH: boolean } // solo mientras se mide
   children?: FNode[]
@@ -120,9 +121,23 @@ const COMPONENT_SLOTS = new Set(["button", "badge", "checkbox", "input", "input-
   // piezas de shadcn/ui con forma fija (cambia el texto, no la estructura)
   "item", "accordion-item", "bubble", "attachment", "marker", "command-item", "sidebar-menu-button", "navigation-menu-link",
   // listas: en Figma son componentes con un slot donde van las pestañas u opciones (las que pida cada pantalla)
-  "tabs-list", "toggle-group", "tab-list"])
-/** Componentes lista → el componente que se mete en su slot (preferido en Figma). */
-const SLOT_LISTS: Record<string, string> = { "tabs-list": "tabs-trigger", "toggle-group": "toggle-group-item", "tab-list": "tab-trigger" }
+  "tabs-list", "toggle-group", "tab-list",
+  // cajas que se llenan con lo que haga falta (slot sin preferido) y menús (slot con sus opciones)
+  "card", "dialog-content", "alert-dialog-content", "sheet-content", "drawer-content", "popover-content", "hover-card-content",
+  "dropdown-menu-content", "context-menu-content", "menubar-content", "tooltip-content",
+  "dropdown-menu-item", "context-menu-item", "menubar-item", "select-item"])
+/** Componentes lista → el componente que se mete en su slot (preferido en Figma); "" = caja sin preferido. */
+const SLOT_LISTS: Record<string, string> = {
+  "tabs-list": "tabs-trigger", "toggle-group": "toggle-group-item", "tab-list": "tab-trigger",
+  "dropdown-menu-content": "dropdown-menu-item", "context-menu-content": "context-menu-item", "menubar-content": "menubar-item",
+  card: "", "dialog-content": "", "alert-dialog-content": "", "sheet-content": "", "drawer-content": "", "popover-content": "", "hover-card-content": "",
+}
+/** Piezas con estados (al pasar el ratón, al pulsar, con el foco, desactivadas, con error): en el catálogo salen todas como variantes. */
+const STATEFUL = new Set(["button", "toggle", "toggle-group-item", "tabs-trigger", "tab-trigger", "input", "textarea", "select-trigger", "native-select",
+  "checkbox", "switch", "radio-group-item", "pagination-link", "breadcrumb-link", "back-button", "fab-button", "app-sidebar-item", "app-tab-bar-item",
+  "sidebar-menu-button", "command-item", "navigation-menu-link", "choice-card", "dropdown-menu-item", "context-menu-item", "menubar-item", "select-item"])
+const STATE_PREFIX: [string, string][] = [["hover", "hover"], ["active", "pulsado"], ["focus-visible", "foco"], ["focus", "foco"], ["disabled", "deshabilitado"], ["aria-invalid", "error"]]
+type StatePatch = { fill?: Paint; text?: Paint; stroke?: Paint; opacity?: number; focusRing?: { color: Paint; width: number } }
 
 function rgba(c: string): [number, number, number, number] | null {
   if (!c) return null
@@ -215,7 +230,8 @@ function iconName(svg: Element) {
 function slotName(el: Element) {
   let slot = el.getAttribute("data-slot")
   // Un botón que abre algo (menú, diálogo, popover…) lleva el data-slot del disparador, pero sigue siendo un Button
-  if (slot?.endsWith("-trigger") && el.hasAttribute("data-variant") && el.hasAttribute("data-size") && el.tagName === "BUTTON") slot = "button"
+  // (lo mismo con los de cerrar o confirmar de un diálogo: dialog-close, alert-dialog-action…)
+  if (slot && !COMPONENT_SLOTS.has(slot) && el.hasAttribute("data-variant") && el.hasAttribute("data-size") && (el.tagName === "BUTTON" || el.tagName === "A")) slot = "button"
   if (!slot || !COMPONENT_SLOTS.has(slot)) return null
   // Una etiqueta que envuelve un campo entero es una tarjeta de opción (con su casilla o interruptor), no una etiqueta
   if (slot === "field-label" && el.querySelector(":scope > [data-slot=field]")) return "choice-card"
@@ -529,7 +545,8 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
       estado: stateOf(el, slot),
     }
     node.component = { set: slot, props }
-    if (SLOT_LISTS[slot]) { node.component.slot = SLOT_LISTS[slot]; props.contenido = "lista" }
+    if (slot in SLOT_LISTS) { node.component.slot = SLOT_LISTS[slot]; props.contenido = SLOT_LISTS[slot] ? "lista" : "caja" }
+    if (STATEFUL.has(slot) && props.estado === "normal") { const st = statePatches(ctx, el); if (Object.keys(st).length) node.states = st }
     node.name = slot
   }
   return node
@@ -537,6 +554,105 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
 
 // Componentes que llevan dentro su control (casilla, interruptor…): su estado es el del control
 const CONTAINS_CONTROL = new Set(["choice-card", "setting-row"])
+/** Cómo cambia una pieza en cada estado, leyendo sus clases (hover:bg-…, focus-visible:focus-ring, disabled:opacity-…). */
+function statePatches(ctx: Ctx, el: Element): Record<string, StatePatch> {
+  const color = (t: string): Paint => ({ color: hex(rgba(String(ctx.resolved[t])) ?? [0, 0, 0, 1]), token: t })
+  const out: Record<string, StatePatch> = {}
+  for (const c of classesOf(el)) {
+    const i = c.lastIndexOf(":")
+    if (i < 0) continue
+    const pre = c.slice(0, i), core = c.slice(i + 1)
+    const st = STATE_PREFIX.find(([p]) => p === pre)?.[1]
+    if (!st) continue
+    const toks = CT[core] ?? []
+    const col = toks.find((t) => ctx.table[t]?.type === "color")
+    const patch = (out[st] = out[st] ?? {})
+    if (core === "focus-ring" || core === "focus-ring-inset") {
+      const w = px(ctx.resolved["control.focus-ring-width"]) ?? 2
+      if (col) patch.focusRing = { color: color(col), width: w }
+    } else if (core.startsWith("bg-") && col) patch.fill = color(col)
+    else if (core.startsWith("text-") && col) patch.text = color(col)
+    else if (core.startsWith("border-") && col) patch.stroke = color(col)
+    else if (core.startsWith("opacity-")) { const v = Number(ctx.resolved[toks[0]]); if (!isNaN(v)) patch.opacity = v }
+  }
+  for (const k of Object.keys(out)) if (!Object.keys(out[k]).length) delete out[k]
+  return out
+}
+
+function applyState(n: FNode, p: StatePatch) {
+  if (p.fill) n.fill = { ...p.fill }
+  if (p.stroke) n.stroke = { ...p.stroke, weights: n.stroke?.weights ?? [1, 1, 1, 1] }
+  if (p.focusRing) { const w = p.focusRing.width; n.stroke = { ...p.focusRing.color, weights: [w, w, w, w], outside: true } }
+  if (p.opacity !== undefined) n.opacity = p.opacity
+  if (p.text) {
+    const walk = (k: FNode) => {
+      if (k.type === "TEXT" && k.text) k.text.color = { ...p.text! }
+      if (k.type === "SVG" && k.fill) k.fill = { ...p.text! }
+      if (!k.component || k === n) (k.children ?? []).forEach(walk)
+    }
+    walk(n)
+  }
+}
+
+const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x))
+
+/** Sección más en una tarjeta del catálogo («Estados», «Abierto»…): título y una fila de piezas. */
+function addSection(screen: FNode, title: string, items: FNode[]) {
+  if (!items.length || !screen.layout) return
+  const proto = findText(screen, 2)
+  const gap = 16, inner = screen.w - screen.layout.pad[1] - screen.layout.pad[3]
+  // Fila con salto de línea: se calcula el alto que tendrá
+  let x = 0, rowH = 0, h = 0
+  for (const it of items) {
+    it.x = 0; it.y = 0; delete it.absolute
+    it.sizing = { h: it.sizing?.h === "FILL" ? "FIXED" : it.sizing?.h ?? "FIXED", v: it.sizing?.v === "FILL" ? "FIXED" : it.sizing?.v ?? "FIXED" }
+    if (x > 0 && x + it.w > inner) { h += rowH + gap; x = 0; rowH = 0 }
+    x += it.w + gap; rowH = Math.max(rowH, it.h)
+  }
+  h += rowH
+  const row: FNode = { type: "FRAME", name: title.toLowerCase(), x: 0, y: 0, w: inner, h, sizing: { h: "FILL", v: "HUG" },
+    layout: { mode: "HORIZONTAL", gap, pad: [0, 0, 0, 0], main: "MIN", cross: "CENTER", wrap: true }, children: items }
+  const kids: FNode[] = []
+  if (proto) { const t = clone(proto); t.text!.chars = title; t.name = title; t.sizing = { h: "HUG", v: "HUG" }; t.text!.single = true; kids.push(t) }
+  kids.push(row)
+  const th = proto ? proto.h + 8 : 0
+  const sec: FNode = { type: "FRAME", name: title, x: 0, y: 0, w: inner, h: h + th, sizing: { h: "FILL", v: "HUG" },
+    layout: { mode: "VERTICAL", gap: 8, pad: [0, 0, 0, 0], main: "MIN", cross: "MIN" }, children: kids }
+  screen.children = [...(screen.children ?? []), sec]
+  screen.h += sec.h + screen.layout.gap
+}
+
+function findText(n: FNode, depth: number): FNode | undefined {
+  if (n.type === "TEXT" && depth <= 0) return n
+  for (const c of n.children ?? []) { const t = depth > 0 ? findText(c, depth - 1) : undefined; if (t) return t }
+  return undefined
+}
+
+/** En el catálogo: cada pieza con estados sale también en hover, pulsado, foco… (una vez por variante) */
+function addStates(screen: FNode, seen: Set<string>) {
+  const items: FNode[] = []
+  const walk = (n: FNode) => {
+    if (n.states && n.component) {
+      const key = n.component.set + "|" + JSON.stringify(n.component.props)
+      if (!seen.has(key)) {
+        seen.add(key)
+        for (const [st, patch] of Object.entries(n.states)) {
+          const c = clone(n); delete c.states; delete c.link
+          c.component!.props.estado = st
+          stripStates(c)
+          applyState(c, patch)
+          items.push(c)
+        }
+      }
+    }
+    for (const c of n.children ?? []) walk(c)
+  }
+  walk(screen)
+  addSection(screen, "Estados", items)
+}
+
+function stripStates(n: FNode) { delete n.states; for (const c of n.children ?? []) stripStates(c) }
+
 function stateOf(el: Element, slot: string) {
   const step = el.getAttribute("data-step")
   if (step) return `paso ${step} de ${el.getAttribute("data-total")}`
@@ -575,7 +691,7 @@ export type FigmaExport = {
 }
 
 /** Recorre las pantallas ya dibujadas en la web (un elemento por pantalla) y arma el archivo para el plugin. */
-type FlowInput = { view?: "mobile" | "desktop"; prototype: { slug: string; label: string; description: string; links?: PrototypeLink[] }; screens: { id: string; label: string; el: HTMLElement }[] }
+type FlowInput = { view?: "mobile" | "desktop"; prototype: { slug: string; label: string; description: string; links?: PrototypeLink[] }; screens: { id: string; label: string; el: HTMLElement; open?: FNode[] }[] }
 
 function flowScreens(ctx: Ctx, flow: FlowInput) {
   return flow.screens.flatMap((s) => {
@@ -593,8 +709,22 @@ function oneScreen(ctx: Ctx, flow: FlowInput, s: FlowInput["screens"][number]) {
     node.sizing = { h: "FIXED", v: "FIXED" }
     delete node._h
     markLinks(node, (flow.prototype.links ?? []).filter((l) => l.from === s.id))
+    if (s.open?.length) addSection(node, "Abierto", s.open.map(clone))
     return { id: s.id, label: s.label, node }
   }
+}
+
+/** Una pieza que se abre encima (diálogo, menú, panel…) medida aparte, para añadirla al catálogo. */
+export function measureOpen(tokens: TokenFiles, mode: Mode, el: HTMLElement): FNode | null {
+  try {
+    const r = el.getBoundingClientRect()
+    const n = serialize(makeCtx(tokens, mode), el, el, r)
+    if (!n) return null
+    delete n.absolute; delete n._h
+    n.x = 0; n.y = 0
+    n.sizing = { h: "FIXED", v: n.layout ? "HUG" : "FIXED" }
+    return n
+  } catch (e) { console.warn("No se ha podido medir", e); return null }
 }
 
 function makeCtx(tokens: TokenFiles, mode: Mode): Ctx {
@@ -612,6 +742,7 @@ export function buildFigmaExport(opts: {
 }): FigmaExport {
   const { collections, effects } = tokensToFigma(opts.tokens)
   const screens = flowScreens(makeCtx(opts.tokens, opts.mode), opts)
+  for (const s of screens) stripStates(s.node)
   return {
     format: FIGMA_FORMAT, system: opts.system,
     prototype: { slug: opts.prototype.slug, label: opts.prototype.label, description: opts.prototype.description },
@@ -632,10 +763,11 @@ export function buildFigmaBundle(opts: {
     format: FIGMA_BUNDLE_FORMAT, system: opts.system,
     mode: opts.mode === "dark" ? "Oscuro" : "Claro", view: opts.view, createdAt: new Date().toISOString(),
     collections, effects,
-    flows: opts.flows.map((f) => ({
-      view: f.view,
-      prototype: { slug: f.prototype.slug, label: f.prototype.label, description: f.prototype.description },
-      screens: flowScreens(ctx, f),
-    })),
+    flows: opts.flows.map((f) => {
+      const screens = flowScreens(ctx, f)
+      if (f.prototype.slug === "catalogo") { const seen = new Set<string>(); for (const s of screens) addStates(s.node, seen) }
+      for (const s of screens) stripStates(s.node)
+      return { view: f.view, prototype: { slug: f.prototype.slug, label: f.prototype.label, description: f.prototype.description }, screens }
+    }),
   }
 }

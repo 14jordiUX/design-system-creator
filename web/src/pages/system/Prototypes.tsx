@@ -22,7 +22,7 @@ import { getSystem, systems } from "@/lib/systems"
 import { useSystemTheme } from "@/lib/theme"
 import { prototypesFor, prototypeUrl, type Prototype } from "@/lib/prototypes"
 import { cn } from "@/lib/utils"
-import { buildFigmaBundle, buildFigmaExport } from "@/lib/figma-export"
+import { buildFigmaBundle, buildFigmaExport, measureOpen, type FNode } from "@/lib/figma-export"
 import type { TokenFiles } from "@/lib/tokens"
 import pluginManifest from "../../../../figma-plugin/manifest.json?raw"
 import pluginCode from "../../../../figma-plugin/code.js?raw"
@@ -426,9 +426,48 @@ class Safe extends ReactComponent<{ children: ReactNode }, { failed: boolean }> 
 }
 
 /** Todo el sistema para Figma en un solo archivo: tokens, el catálogo de componentes y todos los flujos. */
+// Piezas que se abren encima (diálogos, menús, paneles…): para el catálogo de Figma se abren un momento, se miden y se cierran.
+// Cómo se abre cada una: con un clic, al pulsar (pointerdown), con el foco o con el menú contextual.
+const OPENERS: Record<string, "click" | "press" | "focus" | "context"> = {
+  dialog: "click", "alert-dialog": "click",
+  sheet: "click", drawer: "click",
+  popover: "click", "dropdown-menu": "press",
+  menubar: "press", tooltip: "focus",
+  "hover-card": "focus", "context-menu": "context",
+}
+const OPEN_CONTENT = ["dialog-content", "alert-dialog-content", "sheet-content", "drawer-content", "popover-content", "dropdown-menu-content",
+  "menubar-content", "tooltip-content", "hover-card-content", "context-menu-content"].map((x) => `[data-slot="${x}"]`).join(",")
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+async function measureOpened(card: HTMLElement, slug: string, tokens: TokenFiles, mode: "light" | "dark"): Promise<FNode[]> {
+  const how = OPENERS[slug]
+  if (!how) return []
+  const out: FNode[] = []
+  const triggers = Array.from(card.querySelectorAll<HTMLElement>(`[data-slot="${slug}-trigger"]`)).slice(0, 2)
+  for (const t of triggers) {
+    const before = new Set(document.querySelectorAll(OPEN_CONTENT))
+    try {
+      if (how === "click") t.click()
+      else if (how === "press") t.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerType: "mouse" }))
+      else if (how === "focus") t.focus()
+      else { const r = t.getBoundingClientRect(); t.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: r.left + 4, clientY: r.top + 4 })) }
+      await wait(how === "focus" ? 900 : 450)
+      const opened = Array.from(document.querySelectorAll<HTMLElement>(OPEN_CONTENT)).filter((x) => !before.has(x) && !card.contains(x))
+      for (const el of opened) { const n = measureOpen(tokens, mode, el); if (n) out.push(n) }
+    } finally {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+      document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+      t.blur()
+      await wait(300)
+    }
+  }
+  return out
+}
+
 function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens: TokenFiles; system: { id: string; name: string }; mode: "light" | "dark" }) {
   const catalog = useMemo(() => catalogFor(system.id), [system.id])
   const [busy, setBusy] = useState(false)
+  const holder = useRef<HTMLDivElement | null>(null)
   const refs = useRef<Record<string, HTMLDivElement | null>>({})
   useEffect(() => {
     if (!busy) return
@@ -438,12 +477,21 @@ function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens:
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
       if (cancel) return
       try {
+        // Lo que se abre encima se mide antes (de uno en uno); mientras, la zona oculta deja de estar inerte
+        const open: Record<string, FNode[]> = {}
+        if (holder.current) holder.current.inert = false
+        for (const c of catalog) {
+          const card = refs.current["catalogo|" + c.slug]
+          if (card && OPENERS[c.slug]) open[c.slug] = await measureOpened(card, c.slug, tokens, mode)
+          if (cancel) return
+        }
+        if (holder.current) holder.current.inert = true
         const data = buildFigmaBundle({
           tokens, mode, system, view: "desktop",
           flows: [
             {
               prototype: { slug: "catalogo", label: "Catálogo", description: "Todos los componentes del sistema con sus variantes y estados." },
-              screens: catalog.map((c) => ({ id: c.slug, label: c.label, el: refs.current["catalogo|" + c.slug]! })).filter((s) => s.el),
+              screens: catalog.map((c) => ({ id: c.slug, label: c.label, el: refs.current["catalogo|" + c.slug]!, open: open[c.slug] })).filter((s) => s.el),
             },
             // Cada flujo dos veces: en móvil y en escritorio (cada uno en su página de Figma)
             ...list.flatMap((p) => VIEWS.map((v) => ({
@@ -475,11 +523,11 @@ function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens:
         <span className="text-caption text-muted-foreground">Los flujos van en móvil y en escritorio (cada tamaño en su página). Modo {mode === "dark" ? "oscuro" : "claro"}, el que tienes elegido arriba.</span>
       </div>
       <div className="flex flex-wrap gap-gap-sm">
-        <Button onClick={() => setBusy(true)} disabled={busy}>{busy ? <Loader2 className="animate-spin" /> : <Download />}Descargar todo para Figma</Button>
+        <Button onClick={() => { setBusy(true); toast("Preparando el archivo…", { description: "Verás abrirse y cerrarse un momento los diálogos y menús: los mido para Figma." }) }} disabled={busy}>{busy ? <Loader2 className="animate-spin" /> : <Download />}Descargar todo para Figma</Button>
         <Button variant="outline" onClick={downloadPlugin}><Puzzle />Descargar el plugin</Button>
       </div>
       {busy && (
-        <div inert aria-hidden className="pointer-events-none fixed top-0 left-full flex items-start gap-gap-2xl">
+        <div ref={holder} inert aria-hidden className="pointer-events-none fixed top-0 left-full flex items-start gap-gap-2xl">
           {catalog.map((c) => (
             <div key={"catalogo" + c.slug} ref={(el) => { refs.current["catalogo|" + c.slug] = el }} className="flex w-content shrink-0 flex-col gap-gap-xl bg-background p-inset-2xl">
               <div className="flex flex-col gap-gap-2xs">
