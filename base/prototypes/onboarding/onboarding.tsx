@@ -1,5 +1,5 @@
 // Prototipo «Onboarding»: 3 pantallas para dar la bienvenida, elegir intereses y activar avisos.
-// Componentes: Card, Progress, Field, Checkbox, Switch, Button y Badge (shadcn/ui). Ninguna clase fuera de los tokens.
+// Componentes: Card, Steps (propio), Field, Checkbox, Switch, Button y Badge (shadcn/ui). Ninguna clase fuera de los tokens.
 //
 // Cómo funciona un prototipo: recibe `screen` (la pantalla que toca) y `go(id)` (para ir a otra).
 import { useState } from "react"
@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldTitle } from "@/components/ui/field"
-import { Progress } from "@/components/ui/progress"
 import { Switch } from "@/components/ui/switch"
+import { Steps } from "@/components/custom/steps"
 
 export const meta = {
   label: "Onboarding",
@@ -36,8 +36,6 @@ export const meta = {
 
 type Props = { screen: string; go: (id: string) => void }
 
-const STEPS = ["bienvenida", "intereses", "avisos"]
-
 const INTERESTS = [
   { id: "agenda", icon: CalendarDays, title: "Organizar mi agenda", text: "Citas, recordatorios y tareas." },
   { id: "equipo", icon: UsersRound, title: "Trabajar en equipo", text: "Compartir y repartir el trabajo." },
@@ -59,16 +57,6 @@ export default function Onboarding({ screen, go }: Props) {
   )
 }
 
-function Steps({ current }: { current: string }) {
-  const i = STEPS.indexOf(current) + 1
-  return (
-    <div className="flex flex-col gap-gap-xs">
-      <p className="text-caption text-muted-foreground">Paso {i} de {STEPS.length}</p>
-      <Progress value={(i / STEPS.length) * 100} aria-label={`Paso ${i} de ${STEPS.length}`} />
-    </div>
-  )
-}
-
 function Welcome({ go }: { go: Props["go"] }) {
   return (
     <Card>
@@ -81,7 +69,7 @@ function Welcome({ go }: { go: Props["go"] }) {
         <CardDescription>En menos de un minuto dejamos la app a tu medida. Puedes cambiarlo todo más tarde.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-gap-sm">
-        <Steps current="bienvenida" />
+        <Steps current={1} total={3} />
       </CardContent>
       <CardFooter className="flex flex-col gap-gap-sm">
         <Button className="w-full" onClick={() => go("intereses")}>Empezar</Button>
@@ -98,7 +86,7 @@ function Interests({ go, picked, setPicked }: { go: Props["go"]; picked: string[
   return (
     <Card>
       <CardHeader>
-        <Steps current="intereses" />
+        <Steps current={2} total={3} />
         <CardTitle className="text-title">¿Para qué la vas a usar?</CardTitle>
         <CardDescription>Elige lo que quieras. Así te enseñamos primero lo que te sirve.</CardDescription>
       </CardHeader>
@@ -131,7 +119,7 @@ function Notifications({ go, count }: { go: Props["go"]; count: number }) {
   return (
     <Card>
       <CardHeader>
-        <Steps current="avisos" />
+        <Steps current={3} total={3} />
         <CardTitle className="text-title">¿Te avisamos?</CardTitle>
         <CardDescription>
           {count ? `Has elegido ${count} ${count === 1 ? "interés" : "intereses"}. ` : ""}Solo te escribimos cuando haya algo que hacer.
