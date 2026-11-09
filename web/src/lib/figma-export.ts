@@ -485,7 +485,7 @@ export type FigmaExport = {
 }
 
 /** Recorre las pantallas ya dibujadas en la web (un elemento por pantalla) y arma el archivo para el plugin. */
-type FlowInput = { prototype: { slug: string; label: string; description: string; links?: PrototypeLink[] }; screens: { id: string; label: string; el: HTMLElement }[] }
+type FlowInput = { view?: "mobile" | "desktop"; prototype: { slug: string; label: string; description: string; links?: PrototypeLink[] }; screens: { id: string; label: string; el: HTMLElement }[] }
 
 function flowScreens(ctx: Ctx, flow: FlowInput) {
   return flow.screens.flatMap((s) => {
@@ -543,6 +543,7 @@ export function buildFigmaBundle(opts: {
     mode: opts.mode === "dark" ? "Oscuro" : "Claro", view: opts.view, createdAt: new Date().toISOString(),
     collections, effects,
     flows: opts.flows.map((f) => ({
+      view: f.view,
       prototype: { slug: f.prototype.slug, label: f.prototype.label, description: f.prototype.description },
       screens: flowScreens(ctx, f),
     })),

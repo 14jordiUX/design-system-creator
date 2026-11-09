@@ -23,7 +23,7 @@ figma.ui.onmessage = async (msg) => {
         // Todo el sistema: cada flujo se dibuja (o actualiza) en su página, con los mismos tokens y componentes
         for (let i = 0; i < d.flows.length; i++) {
           const f = d.flows[i]
-          await draw({ format: "dsc-figma@1", system: d.system, mode: d.mode, view: d.view, collections: d.collections, effects: d.effects, prototype: f.prototype, screens: f.screens }, opts)
+          await draw({ format: "dsc-figma@1", system: d.system, mode: d.mode, collections: d.collections, effects: d.effects, prototype: f.prototype, screens: f.screens, view: f.view || d.view }, opts)
         }
       } else await draw(d, msg.options || {})
     }
@@ -353,6 +353,7 @@ class Drawer {
     holder.remove()
     comp.setPluginData("set", n.component.set)
     this.components[key] = comp
+    this.done[key] = true      // recién hecho: en los demás flujos de este archivo no se vuelve a rehacer
     return comp
   }
 
@@ -518,7 +519,16 @@ async function draw(data, options) {
 
   const compPage = await pageNamed("Componentes · " + data.system.name, true)
   // Al actualizar se usa la página del flujo que ya existe; al dibujar, una nueva
-  const flowPage = await pageNamed(data.prototype.label + " · " + data.system.name, update)
+  // Cada tamaño en su página: «Iniciar sesión · Base · Móvil» y «… · Escritorio» (el catálogo, sin tamaño)
+  const base = data.prototype.label + " · " + data.system.name
+  const pageName = data.prototype.slug === "catalogo" || !data.view ? base : base + " · " + (data.view === "mobile" ? "Móvil" : "Escritorio")
+  if (update && pageName !== base && data.view === "mobile") {
+    // Archivos de antes (se dibujaban en móvil, en una página sin tamaño): esa página pasa a ser la de móvil
+    await figma.loadAllPagesAsync()
+    const old = figma.root.children.find((x) => x.name === base)
+    if (old && !figma.root.children.find((x) => x.name === pageName)) { old.name = pageName; log("La página «" + base + "» pasa a llamarse «" + pageName + "».") }
+  }
+  const flowPage = await pageNamed(pageName, update)
   const drawer = new Drawer(vars, effects, compPage, update)
   if (options.done) drawer.done = options.done
   drawer.compY = compPage.children.reduce((m, n) => Math.max(m, n.y + n.height + 120), 0)

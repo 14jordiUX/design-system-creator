@@ -14,7 +14,9 @@ Lleva un flujo de la web a Figma y trae tus cambios de vuelta.
 1. En la web: **Llevar a Figma → Descargar el flujo para Figma** (sale con el sistema, el modo y el tamaño que tengas elegidos).
    O todo el sistema de una vez: **Prototipos → Todo <sistema> para Figma → Descargar todo para Figma** (formato `dsc-figma-bundle@1`:
    los tokens, el catálogo entero de componentes —página «Catálogo», una mesa por componente con sus ejemplos— y todos los flujos;
-   el plugin dibuja o actualiza cada uno en su página). Es grande: en Figma tarda un poco.
+   cada flujo en móvil y en escritorio, en páginas «<flujo> · <sistema> · Móvil» y «… · Escritorio»; el plugin dibuja o
+   actualiza cada uno en su página). Es grande: en Figma tarda un poco. Si el archivo tenía la página antigua sin tamaño,
+   al actualizar pasa a ser la de móvil.
 2. En Figma: abre el plugin, suelta el archivo y pulsa **Dibujar en Figma**.
 
 Crea:
