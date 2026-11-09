@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
-import { Copy, MessageSquare, MoreHorizontal, Pencil, Plus, Search, Sparkles, Trash2, Wand2, Eye, FilePlus2, Globe } from "lucide-react"
+import { Copy, MessageSquare, MoreHorizontal, Pencil, Plus, Search, Sparkles, Trash2, Wand2, Eye, FilePlus2, Globe, BookOpen } from "lucide-react"
 import { systems, ORIGIN_LABEL, type DesignSystem } from "@/lib/systems"
 import { fontFamilyCss } from "@/lib/tokens"
 import { loadFonts } from "@/lib/theme"
@@ -96,7 +96,7 @@ export default function Library() {
             <div className="flex size-control-sm items-center justify-center rounded-card bg-primary text-primary-foreground"><Sparkles className="size-icon-md" /></div>
             Design System Creator
           </div>
-          <span className="text-caption text-muted-foreground">Versión 0.4 · funciona en tu ordenador</span>
+          <Button variant="ghost" size="sm" asChild><Link to="/referencias"><BookOpen />Referencias</Link></Button>
         </div>
       </header>
 

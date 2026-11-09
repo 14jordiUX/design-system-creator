@@ -1,0 +1,452 @@
+{
+  "$comment": "Sistemas de diseño de referencia que salen en la sección «Referencias» de la web. Para añadir uno, copia una entrada y cambia los datos. 'tags' usa solo las claves de 'tags' de abajo; 'links' admite web, github y surf (su ficha en designsystems.surf).",
+  "tags": {
+    "tokens": "Tokens",
+    "componentes": "Componentes",
+    "figma": "Kit de Figma",
+    "accesibilidad": "Accesibilidad",
+    "contenido": "Contenido y tono",
+    "patrones": "Patrones",
+    "codigo": "Código abierto"
+  },
+  "systems": [
+    {
+      "name": "shadcn/ui",
+      "company": "shadcn (Vercel)",
+      "sector": "Herramienta",
+      "note": "La base de nuestros componentes. Mira cómo cada pieza es código que copias y adaptas, y cómo los temas salen de unas pocas variables.",
+      "tags": [
+        "componentes",
+        "tokens",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://ui.shadcn.com",
+        "github": "https://github.com/shadcn-ui/ui"
+      }
+    },
+    {
+      "name": "Radix",
+      "company": "WorkOS",
+      "sector": "Herramienta",
+      "note": "Las piezas «invisibles» (menús, diálogos, pestañas) que usa shadcn. Útil para ver cómo se comporta cada componente con teclado y lector de pantalla.",
+      "tags": [
+        "componentes",
+        "accesibilidad",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://www.radix-ui.com",
+        "github": "https://github.com/radix-ui/primitives",
+        "surf": "https://designsystems.surf/design-systems/workos"
+      }
+    },
+    {
+      "name": "Material Design 3",
+      "company": "Google",
+      "sector": "Plataforma",
+      "note": "El sistema más completo para estudiar tokens de color: genera toda la paleta (claro y oscuro) a partir de un solo color.",
+      "tags": [
+        "tokens",
+        "componentes",
+        "figma",
+        "accesibilidad"
+      ],
+      "links": {
+        "web": "https://m3.material.io",
+        "github": "https://github.com/material-components/material-web",
+        "surf": "https://designsystems.surf/design-systems/google"
+      }
+    },
+    {
+      "name": "Human Interface Guidelines",
+      "company": "Apple",
+      "sector": "Plataforma",
+      "note": "Más guía que librería. Ideal para decidir tamaños táctiles, tipografía y cómo adaptar una app a iPhone, iPad y Mac.",
+      "tags": [
+        "patrones",
+        "accesibilidad",
+        "figma"
+      ],
+      "links": {
+        "web": "https://developer.apple.com/design/human-interface-guidelines"
+      }
+    },
+    {
+      "name": "Fluent 2",
+      "company": "Microsoft",
+      "sector": "Plataforma",
+      "note": "Buen ejemplo de tokens en capas (globales y de alias), muy parecido a nuestras primitivas y semánticas.",
+      "tags": [
+        "tokens",
+        "componentes",
+        "figma",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://fluent2.microsoft.design",
+        "github": "https://github.com/microsoft/fluentui",
+        "surf": "https://designsystems.surf/design-systems/microsoft"
+      }
+    },
+    {
+      "name": "Carbon",
+      "company": "IBM",
+      "sector": "Producto / SaaS",
+      "note": "Muy ordenado y documentado. Mira sus páginas de cada componente: uso, estilo, código y accesibilidad separados en pestañas.",
+      "tags": [
+        "tokens",
+        "componentes",
+        "figma",
+        "accesibilidad",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://carbondesignsystem.com",
+        "github": "https://github.com/carbon-design-system/carbon",
+        "surf": "https://designsystems.surf/design-systems/ibm"
+      }
+    },
+    {
+      "name": "Polaris",
+      "company": "Shopify",
+      "sector": "E-commerce",
+      "note": "Referencia en contenido: cómo escribir botones, errores y mensajes vacíos con un tono claro y amable.",
+      "tags": [
+        "contenido",
+        "patrones",
+        "tokens",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://polaris-react.shopify.com",
+        "github": "https://github.com/Shopify/polaris",
+        "surf": "https://designsystems.surf/design-systems/shopify"
+      }
+    },
+    {
+      "name": "Atlassian Design System",
+      "company": "Atlassian",
+      "sector": "Producto / SaaS",
+      "note": "Nombres de tokens muy claros (color.text.subtle, color.background.danger…), igual que nuestra regla de nombres de color.",
+      "tags": [
+        "tokens",
+        "componentes",
+        "contenido",
+        "patrones"
+      ],
+      "links": {
+        "web": "https://atlassian.design",
+        "surf": "https://designsystems.surf/design-systems/atlassian"
+      }
+    },
+    {
+      "name": "Primer",
+      "company": "GitHub",
+      "sector": "Desarrolladores",
+      "note": "Sistema abierto con temas de alto contraste y daltonismo. Bueno para ver cómo un mismo sistema tiene varios temas.",
+      "tags": [
+        "tokens",
+        "componentes",
+        "accesibilidad",
+        "figma",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://primer.style",
+        "github": "https://github.com/primer/react",
+        "surf": "https://designsystems.surf/design-systems/github"
+      }
+    },
+    {
+      "name": "Spectrum",
+      "company": "Adobe",
+      "sector": "Plataforma",
+      "note": "Muy fuerte en accesibilidad y en escalas (tamaños de texto, espaciado) que funcionan en escritorio y móvil.",
+      "tags": [
+        "tokens",
+        "componentes",
+        "accesibilidad",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://spectrum.adobe.com",
+        "github": "https://github.com/adobe/react-spectrum",
+        "surf": "https://designsystems.surf/design-systems/adobe"
+      }
+    },
+    {
+      "name": "Lightning Design System",
+      "company": "Salesforce",
+      "sector": "Producto / SaaS",
+      "note": "Donde nació la idea de «design tokens». Útil para entender el origen del método que usamos.",
+      "tags": [
+        "tokens",
+        "componentes",
+        "patrones",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://www.lightningdesignsystem.com",
+        "github": "https://github.com/salesforce-ux/design-system",
+        "surf": "https://designsystems.surf/design-systems/salesforce"
+      }
+    },
+    {
+      "name": "Geist",
+      "company": "Vercel",
+      "sector": "Desarrolladores",
+      "note": "Minimalista y técnico. Buen ejemplo de cómo un sistema muy sobrio se apoya en tipografía y escalas de grises.",
+      "tags": [
+        "componentes",
+        "tokens"
+      ],
+      "links": {
+        "web": "https://vercel.com/geist/introduction"
+      }
+    },
+    {
+      "name": "GOV.UK Design System",
+      "company": "Gobierno del Reino Unido",
+      "sector": "Público / Salud",
+      "note": "El mejor ejemplo de formularios sencillos y probados con usuarios reales. Cada patrón explica cuándo usarlo y cuándo no.",
+      "tags": [
+        "patrones",
+        "accesibilidad",
+        "contenido",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://design-system.service.gov.uk",
+        "github": "https://github.com/alphagov/govuk-frontend",
+        "surf": "https://designsystems.surf/design-systems/govuk"
+      }
+    },
+    {
+      "name": "NHS Design System",
+      "company": "Sistema de salud del Reino Unido",
+      "sector": "Público / Salud",
+      "note": "Pensado para pacientes de todas las edades: lenguaje claro y pantallas tranquilas. Útil para sistemas de salud como Sereno.",
+      "tags": [
+        "patrones",
+        "accesibilidad",
+        "contenido"
+      ],
+      "links": {
+        "web": "https://service-manual.nhs.uk/design-system",
+        "github": "https://github.com/nhsuk/nhsuk-frontend"
+      }
+    },
+    {
+      "name": "Watson",
+      "company": "Docplanner",
+      "sector": "Público / Salud",
+      "note": "Sistema de una plataforma de citas médicas (Doctoralia). Muy cercano a lo que necesita una clínica como Sereno: agenda, perfiles y reservas.",
+      "tags": [
+        "componentes",
+        "patrones"
+      ],
+      "links": {
+        "github": "https://github.com/DocPlanner",
+        "surf": "https://designsystems.surf/design-systems/docplanner"
+      }
+    },
+    {
+      "name": "Nordhealth Design System",
+      "company": "Nordhealth",
+      "sector": "Público / Salud",
+      "note": "Software para clínicas veterinarias y de fisioterapia. Buen ejemplo de pantallas de gestión para personal sanitario.",
+      "tags": [
+        "componentes",
+        "tokens",
+        "patrones"
+      ],
+      "links": {
+        "github": "https://github.com/nordhealth",
+        "surf": "https://designsystems.surf/design-systems/nordhealth"
+      }
+    },
+    {
+      "name": "Ant Design",
+      "company": "Ant Group",
+      "sector": "Producto / SaaS",
+      "note": "Enorme catálogo para paneles de gestión: tablas, filtros, formularios largos y gráficos.",
+      "tags": [
+        "componentes",
+        "patrones",
+        "tokens",
+        "figma",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://ant.design",
+        "github": "https://github.com/ant-design/ant-design",
+        "surf": "https://designsystems.surf/design-systems/ant-group"
+      }
+    },
+    {
+      "name": "Cloudscape",
+      "company": "Amazon",
+      "sector": "Producto / SaaS",
+      "note": "Pensado para paneles con muchos datos: tablas, filtros y estados de carga muy bien resueltos.",
+      "tags": [
+        "componentes",
+        "patrones",
+        "accesibilidad",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://cloudscape.design",
+        "github": "https://github.com/cloudscape-design/components",
+        "surf": "https://designsystems.surf/design-systems/amazon"
+      }
+    },
+    {
+      "name": "Gestalt",
+      "company": "Pinterest",
+      "sector": "Consumo",
+      "note": "Interfaz visual y amable. Mira cómo documenta lo que se debe y no se debe hacer con ejemplos lado a lado.",
+      "tags": [
+        "componentes",
+        "accesibilidad",
+        "contenido",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://gestalt.pinterest.systems",
+        "github": "https://github.com/pinterest/gestalt"
+      }
+    },
+    {
+      "name": "Base Web",
+      "company": "Uber",
+      "sector": "Consumo",
+      "note": "Un ejemplo claro de cómo personalizar todos los componentes desde un único tema.",
+      "tags": [
+        "componentes",
+        "tokens",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://baseweb.design",
+        "github": "https://github.com/uber/baseweb",
+        "surf": "https://designsystems.surf/design-systems/uber"
+      }
+    },
+    {
+      "name": "Orbit",
+      "company": "Kiwi.com",
+      "sector": "Viajes",
+      "note": "Muy bueno para flujos de reserva y pago en móvil, con guías de contenido detalladas.",
+      "tags": [
+        "componentes",
+        "patrones",
+        "contenido",
+        "figma",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://orbit.kiwi",
+        "github": "https://github.com/kiwicom/orbit",
+        "surf": "https://designsystems.surf/design-systems/kiwicom"
+      }
+    },
+    {
+      "name": "Paste",
+      "company": "Twilio",
+      "sector": "Producto / SaaS",
+      "note": "Documenta cada componente con su «anatomía» (las partes que lo forman), igual que nuestro inspector de tokens.",
+      "tags": [
+        "componentes",
+        "tokens",
+        "accesibilidad",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://paste.twilio.design",
+        "github": "https://github.com/twilio-labs/paste",
+        "surf": "https://designsystems.surf/design-systems/twilio"
+      }
+    },
+    {
+      "name": "Pajamas",
+      "company": "GitLab",
+      "sector": "Desarrolladores",
+      "note": "Todo su proceso está a la vista: cómo proponen, revisan y añaden componentes nuevos.",
+      "tags": [
+        "componentes",
+        "contenido",
+        "figma",
+        "codigo"
+      ],
+      "links": {
+        "web": "https://design.gitlab.com",
+        "surf": "https://designsystems.surf/design-systems/gitlab"
+      }
+    },
+    {
+      "name": "Mística",
+      "company": "Telefónica",
+      "sector": "Telecomunicaciones",
+      "note": "Sistema español que da servicio a varias marcas (Movistar, O2, Vivo) con los mismos componentes y temas distintos.",
+      "tags": [
+        "componentes",
+        "tokens",
+        "codigo"
+      ],
+      "links": {
+        "github": "https://github.com/Telefonica/mistica"
+      }
+    },
+    {
+      "name": "Wise Design",
+      "company": "Wise",
+      "sector": "Finanzas",
+      "note": "Marca y producto en el mismo sitio. Buen ejemplo de color, ilustración y movimiento con mucha personalidad.",
+      "tags": [
+        "contenido",
+        "componentes",
+        "accesibilidad"
+      ],
+      "links": {
+        "web": "https://wise.design"
+      }
+    },
+    {
+      "name": "Untitled UI",
+      "company": "Untitled UI",
+      "sector": "Herramienta",
+      "note": "Kit de Figma muy popular: variables, auto layout y componentes bien montados. Buena referencia para nuestro plugin.",
+      "tags": [
+        "figma",
+        "componentes",
+        "tokens"
+      ],
+      "links": {
+        "web": "https://www.untitledui.com"
+      }
+    }
+  ],
+  "directories": [
+    {
+      "name": "designsystems.surf",
+      "note": "Directorio de sistemas de diseño públicos, con filtros por empresa y por lo que ofrece cada uno.",
+      "url": "https://designsystems.surf/directories/repository"
+    },
+    {
+      "name": "The Component Gallery",
+      "note": "Compara el mismo componente (por ejemplo, un acordeón) en decenas de sistemas.",
+      "url": "https://component.gallery"
+    },
+    {
+      "name": "Adele",
+      "note": "Tabla con más de cien sistemas de diseño y qué tecnología usa cada uno.",
+      "url": "https://adele.uxpin.com"
+    },
+    {
+      "name": "Banani: generador de sistemas con IA",
+      "note": "Herramienta que crea sistemas de diseño con IA. Referencia para nuestro cuestionario.",
+      "url": "https://www.banani.co/product/ai-design-system-generator"
+    }
+  ]
+}

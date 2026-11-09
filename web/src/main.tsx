@@ -5,6 +5,7 @@ import { Toaster } from "sonner"
 import "./index.css"
 import Library from "./pages/Library"
 import NewSystem from "./pages/NewSystem"
+import References from "./pages/References"
 import SystemLayout from "./pages/system/SystemLayout"
 import SystemHome from "./pages/system/SystemHome"
 import Foundation from "./pages/system/Foundation"
@@ -37,6 +38,7 @@ createRoot(document.getElementById("root")!).render(
         <Routes>
           <Route path="/" element={<Library />} />
           <Route path="/nuevo" element={<NewSystem />} />
+          <Route path="/referencias" element={<References />} />
           <Route path="/s/:id" element={<SystemLayout />}>
             {systemPages}
             <Route path="editar">{systemPages}</Route>
