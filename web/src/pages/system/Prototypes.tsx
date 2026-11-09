@@ -412,8 +412,8 @@ function ToFigma({ p, tokens, system, mode, view }: { p: Prototype; tokens: Toke
 
 /** El catálogo: cada componente (de shadcn/ui y propios) con todos sus ejemplos, como una «pantalla» por componente. */
 function catalogFor(systemId: string) {
-  const ui = ALL_COMPONENTS.filter((c) => DEMOS[c.slug]).map((c) => ({ slug: c.slug, label: c.label, group: c.group, examples: DEMOS[c.slug].examples }))
-  const own = customFor(systemId).map((c) => ({ slug: c.slug, label: c.label, group: "Propios", examples: c.demo.examples }))
+  const ui = ALL_COMPONENTS.filter((c) => DEMOS[c.slug]).map((c) => ({ slug: c.slug, label: c.label, group: c.group, description: DEMOS[c.slug].description, examples: DEMOS[c.slug].examples }))
+  const own = customFor(systemId).map((c) => ({ slug: c.slug, label: c.label, group: "Propios", description: c.demo.description, examples: c.demo.examples }))
   return [...ui, ...own]
 }
 
@@ -515,7 +515,7 @@ function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens:
             // El catálogo, una página por grupo (como en el menú de la web: Acciones, Formularios, Propios…)
             ...[...new Set(catalog.map((c) => c.group))].map((g) => ({
               prototype: { slug: `catalogo-${slugify(g)}`, label: "Catálogo · " + g, description: `Componentes de «${g}» con sus variantes y estados.` },
-              screens: catalog.filter((c) => c.group === g).map((c) => ({ id: c.slug, label: c.label, el: refs.current["catalogo|" + c.slug]!, open: open[c.slug] })).filter((s) => s.el),
+              screens: catalog.filter((c) => c.group === g).map((c) => ({ id: c.slug, label: c.label, description: c.description, el: refs.current["catalogo|" + c.slug]!, open: open[c.slug] })).filter((s) => s.el),
             })),
             // Cada flujo dos veces: en móvil y en escritorio (cada uno en su página de Figma)
             ...list.flatMap((p) => VIEWS.map((v) => ({
