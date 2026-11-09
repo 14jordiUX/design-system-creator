@@ -14,8 +14,10 @@ import { anchorOf, scaleFrom } from "@/lib/generator"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Code, EmptyState, PageHeader, Section } from "@/components/app/common"
 import { useDS } from "./context"
+import TokenStructurePage from "./TokenStructure"
 
 const INTRO: Record<string, string> = {
+  estructura: "Cómo están construidos los tokens de este sistema: las capas, la norma de nombres con ejemplos reales y la lista completa con a qué apunta cada uno.",
   color: "Escalas de color en bruto (primitivos) y los roles que las usan (semánticos). Los componentes solo usan los semánticos.",
   tipografia: "Familias tipográficas y los estilos de texto del sistema.",
   espaciado: "Escala de espaciado (base 4 px) y los espacios de uso para rellenos y separaciones.",
@@ -461,7 +463,7 @@ export default function Foundation() {
   const { editor } = useDS()
   const item = FOUNDATIONS.find((f) => f.slug === page)
   if (!item) return <EmptyState title="Esta página no existe" />
-  const Page = { color: ColorPage, tipografia: TypographyPage, espaciado: SpacingPage, radios: RadiusPage, elevacion: ElevationPage, movimiento: MotionPage }[item.slug]!
+  const Page = { estructura: TokenStructurePage, color: ColorPage, tipografia: TypographyPage, espaciado: SpacingPage, radios: RadiusPage, elevacion: ElevationPage, movimiento: MotionPage }[item.slug]!
   return (
     <div>
       <PageHeader eyebrow={editor ? "Fundamentos · editando" : "Fundamentos"} title={item.label} description={INTRO[item.slug]} />
