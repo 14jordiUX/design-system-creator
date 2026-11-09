@@ -80,6 +80,9 @@ def flat_orig(n, path="", out=None):
     return out
 
 
+COPY_WARN = set()  # colores tomados de la copia de un modo (plan gratis), no de la colección buena
+
+
 def flat_figma(n, path="", out=None):
     """Lo mismo para un nodo exportado desde Figma."""
     out = [] if out is None else out
@@ -88,6 +91,7 @@ def flat_figma(n, path="", out=None):
         out.append((path, "ICON", n.get("w"), n.get("h")) if nm.startswith("icon/") else (path, "INST", nm)); return out
     t = n.get("text") or {}
     f = (n.get("fills") or [None])[0] or {}
+    if f.get("collection"): COPY_WARN.add(f"`{f.get('token')}` en «{n['name']}» viene de la colección «{f['collection']}» (la copia del modo oscuro): usa la de «Color»")
     out.append((path, n["type"].replace("COMPONENT", "FRAME"), n.get("w"), n.get("h"), t.get("chars"), f.get("token") if n["type"] != "VECTOR" else None, t.get("fontSize"), ((n.get("strokes") or [None])[0] or {}).get("token")))
     for i, c in enumerate(n.get("children") or []): flat_figma(c, f"{path}/{i}", out)
     return out
@@ -196,6 +200,7 @@ def main():
         for x in nodes:
             for f in x.get("fills", []) or []:
                 if f and f.get("color") and not f.get("token"): loose.append(f"relleno {f['color']} en «{x['name']}»")
+                if f and f.get("collection"): COPY_WARN.add(f"`{f.get('token')}` en «{x['name']}» viene de la colección «{f['collection']}» (la copia del modo oscuro): usa la de «Color»")
             for f in x.get("strokes", []) or []:
                 if f and f.get("color") and not f.get("token"): loose.append(f"borde {f['color']} en «{x['name']}»")
             lay = x.get("layout")
@@ -222,6 +227,8 @@ def main():
         lines.append("- Componentes: " + (", ".join(comps) if comps else "ninguno"))
         if loose: lines.append(f"- **Valores sin variable ({len(loose)})**: " + "; ".join(loose[:12]) + (" …" if len(loose) > 12 else ""))
         lines.append("")
+    if COPY_WARN:
+        lines += ["## ⚠ Variables de la colección equivocada", ""] + [f"- {w}" for w in sorted(COPY_WARN)] + [""]
     print("\n".join(lines))
 
 

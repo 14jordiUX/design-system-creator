@@ -78,7 +78,7 @@ async function upsertVariables(collections, overwrite) {
       const isNew = !fv
       if (!fv) { fv = figma.variables.createVariable(v.name, fc, v.type); created++ }
       if (v.description && (isNew || overwrite)) fv.description = v.description
-      if (col.hidden) fv.scopes = []         // los primitivos no salen en los selectores: se diseña con semánticos
+      if (col.hidden || !col.register) fv.scopes = []   // primitivos y copias de modo no salen en los selectores: se diseña con semánticos de «Color»
       if (col.register) byName[v.name] = fv   // las de la colección aparte no se usan al dibujar
       plan.push({ fv, v, modeIds, write: isNew || overwrite })
     }
@@ -464,8 +464,15 @@ async function varName(id) {
 
 async function paintOut(p) {
   if (!p || p.type !== "SOLID") return p ? { type: p.type } : undefined
-  const bound = p.boundVariables && p.boundVariables.color ? await varName(p.boundVariables.color.id) : undefined
-  return { color: rgbaToHex(p.color, p.opacity), token: bound }
+  const id = p.boundVariables && p.boundVariables.color ? p.boundVariables.color.id : undefined
+  const out = { color: rgbaToHex(p.color, p.opacity), token: await varName(id) }
+  if (id) {
+    // ¿Es la copia de «Oscuro» (plan gratis)? Tiene el mismo nombre que la buena, pero en claro se vería otro color.
+    const v = await figma.variables.getVariableByIdAsync(id)
+    const c = v ? await figma.variables.getVariableCollectionByIdAsync(v.variableCollectionId) : null
+    if (c && c.name.indexOf(" · ") > 0) out.collection = c.name
+  }
+  return out
 }
 
 async function nodeOut(n) {
