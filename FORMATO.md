@@ -96,7 +96,8 @@ Los principios y las notas aparecen en la web (Inicio) y se copian al `SKILL.md`
 Formato estándar W3C (DTCG), en dos capas:
 
 1. **Primitivos**: qué valor es (`color.brand.600`, `space.4`).
-2. **Semánticos**: para qué sirve (`color.action.primary.default`, `radius.card`). Apuntan a primitivos.
+2. **Semánticos**: para qué sirve (`color.bg.action.primary.default`, `radius.card`). Apuntan a primitivos.
+   Los colores siguen `color . dónde (bg / text / border) . función . variante . estado`: `color.bg.action.primary.hover`, `color.text.on-action.primary`, `color.border.feedback.danger.subtle`. Las clases `bg-primary`, `text-primary` y `border-primary` toman cada una el token de su sitio.
 
 ## Comandos (para Claude)
 

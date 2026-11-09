@@ -15,6 +15,96 @@
       },
       "inverse": {
         "$value": "{color.neutral.900}"
+      },
+      "action": {
+        "primary": {
+          "default": {
+            "$value": "{color.brand.300}",
+            "$description": "Fondo de la acción principal"
+          },
+          "hover": {
+            "$value": "{color.brand.400}",
+            "$description": "Al pasar el ratón"
+          },
+          "active": {
+            "$value": "{color.brand.500}",
+            "$description": "Al pulsar"
+          },
+          "subtle": {
+            "$value": "{color.brand.50}",
+            "$description": "Fondo suave (tags, selección)"
+          }
+        },
+        "secondary": {
+          "default": {
+            "$value": "{color.neutral.100}",
+            "$description": "Fondo de la acción secundaria"
+          },
+          "hover": {
+            "$value": "{color.neutral.200}",
+            "$description": "Al pasar el ratón"
+          },
+          "active": {
+            "$value": "{color.neutral.300}",
+            "$description": "Al pulsar"
+          }
+        },
+        "ghost": {
+          "hover": {
+            "$value": "{color.neutral.100}",
+            "$description": "Al pasar el ratón"
+          }
+        },
+        "disabled": {
+          "$value": "{color.neutral.100}",
+          "$description": "Fondo de una acción desactivada"
+        }
+      },
+      "feedback": {
+        "success": {
+          "default": {
+            "$value": "{color.green.700}",
+            "$description": "Fondo lleno (badges, botones)"
+          },
+          "subtle": {
+            "$value": "{color.green.50}",
+            "$description": "Fondo suave de alertas"
+          }
+        },
+        "warning": {
+          "default": {
+            "$value": "{color.amber.500}",
+            "$description": "Fondo lleno (badges, botones)"
+          },
+          "subtle": {
+            "$value": "{color.amber.50}",
+            "$description": "Fondo suave de alertas"
+          }
+        },
+        "danger": {
+          "default": {
+            "$value": "{color.red.600}",
+            "$description": "Fondo lleno (badges, botones)"
+          },
+          "hover": {
+            "$value": "{color.red.700}",
+            "$description": "Fondo lleno al pasar el ratón"
+          },
+          "subtle": {
+            "$value": "{color.red.50}",
+            "$description": "Fondo suave de alertas"
+          }
+        },
+        "info": {
+          "default": {
+            "$value": "{color.blue.600}",
+            "$description": "Fondo lleno (badges, botones)"
+          },
+          "subtle": {
+            "$value": "{color.blue.50}",
+            "$description": "Fondo suave de alertas"
+          }
+        }
       }
     },
     "surface": {
@@ -53,6 +143,66 @@
       },
       "link": {
         "$value": "{color.brand.800}"
+      },
+      "action": {
+        "primary": {
+          "$value": "{color.brand.800}",
+          "$description": "Texto o icono en el color principal (legible sobre el fondo)"
+        }
+      },
+      "on-action": {
+        "primary": {
+          "$value": "{color.brand.950}",
+          "$description": "Texto/icono encima de la acción principal"
+        },
+        "secondary": {
+          "$value": "{color.neutral.900}",
+          "$description": "Texto/icono encima de la acción secundaria"
+        },
+        "ghost": {
+          "$value": "{color.neutral.900}",
+          "$description": "Texto/icono encima de la acción sin fondo"
+        },
+        "disabled": {
+          "$value": "{color.neutral.400}",
+          "$description": "Texto/icono encima de la acción desactivada"
+        }
+      },
+      "feedback": {
+        "success": {
+          "$value": "{color.green.700}",
+          "$description": "Texto de un aviso sobre fondo normal o suave"
+        },
+        "warning": {
+          "$value": "{color.amber.700}",
+          "$description": "Texto de un aviso sobre fondo normal o suave"
+        },
+        "danger": {
+          "$value": "{color.red.700}",
+          "$description": "Texto de un aviso sobre fondo normal o suave"
+        },
+        "info": {
+          "$value": "{color.blue.700}",
+          "$description": "Texto de un aviso sobre fondo normal o suave"
+        }
+      },
+      "on-feedback": {
+        "success": {
+          "$value": "{color.white}",
+          "$description": "Texto/icono encima del fondo lleno"
+        },
+        "warning": {
+          "$value": "{color.neutral.950}",
+          "$description": "Texto/icono encima del fondo lleno"
+        },
+        "danger": {
+          "$value": "{color.white}",
+          "$description": "Texto/icono encima del fondo lleno"
+        },
+        "info": {
+          "$value": "{color.white}",
+          "$description": "Texto/icono encima del fondo lleno"
+        }
       }
     },
     "border": {
@@ -69,142 +219,53 @@
       "focus": {
         "$value": "{color.brand.500}",
         "$description": "Anillo de foco"
-      }
-    },
-    "action": {
-      "primary": {
-        "default": {
-          "$value": "{color.brand.300}"
-        },
-        "hover": {
-          "$value": "{color.brand.400}"
-        },
-        "active": {
-          "$value": "{color.brand.500}"
-        },
-        "on": {
-          "$value": "{color.brand.950}",
-          "$description": "Texto/icono sobre primary"
-        },
-        "subtle": {
-          "$value": "{color.brand.50}",
-          "$description": "Fondo suave (tags, selección)"
+      },
+      "action": {
+        "primary": {
+          "$value": "{color.brand.300}",
+          "$description": "Borde en el color principal (casillas, selección)"
         }
       },
-      "secondary": {
-        "default": {
-          "$value": "{color.neutral.100}"
+      "feedback": {
+        "success": {
+          "default": {
+            "$value": "{color.green.700}",
+            "$description": "Borde fuerte (campo con error, selección)"
+          },
+          "subtle": {
+            "$value": "{color.green.200}",
+            "$description": "Borde suave de un aviso"
+          }
         },
-        "hover": {
-          "$value": "{color.neutral.200}"
+        "warning": {
+          "default": {
+            "$value": "{color.amber.500}",
+            "$description": "Borde fuerte (campo con error, selección)"
+          },
+          "subtle": {
+            "$value": "{color.amber.200}",
+            "$description": "Borde suave de un aviso"
+          }
         },
-        "active": {
-          "$value": "{color.neutral.300}"
+        "danger": {
+          "default": {
+            "$value": "{color.red.600}",
+            "$description": "Borde fuerte (campo con error, selección)"
+          },
+          "subtle": {
+            "$value": "{color.red.200}",
+            "$description": "Borde suave de un aviso"
+          }
         },
-        "on": {
-          "$value": "{color.neutral.900}"
-        }
-      },
-      "ghost": {
-        "hover": {
-          "$value": "{color.neutral.100}"
-        },
-        "on": {
-          "$value": "{color.neutral.900}"
-        }
-      },
-      "disabled": {
-        "default": {
-          "$value": "{color.neutral.100}"
-        },
-        "on": {
-          "$value": "{color.neutral.400}"
-        }
-      }
-    },
-    "feedback": {
-      "success": {
-        "solid": {
-          "$value": "{color.green.700}",
-          "$description": "Fondo sólido (badges, botones)"
-        },
-        "on-solid": {
-          "$value": "{color.white}",
-          "$description": "Texto sobre el fondo sólido"
-        },
-        "subtle": {
-          "$value": "{color.green.50}",
-          "$description": "Fondo suave de alertas"
-        },
-        "border": {
-          "$value": "{color.green.200}"
-        },
-        "text": {
-          "$value": "{color.green.700}"
-        }
-      },
-      "warning": {
-        "solid": {
-          "$value": "{color.amber.500}",
-          "$description": "Fondo sólido (badges, botones)"
-        },
-        "on-solid": {
-          "$value": "{color.neutral.950}",
-          "$description": "Texto sobre el fondo sólido"
-        },
-        "subtle": {
-          "$value": "{color.amber.50}",
-          "$description": "Fondo suave de alertas"
-        },
-        "border": {
-          "$value": "{color.amber.200}"
-        },
-        "text": {
-          "$value": "{color.amber.700}"
-        }
-      },
-      "danger": {
-        "solid": {
-          "$value": "{color.red.600}",
-          "$description": "Fondo sólido (badges, botones)"
-        },
-        "on-solid": {
-          "$value": "{color.white}",
-          "$description": "Texto sobre el fondo sólido"
-        },
-        "subtle": {
-          "$value": "{color.red.50}",
-          "$description": "Fondo suave de alertas"
-        },
-        "border": {
-          "$value": "{color.red.200}"
-        },
-        "text": {
-          "$value": "{color.red.700}"
-        },
-        "hover": {
-          "$value": "{color.red.700}",
-          "$description": "Fondo sólido de peligro al pasar el ratón"
-        }
-      },
-      "info": {
-        "solid": {
-          "$value": "{color.blue.600}",
-          "$description": "Fondo sólido (badges, botones)"
-        },
-        "on-solid": {
-          "$value": "{color.white}",
-          "$description": "Texto sobre el fondo sólido"
-        },
-        "subtle": {
-          "$value": "{color.blue.50}",
-          "$description": "Fondo suave de alertas"
-        },
-        "border": {
-          "$value": "{color.blue.200}"
-        },
-        "text": {
-          "$value": "{color.blue.700}"
+        "info": {
+          "default": {
+            "$value": "{color.blue.600}",
+            "$description": "Borde fuerte (campo con error, selección)"
+          },
+          "subtle": {
+            "$value": "{color.blue.200}",
+            "$description": "Borde suave de un aviso"
+          }
         }
       }
     },

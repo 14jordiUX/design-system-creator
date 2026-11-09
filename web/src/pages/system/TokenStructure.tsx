@@ -80,7 +80,7 @@ function Chain({ path, table }: { path: string; table: Table }) {
 
 // ---------- 1. Las tres capas ----------
 function Layers({ light, dark }: { light: Table; dark: Table }) {
-  const sem = "color.action.primary.default"
+  const sem = "color.bg.action.primary.default"
   const prim = aliasOf(light[sem]?.value)
   const primDark = aliasOf(dark[sem]?.value)
   const boxes: { n: string; t: string; d: ReactNode; ex: ReactNode }[] = [
@@ -110,7 +110,7 @@ function Layers({ light, dark }: { light: Table; dark: Table }) {
 // ---------- 2. La norma de nombres ----------
 type Example = { path: string; labels: string[]; note: string }
 const PRIMITIVE_RULE = ["categoría", "escala", "paso"]
-const SEMANTIC_RULE = ["categoría", "función", "variante", "estado"]
+const SEMANTIC_RULE = ["categoría", "dónde", "función", "variante", "estado"]
 
 const PRIMITIVE_EXAMPLES: Example[] = [
   { path: "color.brand.600", labels: ["categoría", "escala", "paso"], note: "Tono 600 de la escala de marca (de 50, muy claro, a 950, muy oscuro)." },
@@ -120,10 +120,13 @@ const PRIMITIVE_EXAMPLES: Example[] = [
   { path: "radius.md", labels: ["categoría", "paso"], note: "Un radio de la escala." },
 ]
 const SEMANTIC_EXAMPLES: Example[] = [
-  { path: "color.action.primary.hover", labels: ["categoría", "función", "variante", "estado"], note: "Color de una acción principal (botón primario) al pasar el ratón." },
-  { path: "color.action.primary.on", labels: ["categoría", "función", "variante", "uso"], note: "«on» = lo que va encima: el texto o icono sobre ese fondo." },
-  { path: "color.feedback.danger.solid", labels: ["categoría", "función", "tipo", "uso"], note: "Aviso de error en versión llena (fondo fuerte)." },
-  { path: "color.text.muted", labels: ["categoría", "función", "variante"], note: "Texto secundario, menos importante." },
+  { path: "color.bg.action.primary.hover", labels: ["categoría", "dónde", "función", "variante", "estado"], note: "Fondo de una acción principal (botón primario) al pasar el ratón." },
+  { path: "color.text.on-action.primary", labels: ["categoría", "dónde", "función", "variante"], note: "Texto o icono encima de una acción principal. «on» = lo que va encima de ese fondo." },
+  { path: "color.text.action.primary", labels: ["categoría", "dónde", "función", "variante"], note: "Texto en color principal sobre el fondo normal (enlaces de acción, iconos activos)." },
+  { path: "color.border.action.primary", labels: ["categoría", "dónde", "función", "variante"], note: "Borde en color principal (casilla marcada, opción elegida)." },
+  { path: "color.bg.feedback.danger.default", labels: ["categoría", "dónde", "función", "tipo", "estado"], note: "Fondo lleno de un aviso de error." },
+  { path: "color.border.feedback.danger.subtle", labels: ["categoría", "dónde", "función", "tipo", "variante"], note: "Borde suave de una alerta de error. «default» es el borde fuerte (un campo con error)." },
+  { path: "color.text.muted", labels: ["categoría", "dónde", "variante"], note: "Texto secundario, menos importante." },
   { path: "space.inset.md", labels: ["categoría", "uso", "tamaño"], note: "Relleno interior mediano (padding). «gap» es la separación entre elementos." },
   { path: "radius.card", labels: ["categoría", "elemento"], note: "Redondeo de las tarjetas." },
   { path: "text.size.body", labels: ["categoría", "propiedad", "rol"], note: "Tamaño de letra del texto normal." },
@@ -162,14 +165,16 @@ function ExampleRow({ ex, table }: { ex: Example; table: Table }) {
 }
 
 const GLOSSARY: [string, string][] = [
-  ["default · hover · active", "Estados: normal, al pasar el ratón, al pulsar."],
-  ["on · on-solid", "El color que va encima (texto o icono) de un fondo."],
-  ["solid · subtle · border · text", "Versiones de un aviso: lleno, suave de fondo, su borde y su texto."],
-  ["primary · secondary · ghost", "Variantes de acción: principal, secundaria y sin fondo."],
+  ["bg · text · border", "Dónde se aplica el color: fondo, texto (e iconos) o borde."],
+  ["surface", "Fondos de superficies que flotan o se apilan: tarjetas, menús, barra lateral."],
+  ["action · on-action", "Colores de acciones (botones…); «on-action» es el texto que va encima de su fondo."],
+  ["feedback · on-feedback", "Colores de avisos; «on-feedback» es el texto encima del fondo lleno."],
+  ["primary · secondary · ghost · disabled", "Variantes de acción: principal, secundaria, sin fondo y desactivada."],
   ["success · warning · danger · info", "Tipos de aviso: bien, cuidado, error e información."],
+  ["default · hover · active", "Estados: normal, al pasar el ratón, al pulsar."],
+  ["subtle · strong · muted", "Versiones más suaves o más marcadas de un color."],
   ["inset · gap", "Espacios: relleno interior (padding) y separación entre elementos."],
   ["3xs … 4xl", "Tallas de menor a mayor."],
-  ["bg · surface · text · border", "Funciones del color: fondo de página, superficies (tarjetas, menús), texto y bordes."],
 ]
 
 // ---------- 3. Listado de todos los tokens ----------
@@ -306,7 +311,7 @@ export default function TokenStructurePage() {
         <Layers light={data.light} dark={data.dark} />
       </Section>
 
-      <Section title="La norma de nombres" description="Los nombres se leen de lo general a lo concreto y cada pieza se separa con un punto. En código el punto pasa a ser guion: color.action.primary.hover → --color-action-primary-hover.">
+      <Section title="La norma de nombres" description="Los nombres se leen de lo general a lo concreto y cada pieza se separa con un punto. En código el punto pasa a ser guion: color.bg.action.primary.hover → --color-bg-action-primary-hover.">
         <div className="grid gap-gap-md md:grid-cols-2">
           <div className="flex flex-col gap-gap-sm rounded-card border-thin bg-card p-inset-lg">
             <div className="text-ui font-strong">Primitivos</div>
@@ -316,7 +321,7 @@ export default function TokenStructurePage() {
           <div className="flex flex-col gap-gap-sm rounded-card border-thin bg-card p-inset-lg">
             <div className="text-ui font-strong">Semánticos</div>
             <RuleLine pieces={SEMANTIC_RULE} />
-            <p className="text-ui text-muted-foreground">Para qué sirve, qué versión es y en qué estado. Las piezas que no hacen falta se omiten (por ejemplo, radius.card no tiene estado).</p>
+            <p className="text-ui text-muted-foreground">En los colores, la segunda pieza dice dónde se aplica: bg (fondo), text (texto e iconos) o border (bordes). Así nunca se usa un fondo como color de texto. Las piezas que no hacen falta se omiten (color.text.muted no tiene función; radius.card no tiene estado).</p>
           </div>
         </div>
       </Section>

@@ -26,7 +26,7 @@ Tipo de producto: Web y app de reservas para clínica dental.
 
 1. **Usa siempre los componentes de `components/ui/`** (shadcn/ui ya tematizados). No crees botones, campos o tarjetas desde cero si existe el componente. Componentes disponibles: accordion, alert, alert-dialog, aspect-ratio, attachment, avatar, badge, breadcrumb, bubble, button, button-group, calendar, card, carousel, chart, checkbox, code-block, collapsible, command, context-menu, dialog, direction, drawer, dropdown-menu, empty, field, form, hover-card, input, input-group, input-otp, item, kbd, label, marker, menubar, message, message-scroller, native-select, navigation-menu, pagination, popover, progress, questionnaire, radio-group, resizable, scroll-area, select, separator, sheet, sidebar, skeleton, slider, spinner, switch, table, tabs, textarea, toggle, toggle-group, tooltip, trace. Además, componentes propios de este sistema en `components/custom/`: app-sidebar, appointment-card, back-button, brand, choice-card, code-input, fab, icon-badge, password-input, setting-row, stat-card, step-footer, steps, tab. Úsalos antes que montar algo parecido. Hay pantallas de ejemplo hechas solo con estos componentes en `patterns/` (panel-de-gestion): tómalas como modelo de estructura. Y flujos de varias pantallas que se pueden clicar en `prototypes/` (login, onboarding): cada uno recibe `screen` y `go(id)`; tómalos como modelo para montar flujos completos.
 2. **Nunca escribas valores a mano**: nada de `#hex`, `px`, `rem`, `ms` ni clases con corchetes como `p-[13px]`. El tema de Tailwind de este kit solo contiene clases que apuntan a tokens; si una clase no existe (por ejemplo `h-9`, `bg-red-500` sin token o `text-white`), no genera CSS. Si necesitas un valor que no está, pide añadir un token.
-3. **Solo tokens semánticos.** Los primitivos (`space.4`, `radius.md`, `font.size.sm`, `color.brand.600`…) son la capa de gestión: no se usan en el código y no tienen clase. Usa siempre el semántico (`space.inset.lg`, `radius.control`, `text.size.ui`, `color.action.primary.default`…).
+3. **Solo tokens semánticos.** Los primitivos (`space.4`, `radius.md`, `font.size.sm`, `color.brand.600`…) son la capa de gestión: no se usan en el código y no tienen clase. Usa siempre el semántico (`space.inset.lg`, `radius.control`, `text.size.ui`, `color.bg.action.primary.default`…).
 4. Vocabulario de clases (todas salen de tokens):
    - Color: `bg-`/`text-`/`border-` + `background`, `foreground`, `card`, `popover`, `primary`, `primary-hover`, `primary-subtle`, `secondary`, `secondary-hover`, `muted`, `muted-foreground`, `subtle`, `accent`, `destructive`, `destructive-hover`, `border`, `border-strong`, `input`, `ring`, `overlay`, `inverse`, `link`, `success`/`warning`/`danger`/`info` (+ `-foreground`, `-subtle`, `-border`, `-text`), `chart-1…5`, `sidebar-*`.
    - Relleno y distancias a bordes: `p-inset-*`, `px-inset-*`, `top-inset-*`… con la escala `3xs, 2xs, xs, sm, md, lg, xl, 2xl, 3xl, 4xl`.
@@ -59,6 +59,24 @@ Tipo de producto: Web y app de reservas para clínica dental.
 | `color.bg.subtle` | `--color-bg-subtle` | #fafaf9 | #1c1917 |  |
 | `color.bg.muted` | `--color-bg-muted` | #f5f5f4 | #292524 | Zonas secundarias, filas alternas |
 | `color.bg.inverse` | `--color-bg-inverse` | #1c1917 | #fafaf9 |  |
+| `color.bg.action.primary.default` | `--color-bg-action-primary-default` | #0f766e | #0f766e | Fondo de la acción principal |
+| `color.bg.action.primary.hover` | `--color-bg-action-primary-hover` | #115e59 | #115e59 | Al pasar el ratón |
+| `color.bg.action.primary.active` | `--color-bg-action-primary-active` | #134e4a | #134e4a | Al pulsar |
+| `color.bg.action.primary.subtle` | `--color-bg-action-primary-subtle` | #f0fdfa | #021716 | Fondo suave (tags, selección) |
+| `color.bg.action.secondary.default` | `--color-bg-action-secondary-default` | #f5f5f4 | #292524 | Fondo de la acción secundaria |
+| `color.bg.action.secondary.hover` | `--color-bg-action-secondary-hover` | #e7e5e4 | #44403c | Al pasar el ratón |
+| `color.bg.action.secondary.active` | `--color-bg-action-secondary-active` | #d6d3d1 | #57534e | Al pulsar |
+| `color.bg.action.ghost.hover` | `--color-bg-action-ghost-hover` | #f5f5f4 | #292524 | Al pasar el ratón |
+| `color.bg.action.disabled` | `--color-bg-action-disabled` | #f5f5f4 | #292524 | Fondo de una acción desactivada |
+| `color.bg.feedback.success.default` | `--color-bg-feedback-success-default` | #15803d | #15803d | Fondo lleno (badges, botones) |
+| `color.bg.feedback.success.subtle` | `--color-bg-feedback-success-subtle` | #f0fdf4 | #052e16 | Fondo suave de alertas |
+| `color.bg.feedback.warning.default` | `--color-bg-feedback-warning-default` | #f59e0b | #f59e0b | Fondo lleno (badges, botones) |
+| `color.bg.feedback.warning.subtle` | `--color-bg-feedback-warning-subtle` | #fffbeb | #451a03 | Fondo suave de alertas |
+| `color.bg.feedback.danger.default` | `--color-bg-feedback-danger-default` | #dc2626 | #dc2626 | Fondo lleno (badges, botones) |
+| `color.bg.feedback.danger.hover` | `--color-bg-feedback-danger-hover` | #b91c1c | #b91c1c | Fondo lleno al pasar el ratón |
+| `color.bg.feedback.danger.subtle` | `--color-bg-feedback-danger-subtle` | #fef2f2 | #450a0a | Fondo suave de alertas |
+| `color.bg.feedback.info.default` | `--color-bg-feedback-info-default` | #2563eb | #2563eb | Fondo lleno (badges, botones) |
+| `color.bg.feedback.info.subtle` | `--color-bg-feedback-info-subtle` | #eff6ff | #172554 | Fondo suave de alertas |
 | `color.surface.card` | `--color-surface-card` | #ffffff | #1c1917 | Tarjetas |
 | `color.surface.popover` | `--color-surface-popover` | #ffffff | #1c1917 | Menús, popovers, tooltips |
 | `color.surface.overlay` | `--color-surface-overlay` | #09090b99 | #09090b99 | Velo detrás de modales |
@@ -68,44 +86,32 @@ Tipo de producto: Web y app de reservas para clínica dental.
 | `color.text.subtle` | `--color-text-subtle` | #a8a29e | #78716c | Placeholders, deshabilitado |
 | `color.text.inverse` | `--color-text-inverse` | #fafaf9 | #0c0a09 |  |
 | `color.text.link` | `--color-text-link` | #0f766e | #2dd4bf |  |
+| `color.text.action.primary` | `--color-text-action-primary` | #0f766e | #2dd4bf | Texto o icono en el color principal (legible sobre el fondo) |
+| `color.text.on-action.primary` | `--color-text-on-action-primary` | #ffffff | #ffffff | Texto/icono encima de la acción principal |
+| `color.text.on-action.secondary` | `--color-text-on-action-secondary` | #1c1917 | #fafaf9 | Texto/icono encima de la acción secundaria |
+| `color.text.on-action.ghost` | `--color-text-on-action-ghost` | #1c1917 | #fafaf9 | Texto/icono encima de la acción sin fondo |
+| `color.text.on-action.disabled` | `--color-text-on-action-disabled` | #a8a29e | #57534e | Texto/icono encima de la acción desactivada |
+| `color.text.feedback.success` | `--color-text-feedback-success` | #15803d | #86efac | Texto de un aviso sobre fondo normal o suave |
+| `color.text.feedback.warning` | `--color-text-feedback-warning` | #b45309 | #fcd34d | Texto de un aviso sobre fondo normal o suave |
+| `color.text.feedback.danger` | `--color-text-feedback-danger` | #b91c1c | #fca5a5 | Texto de un aviso sobre fondo normal o suave |
+| `color.text.feedback.info` | `--color-text-feedback-info` | #1d4ed8 | #93c5fd | Texto de un aviso sobre fondo normal o suave |
+| `color.text.on-feedback.success` | `--color-text-on-feedback-success` | #ffffff | #ffffff | Texto/icono encima del fondo lleno |
+| `color.text.on-feedback.warning` | `--color-text-on-feedback-warning` | #0c0a09 | #0c0a09 | Texto/icono encima del fondo lleno |
+| `color.text.on-feedback.danger` | `--color-text-on-feedback-danger` | #ffffff | #ffffff | Texto/icono encima del fondo lleno |
+| `color.text.on-feedback.info` | `--color-text-on-feedback-info` | #ffffff | #ffffff | Texto/icono encima del fondo lleno |
 | `color.border.default` | `--color-border-default` | #e7e5e4 | #292524 |  |
 | `color.border.strong` | `--color-border-strong` | #d6d3d1 | #44403c |  |
 | `color.border.input` | `--color-border-input` | #e7e5e4 | #292524 | Borde de campos de formulario |
 | `color.border.focus` | `--color-border-focus` | #14b8a6 | #2dd4bf | Anillo de foco |
-| `color.action.primary.default` | `--color-action-primary-default` | #0f766e | #0f766e |  |
-| `color.action.primary.hover` | `--color-action-primary-hover` | #115e59 | #115e59 |  |
-| `color.action.primary.active` | `--color-action-primary-active` | #134e4a | #134e4a |  |
-| `color.action.primary.on` | `--color-action-primary-on` | #ffffff | #ffffff | Texto/icono sobre primary |
-| `color.action.primary.subtle` | `--color-action-primary-subtle` | #f0fdfa | #021716 | Fondo suave (tags, selección) |
-| `color.action.secondary.default` | `--color-action-secondary-default` | #f5f5f4 | #292524 |  |
-| `color.action.secondary.hover` | `--color-action-secondary-hover` | #e7e5e4 | #44403c |  |
-| `color.action.secondary.active` | `--color-action-secondary-active` | #d6d3d1 | #57534e |  |
-| `color.action.secondary.on` | `--color-action-secondary-on` | #1c1917 | #fafaf9 |  |
-| `color.action.ghost.hover` | `--color-action-ghost-hover` | #f5f5f4 | #292524 |  |
-| `color.action.ghost.on` | `--color-action-ghost-on` | #1c1917 | #fafaf9 |  |
-| `color.action.disabled.default` | `--color-action-disabled-default` | #f5f5f4 | #292524 |  |
-| `color.action.disabled.on` | `--color-action-disabled-on` | #a8a29e | #57534e |  |
-| `color.feedback.success.solid` | `--color-feedback-success-solid` | #15803d | #15803d | Fondo sólido (badges, botones) |
-| `color.feedback.success.on-solid` | `--color-feedback-success-on-solid` | #ffffff | #ffffff | Texto sobre el fondo sólido |
-| `color.feedback.success.subtle` | `--color-feedback-success-subtle` | #f0fdf4 | #052e16 | Fondo suave de alertas |
-| `color.feedback.success.border` | `--color-feedback-success-border` | #bbf7d0 | #166534 |  |
-| `color.feedback.success.text` | `--color-feedback-success-text` | #15803d | #86efac |  |
-| `color.feedback.warning.solid` | `--color-feedback-warning-solid` | #f59e0b | #f59e0b | Fondo sólido (badges, botones) |
-| `color.feedback.warning.on-solid` | `--color-feedback-warning-on-solid` | #0c0a09 | #0c0a09 | Texto sobre el fondo sólido |
-| `color.feedback.warning.subtle` | `--color-feedback-warning-subtle` | #fffbeb | #451a03 | Fondo suave de alertas |
-| `color.feedback.warning.border` | `--color-feedback-warning-border` | #fde68a | #92400e |  |
-| `color.feedback.warning.text` | `--color-feedback-warning-text` | #b45309 | #fcd34d |  |
-| `color.feedback.danger.solid` | `--color-feedback-danger-solid` | #dc2626 | #dc2626 | Fondo sólido (badges, botones) |
-| `color.feedback.danger.on-solid` | `--color-feedback-danger-on-solid` | #ffffff | #ffffff | Texto sobre el fondo sólido |
-| `color.feedback.danger.subtle` | `--color-feedback-danger-subtle` | #fef2f2 | #450a0a | Fondo suave de alertas |
-| `color.feedback.danger.border` | `--color-feedback-danger-border` | #fecaca | #991b1b |  |
-| `color.feedback.danger.text` | `--color-feedback-danger-text` | #b91c1c | #fca5a5 |  |
-| `color.feedback.danger.hover` | `--color-feedback-danger-hover` | #b91c1c | #b91c1c | Fondo sólido de peligro al pasar el ratón |
-| `color.feedback.info.solid` | `--color-feedback-info-solid` | #2563eb | #2563eb | Fondo sólido (badges, botones) |
-| `color.feedback.info.on-solid` | `--color-feedback-info-on-solid` | #ffffff | #ffffff | Texto sobre el fondo sólido |
-| `color.feedback.info.subtle` | `--color-feedback-info-subtle` | #eff6ff | #172554 | Fondo suave de alertas |
-| `color.feedback.info.border` | `--color-feedback-info-border` | #bfdbfe | #1e40af |  |
-| `color.feedback.info.text` | `--color-feedback-info-text` | #1d4ed8 | #93c5fd |  |
+| `color.border.action.primary` | `--color-border-action-primary` | #0f766e | #0f766e | Borde en el color principal (casillas, selección) |
+| `color.border.feedback.success.default` | `--color-border-feedback-success-default` | #15803d | #15803d | Borde fuerte (campo con error, selección) |
+| `color.border.feedback.success.subtle` | `--color-border-feedback-success-subtle` | #bbf7d0 | #166534 | Borde suave de un aviso |
+| `color.border.feedback.warning.default` | `--color-border-feedback-warning-default` | #f59e0b | #f59e0b | Borde fuerte (campo con error, selección) |
+| `color.border.feedback.warning.subtle` | `--color-border-feedback-warning-subtle` | #fde68a | #92400e | Borde suave de un aviso |
+| `color.border.feedback.danger.default` | `--color-border-feedback-danger-default` | #dc2626 | #dc2626 | Borde fuerte (campo con error, selección) |
+| `color.border.feedback.danger.subtle` | `--color-border-feedback-danger-subtle` | #fecaca | #991b1b | Borde suave de un aviso |
+| `color.border.feedback.info.default` | `--color-border-feedback-info-default` | #2563eb | #2563eb | Borde fuerte (campo con error, selección) |
+| `color.border.feedback.info.subtle` | `--color-border-feedback-info-subtle` | #bfdbfe | #1e40af | Borde suave de un aviso |
 | `color.chart.1` | `--color-chart-1` | #0f766e | #2dd4bf |  |
 | `color.chart.2` | `--color-chart-2` | #16a34a | #4ade80 |  |
 | `color.chart.3` | `--color-chart-3` | #f59e0b | #fbbf24 |  |

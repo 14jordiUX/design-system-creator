@@ -175,12 +175,13 @@ PAIRS = [("Texto principal sobre fondo", "color.text.default", "color.bg.default
          ("Texto secundario sobre fondo", "color.text.muted", "color.bg.default"),
          ("Texto principal sobre tarjeta", "color.text.default", "color.surface.card"),
          ("Enlace sobre fondo", "color.text.link", "color.bg.default"),
-         ("Botón principal", "color.action.primary.on", "color.action.primary.default"),
-         ("Botón secundario", "color.action.secondary.on", "color.action.secondary.default"),
-         ("Éxito", "color.feedback.success.on-solid", "color.feedback.success.solid"),
-         ("Aviso", "color.feedback.warning.on-solid", "color.feedback.warning.solid"),
-         ("Error", "color.feedback.danger.on-solid", "color.feedback.danger.solid"),
-         ("Info", "color.feedback.info.on-solid", "color.feedback.info.solid")]
+         ("Texto en color principal", "color.text.action.primary", "color.bg.default"),
+         ("Botón principal", "color.text.on-action.primary", "color.bg.action.primary.default"),
+         ("Botón secundario", "color.text.on-action.secondary", "color.bg.action.secondary.default"),
+         ("Éxito", "color.text.on-feedback.success", "color.bg.feedback.success.default"),
+         ("Aviso", "color.text.on-feedback.warning", "color.bg.feedback.warning.default"),
+         ("Error", "color.text.on-feedback.danger", "color.bg.feedback.danger.default"),
+         ("Info", "color.text.on-feedback.info", "color.bg.feedback.info.default")]
 
 
 def _table(t, mode):

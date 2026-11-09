@@ -18,16 +18,16 @@
     "brand": "#7c5cc4",
     "overrides": {
       "light": {
-        "color.action.primary.default": "{color.brand.300}",
-        "color.action.primary.hover": "{color.brand.400}",
-        "color.action.primary.active": "{color.brand.500}",
-        "color.action.primary.on": "{color.brand.950}"
+        "color.bg.action.primary.default": "{color.brand.300}",
+        "color.bg.action.primary.hover": "{color.brand.400}",
+        "color.bg.action.primary.active": "{color.brand.500}",
+        "color.text.on-action.primary": "{color.brand.950}"
       },
       "dark": {
-        "color.action.primary.default": "{color.brand.300}",
-        "color.action.primary.hover": "{color.brand.400}",
-        "color.action.primary.active": "{color.brand.500}",
-        "color.action.primary.on": "{color.brand.950}"
+        "color.bg.action.primary.default": "{color.brand.300}",
+        "color.bg.action.primary.hover": "{color.brand.400}",
+        "color.bg.action.primary.active": "{color.brand.500}",
+        "color.text.on-action.primary": "{color.brand.950}"
       }
     }
   }

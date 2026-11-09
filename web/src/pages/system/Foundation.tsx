@@ -177,10 +177,10 @@ function ColorPage() {
   const colorOptions = Object.values(prim).filter((t) => t.type === "color").map((t) => t.path)
   const semFile = mode === "dark" ? "dark" : "light"
   const semantic = flatten(tokens[semFile])
-  const groups = ["bg", "surface", "text", "border", "action", "feedback"]
+  const groups = ["bg", "surface", "text", "border", "chart"]
   const report = contrastReport(tokens, mode)
   const fails = report.filter((r) => !r.ok)
-  const GROUP_LABEL: Record<string, string> = { bg: "Fondos", surface: "Superficies", text: "Texto", border: "Bordes", action: "Acciones", feedback: "Estados" }
+  const GROUP_LABEL: Record<string, string> = { bg: "Fondos (de página, de acciones y de avisos)", surface: "Superficies", text: "Texto e iconos", border: "Bordes", chart: "Gráficos" }
 
   return (
     <>

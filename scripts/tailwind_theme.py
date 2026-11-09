@@ -21,6 +21,23 @@ def _resolve(v, primitives):
     return v
 
 
+TEXT_TOKENS = {"primary": "--color-text-action-primary", "sidebar-primary": "--color-text-action-primary",
+               "destructive": "--color-text-feedback-danger",
+               **{f: f"--color-text-feedback-{f}" for f in ["success", "warning", "danger", "info"]}}
+BORDER_TOKENS = {"primary": "--color-border-action-primary", "sidebar-primary": "--color-border-action-primary",
+                 "destructive": "--color-border-feedback-danger-default",
+                 **{f: f"--color-border-feedback-{f}-default" for f in ["success", "warning", "danger", "info"]}}
+# espacio de nombres de Tailwind v4 -> utilidades que lo leen
+PROP_NS = {"text-color": TEXT_TOKENS, "fill": TEXT_TOKENS, "stroke": TEXT_TOKENS, "text-decoration-color": TEXT_TOKENS,
+           "border-color": BORDER_TOKENS, "ring-color": BORDER_TOKENS, "outline-color": BORDER_TOKENS}
+NS_UTILS = {"text-color": ["text"], "fill": ["fill"], "stroke": ["stroke"], "text-decoration-color": ["decoration"],
+            "border-color": ["border", "border-t", "border-b", "border-l", "border-r"], "ring-color": ["ring"], "outline-color": ["outline"]}
+
+
+def per_property(colors):
+    return {ns: {k: v for k, v in m.items() if k in colors} for ns, m in PROP_NS.items()}
+
+
 def build(primitives, semantic, light):
     L = []
     add = L.append
@@ -31,20 +48,20 @@ def build(primitives, semantic, light):
         "card": "--card", "card-foreground": "--card-foreground",
         "popover": "--popover", "popover-foreground": "--popover-foreground",
         "primary": "--primary", "primary-foreground": "--primary-foreground",
-        "primary-hover": "--color-action-primary-hover", "primary-active": "--color-action-primary-active",
-        "primary-subtle": "--color-action-primary-subtle",
+        "primary-hover": "--color-bg-action-primary-hover", "primary-active": "--color-bg-action-primary-active",
+        "primary-subtle": "--color-bg-action-primary-subtle",
         "secondary": "--secondary", "secondary-foreground": "--secondary-foreground",
-        "secondary-hover": "--color-action-secondary-hover", "secondary-active": "--color-action-secondary-active",
+        "secondary-hover": "--color-bg-action-secondary-hover", "secondary-active": "--color-bg-action-secondary-active",
         "muted": "--muted", "muted-foreground": "--muted-foreground",
         "subtle": "--color-bg-subtle", "subtle-foreground": "--color-text-subtle",
         "accent": "--accent", "accent-foreground": "--accent-foreground",
         "destructive": "--destructive", "destructive-foreground": "--destructive-foreground",
-        "destructive-hover": "--color-feedback-danger-hover",
+        "destructive-hover": "--color-bg-feedback-danger-hover",
         "border": "--border", "border-strong": "--color-border-strong", "input": "--input", "ring": "--ring",
         "overlay": "--color-surface-overlay",
         "inverse": "--color-bg-inverse", "inverse-foreground": "--color-text-inverse",
         "link": "--color-text-link",
-        "disabled": "--color-action-disabled-default", "disabled-foreground": "--color-action-disabled-on",
+        "disabled": "--color-bg-action-disabled", "disabled-foreground": "--color-text-on-action-disabled",
     }
     colors.update({
         "sidebar": "--color-surface-sidebar", "sidebar-foreground": "--foreground",
@@ -55,10 +72,14 @@ def build(primitives, semantic, light):
     for k in _keys(light["color"].get("chart", {})):
         colors[f"chart-{k}"] = f"--color-chart-{k}"
     for f in ["success", "warning", "danger", "info"]:
-        colors[f] = f"--color-feedback-{f}-solid"
-        colors[f"{f}-foreground"] = f"--color-feedback-{f}-on-solid"
-        for n in ["subtle", "border", "text"]:
-            colors[f"{f}-{n}"] = f"--color-feedback-{f}-{n}"
+        colors[f] = f"--color-bg-feedback-{f}-default"
+        colors[f"{f}-foreground"] = f"--color-text-on-feedback-{f}"
+        colors[f"{f}-subtle"] = f"--color-bg-feedback-{f}-subtle"
+        colors[f"{f}-border"] = f"--color-border-feedback-{f}-subtle"
+        colors[f"{f}-text"] = f"--color-text-feedback-{f}"
+    # El mismo nombre de clase toma el token de su sitio: bg-primary = fondo de la acción,
+    # text-primary = texto en color principal, border-primary = borde en color principal.
+    by_prop = per_property(colors)
     # (las escalas primitivas de color no se exponen como clases: solo los colores semánticos)
 
     # ---------- espaciado y tamaños ----------
@@ -83,6 +104,8 @@ def build(primitives, semantic, light):
     add("@theme inline reference {")
     add("  /* Colores */")
     L += [f"  --color-{k}: var({v});" for k, v in colors.items()]
+    add("\n  /* Colores según dónde se aplican (texto, borde, icono): ganan a --color-* */")
+    L += [f"  --{ns}-{k}: var({v});" for ns, m in by_prop.items() for k, v in m.items()]
     add("\n  /* Espaciado y tamaños (p-, m-, gap-, w-, h-, size-, max-w-, top-…) */")
     L += [f"  --spacing-{k}: {'0px' if v is None else f'var({v})'};" for k, v in spacing.items()]
     L += [f"  --container-{k}: var({v});" for k, v in spacing.items() if v and k != "compact"]
@@ -213,11 +236,11 @@ SHADCN_PATHS = {
     "--background": "color.bg.default", "--foreground": "color.text.default",
     "--card": "color.surface.card", "--card-foreground": "color.text.default",
     "--popover": "color.surface.popover", "--popover-foreground": "color.text.default",
-    "--primary": "color.action.primary.default", "--primary-foreground": "color.action.primary.on",
-    "--secondary": "color.action.secondary.default", "--secondary-foreground": "color.action.secondary.on",
+    "--primary": "color.bg.action.primary.default", "--primary-foreground": "color.text.on-action.primary",
+    "--secondary": "color.bg.action.secondary.default", "--secondary-foreground": "color.text.on-action.secondary",
     "--muted": "color.bg.muted", "--muted-foreground": "color.text.muted",
-    "--accent": "color.action.ghost.hover", "--accent-foreground": "color.action.ghost.on",
-    "--destructive": "color.feedback.danger.solid", "--destructive-foreground": "color.feedback.danger.on-solid",
+    "--accent": "color.bg.action.ghost.hover", "--accent-foreground": "color.text.on-action.ghost",
+    "--destructive": "color.bg.feedback.danger.default", "--destructive-foreground": "color.text.on-feedback.danger",
     "--border": "color.border.default", "--input": "color.border.input", "--ring": "color.border.focus",
 }
 
@@ -245,11 +268,16 @@ def class_map(primitives, semantic, light):
         out[cls] = [p for p in ps if p]
     for name, var in _re.findall(r"--color-([\w-]+): var\((--[\w-]+)\);", css):
         for u in COLOR_UTILS: put(f"{u}-{name}", paths.get(var))
+    for ns, m in PROP_NS.items():   # text-primary, border-destructive… leen el token de su sitio
+        for name, var in m.items():
+            if f"--color-{name}:" in css:
+                for u in NS_UTILS[ns]: put(f"{u}-{name}", paths.get(var))
     for name, var in _re.findall(r"--spacing-([\w\\.-]+): var\((--[\w-]+)\);", css):
         name = name.replace("\\", "")
         for u in SPACING_UTILS: put(f"{u}-{name}", paths.get(var))
     for ns, util in [("text", "text"), ("font-weight", "font"), ("leading", "leading"), ("tracking", "tracking"), ("shadow", "shadow")]:
         for name, var in _re.findall(rf"--{ns}-([\w-]+): var\((--[\w-]+)\);", css):
+            if ns == "text" and (name.startswith("color-") or name.startswith("decoration-")): continue
             put(f"{util}-{name}", paths.get(var))
     for name, var in _re.findall(r"--font-(base|code): var\((--[\w-]+)\);", css):
         put(f"font-{name}", paths.get(var))
