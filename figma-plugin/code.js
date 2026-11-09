@@ -600,7 +600,7 @@ function combineSets(drawer) {
     for (const c of comps) {
       const cur = {}
       c.name.split(", ").forEach((kv) => { const [k, v] = kv.split("="); if (k) cur[k] = v })
-      for (const k of Object.keys(names)) if (!cur[k]) cur[k] = k === "estado" ? "normal" : "default"
+      for (const k of Object.keys(names)) if (!cur[k]) cur[k] = k === "estado" ? "normal" : k === "posición" ? "sola" : "default"
       c.name = props(cur)
     }
     const existingSet = figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] }).find((s) => s.name === set)

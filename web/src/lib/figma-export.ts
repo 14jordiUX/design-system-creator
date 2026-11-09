@@ -544,6 +544,9 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
       contenido: icons && texts ? "icono y texto" : icons ? "icono" : texts ? "texto" : "vacío",
       estado: stateOf(el, slot),
     }
+    // Pegado a otro (en un Button Group o un campo con prefijo): sin borde o sin esquinas redondeadas en un lado → su propia variante
+    const pos = JOINABLE.has(slot) ? joinedSide(node) : undefined
+    if (pos) props.posición = pos
     node.component = { set: slot, props }
     if (slot in SLOT_LISTS) { node.component.slot = SLOT_LISTS[slot]; props.contenido = SLOT_LISTS[slot] ? "lista" : "caja" }
     if (STATEFUL.has(slot) && props.estado === "normal") { const st = statePatches(ctx, el); if (Object.keys(st).length) node.states = st }
@@ -554,6 +557,27 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
 
 // Componentes que llevan dentro su control (casilla, interruptor…): su estado es el del control
 const CONTAINS_CONTROL = new Set(["choice-card", "setting-row"])
+/** «inicio» (pegado por la derecha o por abajo), «medio» (por los dos lados) o «fin» (por la izquierda o por arriba); nada si va sola. */
+/** Piezas que se pueden pegar unas a otras (Button Group, Toggle Group, casillas del código, campo con prefijo) */
+const JOINABLE = new Set(["button", "input", "toggle", "toggle-group-item", "input-otp-slot", "select-trigger", "native-select", "input-group", "textarea"])
+
+function joinedSide(n: FNode): string | undefined {
+  const r = n.radius, w = n.stroke?.weights
+  const zero = (i: number[]) => !!r && i.every((k) => r[k] === 0)
+  const anyRad = !!r && r.some((v) => v > 0)
+  // Solo cuenta si le falta un único lado (una pieza con borde solo abajo, como el Accordion, no está pegada a nada)
+  const noBorder = (k: number) => !!w && w[k] === 0 && w.filter((v) => v > 0).length === 3
+  // radio: [arriba-izq, arriba-der, abajo-der, abajo-izq]; borde: [arriba, der, abajo, izq]
+  // Pegado a lo anterior: le falta el borde o las esquinas de la izquierda (o de arriba)
+  const prev = noBorder(3) || noBorder(0) || (anyRad && (zero([0, 3]) || zero([0, 1])))
+  // Pegado a lo siguiente: le faltan las esquinas de la derecha (o de abajo); sin esquinas y pegado a lo anterior → en medio
+  const next = (anyRad && (zero([1, 2]) || zero([2, 3]))) || (!anyRad && prev)
+  if (prev && next) return "medio"
+  if (prev) return "fin"
+  if (next) return "inicio"
+  return undefined
+}
+
 /** Cómo cambia una pieza en cada estado, leyendo sus clases (hover:bg-…, focus-visible:focus-ring, disabled:opacity-…). */
 function statePatches(ctx: Ctx, el: Element): Record<string, StatePatch> {
   const color = (t: string): Paint => ({ color: hex(rgba(String(ctx.resolved[t])) ?? [0, 0, 0, 1]), token: t })

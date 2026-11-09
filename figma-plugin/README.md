@@ -77,3 +77,4 @@ Pedidas por Jordi al revisar el catálogo en Figma. Cualquier componente o panta
    - `disabled:` → deshabilitado
    - `aria-invalid:` → error
 8. **Lo que se abre encima.** Diálogos, menús, paneles y tooltips se abren un momento al descargar, se miden y salen en la sección «Abierto» del catálogo como componentes.
+9. **Piezas pegadas.** En un Button Group, un Toggle Group, las casillas del código o un campo con prefijo, cada pieza es su propia variante con la propiedad `posición`: `inicio` (sin esquinas a la derecha), `medio` (sin borde a la izquierda ni esquinas) o `fin` (sin borde a la izquierda). Las que van solas no llevan esa propiedad, que en el conjunto sale como `sola`. Así un Input dentro de un grupo no cambia el Input normal.
