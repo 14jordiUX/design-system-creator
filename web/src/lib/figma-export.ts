@@ -355,8 +355,8 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
 
   const hints = {
     grow: num(cs.flexGrow) > 0, wClass: hasSizeClass(el, "w"), hClass: hasSizeClass(el, "h"),
-    fillW: classesOf(el).some((c) => coreClass(c, false) === "w-full"),
-    fillH: classesOf(el).some((c) => ["h-full", "min-h-full"].includes(coreClass(c, false) ?? "")),
+    fillW: classesOf(el).some((c) => ["w-full", "size-full"].includes(coreClass(c, false) ?? "")),
+    fillH: classesOf(el).some((c) => ["h-full", "min-h-full", "size-full"].includes(coreClass(c, false) ?? "")),
   }
 
   // Un elemento que solo tiene texto y no tiene caja propia se queda en un nodo de texto
