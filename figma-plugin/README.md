@@ -52,7 +52,7 @@ valores sueltos (sin variable), y lo pasa al código siguiendo las reglas del si
 
 ## Para Claude
 
-- Formato de entrada `dsc-figma@1`: lo genera `web/src/lib/figma-export.ts` midiendo las pantallas tal como se ven en la web.
+- Formato de entrada `dsc-figma@1` (un flujo) o `dsc-figma-bundle@1` (todo): lo genera `web/src/lib/figma-export.ts` midiendo las pantallas tal como se ven en la web. Lleva `sets` (descripción y partes opcionales de cada componente) y `definitions` (la pieza más completa de cada variante, de la que sale el maestro).
 - Formato de salida `dsc-figma-changes@1`: lo genera `code.js` (`exportChanges`).
 - Sin compilación: `code.js` es JavaScript tal cual (sin `?.` ni `??`, por compatibilidad con el entorno de plugins).
 
@@ -80,3 +80,21 @@ Pedidas por Jordi al revisar el catálogo en Figma. Cualquier componente o panta
 9. **Piezas pegadas.** En un Button Group, un Toggle Group, las casillas del código o un campo con prefijo, cada pieza es su propia variante con la propiedad `posición`: `inicio` (sin esquinas a la derecha), `medio` (sin borde a la izquierda ni esquinas) o `fin` (sin borde a la izquierda). Las que van solas no llevan esa propiedad, que en el conjunto sale como `sola`. Así un Input dentro de un grupo no cambia el Input normal.
 10. **Botón: variantes completas e iconos con interruptores.** El botón tiene todas las combinaciones de `variante` × `tamaño` × `estado` (normal, hover, foco, deshabilitado; sin «error»), aunque no salgan en los ejemplos. El icono no es una variante: cada botón tiene `icono izquierda` e `icono derecha` (sí/no), `… · cuál` para elegir el icono y `texto`. Los botones de solo icono son los tamaños `icon…`. Al actualizar un archivo antiguo, la variante `contenido` se quita sola y las repetidas se juntan.
 11. **Ancho de lo que lleva texto: abrazar o rellenar, nunca fijo.** Un texto de una línea abraza su texto; uno de varias líneas rellena el ancho de su caja. Una pieza que mide justo lo que su contenido abraza (aunque ocupe todo el ancho de su padre); las piezas en columnas de una rejilla rellenan su columna. Solo llevan ancho fijo las piezas que no escalan (regla 4), los campos y barras, y lo que en la web tiene un ancho propio (`w-…`). En las secciones «Estados» y «Abierto» cada pieza va con su tamaño natural.
+
+## Reglas de componentes, variables y páginas (estudio de mercado, 2026-11-09)
+
+Salen del estudio de cómo trabajan las grandes empresas en Figma (`/mnt/project-files/estudios/figma-reglas-plugin.md`).
+
+12. **Cada componente, solo sus propiedades reales.** `variante`, `tamaño`, `paso` y `posición` solo si la pieza los tiene en el código; `estado` solo si es interactiva (o tiene un estado que no es el normal). `error` solo en campos, casillas, interruptores, etiquetas, sliders y tarjetas de elección. Al actualizar un archivo antiguo, las propiedades que sobran se quitan y las variantes repetidas se juntan (sus instancias pasan a la que se queda).
+13. **`seleccionado` aparte del estado.** Casilla, radio, interruptor, pestañas, toggle, opciones de menú, elementos de la barra lateral… llevan `seleccionado=sí/no`. Lo que antes era `estado=marcado` o `estado=activo` pasa a `estado=normal, seleccionado=sí`.
+14. **El patrón del botón para todos.** Cada texto es una propiedad de texto con el nombre de su función (`texto`, `título`, `descripción`, `etiqueta`, `valor`, `placeholder`, `atajo`…). Lo que no siempre va es un interruptor (`con descripción`, `icono`). Cada icono se elige con `… · cuál`, con los iconos del sistema como preferidos. Las piezas con iconos a los lados (botón, insignia, opción de menú, pestaña, enlace…) tienen `icono izquierda` e `icono derecha`.
+15. **El maestro es la pieza más completa.** De todas las veces que sale una variante, el componente se hace con la que tiene más partes; las demás son instancias con las partes que no llevan apagadas.
+16. **Piezas dentro de piezas: instancias, y a la vista.** Lo que ya es componente va como instancia (el botón dentro de una tarjeta), con su variante y sus textos, y se muestra en las propiedades del componente de fuera.
+17. **Capas con nombre.** Textos e iconos por su función; cajas por su `data-slot` o por lo que son (cabecera, pie, contenido, párrafo, lista…), o por lo que llevan (acciones, textos, iconos, contenido con icono). Nunca `div`, `grupo`, `columna` ni `fila`.
+18. **Rejilla de variantes ordenada.** Una fila por variante, tamaño y seleccionado; una columna por estado (normal, hover, foco, pulsado, deshabilitado, error). La de por defecto, la primera.
+19. **Descripción** en cada componente (la de la web) y una **ficha** a su lado en la página de componentes: qué es, cuántas variantes tiene y sus propiedades.
+20. **Variables con su uso y su código.** Cada variable solo sale donde toca (scopes): `color/bg` y `surface` en rellenos, `color/text` en textos e iconos, `color/border` en bordes, `space` en separaciones y márgenes, `radius` en esquinas, `size`, `control/height` y `layout` en ancho y alto, la tipografía en sus campos. Los primitivos no salen. En Dev Mode, cada una enseña su variable CSS: `var(--color-bg-action-primary-default)`.
+21. **Estilos de texto** `texto/<tamaño>/<peso>` (p. ej. `texto/body/normal`), uno por combinación usada, con tamaño, peso y familia enlazados a sus variables, y aplicados a cada texto.
+22. **Medidas con token.** El alto (y el ancho, si es fijo) que en la web sale de un token (`h-control-md`, `size-…`) se enlaza a su variable. Los márgenes y separaciones sin clase en la web se enlazan a la variable semántica que vale eso.
+23. **Páginas en orden:** Portada, Fundamentos (colores, textos, espacios, radios y sombras, enlazados a sus variables), `---`, Componentes, `---`, el catálogo por grupos, `---`, los flujos.
+24. **Revisión al terminar.** El plugin repasa el archivo y lo dice en su ventana: colores, márgenes o separaciones sin variable, capas con nombre por defecto, cajas Hug con hijos Fill, cajas sin auto layout, componentes con más de 30 variantes (salvo el botón), componentes sin descripción, variables sin uso y botones de menos de 44 px en móvil.

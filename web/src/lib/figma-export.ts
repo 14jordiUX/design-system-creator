@@ -91,6 +91,7 @@ export type FNode = {
   x: number; y: number; w: number; h: number
   layout?: { mode: "HORIZONTAL" | "VERTICAL"; gap: number; pad: [number, number, number, number]; main: string; cross: string; wrap?: boolean }
   absolute?: boolean
+  hidden?: boolean                                     // capa oculta (un icono que se enciende con su interruptor)
   sizing?: { h: "FIXED" | "FILL" | "HUG"; v: "FIXED" | "FILL" | "HUG" }
   fill?: Paint
   stroke?: Paint & { weights: [number, number, number, number]; outside?: boolean }
@@ -104,7 +105,8 @@ export type FNode = {
   icon?: string                                        // nombre del icono (lucide) → componente icon/<nombre>
   // toggles: interruptores del componente (icono izquierda/derecha del botón) → si se ven en esta instancia
   component?: { set: string; props: Record<string, string>; slot?: string; toggles?: Record<string, boolean> }
-  role?: string                                        // capa con propiedad en Figma: «icono izquierda», «icono derecha», «texto»
+  role?: string                                        // capa con propiedad en Figma: «texto», «título», «icono izquierda»…
+  hint?: string                                        // solo mientras se mide: data-slot o etiqueta HTML de donde sale el texto
   states?: Record<string, StatePatch>                 // solo mientras se mide: cómo cambia en cada estado // slot: lo que va en su slot (otro componente)
   link?: string                                        // al clicar, va a esta pantalla
   _h?: { grow: boolean; wClass: boolean; hClass: boolean; fillW: boolean; fillH: boolean } // solo mientras se mide
@@ -211,7 +213,7 @@ function inherited(el: Element | null, stop: Element, prefix: RegExp, test: (t: 
 const num = (v: string) => parseFloat(v) || 0
 // Componentes que no escalan nunca: van con ancho y alto fijos en el auto layout (no «hug» ni «fill»)
 const FIXED_SIZE = new Set(["switch", "checkbox", "avatar", "input-otp-slot", "spinner", "icon-badge", "radio-group-item"])
-const fixedSize = (c: FNode) => !!c.component && (FIXED_SIZE.has(c.component.set) || (c.component.set === "button" && c.component.props.tamaño.startsWith("icon")))
+const fixedSize = (c: FNode) => !!c.component && (FIXED_SIZE.has(c.component.set) || (c.component.set === "button" && (c.component.props.tamaño ?? "").startsWith("icon")))
 // Desplazado en horizontal con transform (la barra de Progress, la bolita de Switch): en Figma va suelto en su sitio, si no el auto layout lo recoloca
 const moved = (cs: CSSStyleDeclaration) => {
   // Solo en horizontal (los iconos llevan pequeños ajustes verticales que no cuentan).
@@ -356,7 +358,8 @@ function gridGroups(ctx: Ctx, el: Element, kids: Kid[], box: DOMRect): Kid[] | n
           const children = g.map((k) => k.make()).filter(Boolean) as FNode[]
           const dx = Math.round(rect.left - box.left), dy = Math.round(rect.top - box.top)
           for (const c of children) { c.x -= dx; c.y -= dy }
-          const n: FNode = { type: "FRAME", name: stack ? "grupo" : axis === "col" ? "columna" : "fila", x: dx, y: dy, w: Math.round(rect.width), h: Math.round(rect.height), layout: layout!, children }
+          const n: FNode = { type: "FRAME", name: "", x: dx, y: dy, w: Math.round(rect.width), h: Math.round(rect.height), layout: layout!, children }
+          n.name = nameByContent(n)
           const t = layout!.gap > 0 ? gapTok(layout!.gap) : undefined
           if (t) n.bind = { itemSpacing: t }
           sizeChildren(n, layout!, rect.width, rect.height)
@@ -459,7 +462,7 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
     return { type: "SVG", name: icon ? `icon/${icon}` : "svg", ...base, svg: serializeSvg(el, cs.color), icon, fill: { color: hex(rgba(cs.color) ?? [0, 0, 0, 1]), token: colorTok } }
   }
 
-  const node: FNode = { type: "FRAME", name: el.getAttribute("data-slot") ?? el.tagName.toLowerCase(), ...base }
+  const node: FNode = { type: "FRAME", name: el.getAttribute("data-slot") ?? TAG_NAMES[el.tagName.toLowerCase()] ?? "", ...base }
   if (cs.position === "absolute" || cs.position === "fixed" || moved(cs)) node.absolute = true
 
   // Caja: fondo, borde, radio, sombra, opacidad
@@ -484,6 +487,11 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
     if (sh) node.effect = varName(sh)
   }
   if (num(cs.opacity) < 1 && cs.opacity !== "") node.opacity = num(cs.opacity)
+  // Alto y ancho fijos que salen de un token (alto del botón, tamaño del avatar…): se enlazan a su variable
+  const ht = pickNum(ctx, candidates(el, /^(h|size)-/), r.height)
+  if (ht) bind.height = ht
+  const wd = pickNum(ctx, candidates(el, /^(w|size)-/), r.width)
+  if (wd) bind.width = wd
   if (cs.overflow === "hidden" || cs.overflow === "clip") node.clip = true
 
   // Contenido: texto suelto, campos, iconos y elementos hijos
@@ -520,7 +528,8 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
       range.setStart(first, 0); range.setEnd(last, (last.textContent ?? "").length)
       const tr = range.getBoundingClientRect()
       if (tr.width < 1) return
-      kids.push({ rect: tr, absolute: false, make: () => ({ type: "TEXT", name: chars.slice(0, 40), x: Math.round(tr.left - r.left), y: Math.round(tr.top - r.top), w: Math.ceil(tr.width), h: Math.round(tr.height), text: textStyle(ctx, el, root, chars, tr) }) })
+      const hint = el.getAttribute("data-slot") || el.tagName.toLowerCase()
+      kids.push({ rect: tr, absolute: false, make: () => ({ type: "TEXT", name: textName(hint), hint, x: Math.round(tr.left - r.left), y: Math.round(tr.top - r.top), w: Math.ceil(tr.width), h: Math.round(tr.height), text: textStyle(ctx, el, root, chars, tr) }) })
     }
     for (const child of Array.from(el.childNodes)) {
       if (child.nodeType === Node.TEXT_NODE) { run.push(child as Text); continue }
@@ -547,7 +556,7 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
   // Un elemento que solo tiene texto y no tiene caja propia se queda en un nodo de texto
   if (!node.fill && !node.stroke && !node.radius && !node.effect && kids.length === 1 && !(el instanceof HTMLInputElement) && num(cs.paddingTop) + num(cs.paddingLeft) === 0 && !slotName(el)) {
     const only = kids[0].make()
-    if (only?.type === "TEXT") return { ...only, ...base, absolute: node.absolute, _h: hints }
+    if (only?.type === "TEXT") { const hint = el.getAttribute("data-slot") || el.tagName.toLowerCase(); return { ...only, ...base, hint, name: textName(hint), absolute: node.absolute, _h: hints } }
   }
 
   let layout = layoutOf(cs, kids.filter((k) => !k.absolute).map((k) => k.rect), r)
@@ -579,50 +588,125 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
   // Una capa encima que no pinta nada (sin fondo, borde ni contenido) sobra en Figma
   if (node.absolute && !node.fill && !node.stroke && !node.children.length) return null
   // Tamaño de cada hijo dentro del auto layout: rellenar (FILL), abrazar el contenido (HUG) o fijo (FIXED)
+  if (!node.name) node.name = nameByContent(node)
   if (layout) sizeChildren(node, layout, r.width - layout.pad[1] - layout.pad[3] - bw[1] - bw[3], r.height - layout.pad[0] - layout.pad[2] - bw[0] - bw[2])
   else for (const c of node.children) delete c._h
   if (node.clip) pullTrack(node)
 
   const slot = slotName(el)
   if (slot) {
-    // Siempre las mismas propiedades, para que las variantes encajen en Figma (y se reconozcan al volver a dibujar)
-    const icons = (node.children ?? []).filter((c) => c.type === "SVG").length
-    const texts = countText(node)
-    const props: Record<string, string> = {
-      variante: el.getAttribute("data-variant") || "default",
-      tamaño: el.getAttribute("data-size") || "default",
-      contenido: icons && texts ? "icono y texto" : icons ? "icono" : texts ? "texto" : "vacío",
-      estado: stateOf(el, slot),
-    }
-    if (NO_STATE[slot]?.includes(props.estado)) props.estado = "normal"
-    // Pegado a otro (en un Button Group o un campo con prefijo): sin borde o sin esquinas redondeadas en un lado → su propia variante
-    const pos = JOINABLE.has(slot) ? joinedSide(node) : undefined
-    if (pos) props.posición = pos
-    node.component = { set: slot, props }
-    // Botón con texto: el icono no es una variante, son interruptores (izquierda/derecha) con el icono intercambiable
-    if (WITH_TOGGLES.has(slot) && !props.tamaño.startsWith("icon") && texts) {
-      delete props.contenido
-      const kids = node.children ?? []
-      const ti = kids.findIndex((k) => k.type === "TEXT")
-      const left = kids.findIndex((k, i) => k.type === "SVG" && i < ti), right = kids.findIndex((k, i) => k.type === "SVG" && i > ti)
-      if (ti >= 0) kids[ti].role = "texto"
-      if (left >= 0) kids[left].role = "icono izquierda"
-      if (right >= 0) kids[right].role = "icono derecha"
-      node.component.toggles = { "icono izquierda": left >= 0, "icono derecha": right >= 0 }
-    } else if (WITH_TOGGLES.has(slot)) delete props.contenido
-    if (slot in SLOT_LISTS) { node.component.slot = SLOT_LISTS[slot]; props.contenido = SLOT_LISTS[slot] ? "lista" : "caja" }
-    if (STATEFUL.has(slot) && props.estado === "normal") { const st = statePatches(ctx, el); for (const k of NO_STATE[slot] ?? []) delete st[k]; if (Object.keys(st).length) node.states = st }
+    componentize(ctx, node, el, slot)
     node.name = slot
   }
   return node
 }
 
+/** Las propiedades de un componente: solo las que tiene de verdad (variante y tamaño si los tiene en el código,
+ *  estado si cambia con el ratón o el foco, seleccionado si se puede marcar), y cada texto e icono con su función
+ *  (en Figma: texto editable, icono intercambiable y, si no siempre está, un interruptor para mostrarlo). */
+function componentize(ctx: Ctx, node: FNode, el: Element, slot: string) {
+  const props: Record<string, string> = {}
+  if (el.hasAttribute("data-variant")) props.variante = el.getAttribute("data-variant") || "default"
+  if (el.hasAttribute("data-size")) props.tamaño = el.getAttribute("data-size") || "default"
+  const step = el.getAttribute("data-step")
+  if (step) props.paso = `${step} de ${el.getAttribute("data-total")}`
+  if (SELECTABLE.has(slot)) props.seleccionado = selectedOf(el, slot) ? "sí" : "no"
+  const st = stateOf(el, slot)
+  if (STATEFUL.has(slot) || st !== "normal") props.estado = NO_STATE[slot]?.includes(st) ? "normal" : st
+  // Pegado a otro (en un Button Group o un campo con prefijo): sin borde o sin esquinas redondeadas en un lado → su propia variante
+  const pos = JOINABLE.has(slot) ? joinedSide(node) : undefined
+  if (pos) props.posición = pos
+  node.component = { set: slot, props }
+  if (slot in SLOT_LISTS) node.component.slot = SLOT_LISTS[slot]
+  else assignRoles(node, slot)
+  if (STATEFUL.has(slot) && props.estado === "normal") { const sp = statePatches(ctx, el); for (const k of NO_STATE[slot] ?? []) delete sp[k]; if (Object.keys(sp).length) node.states = sp }
+  node.name = slot
+}
+
+/** Textos e iconos del componente (sin entrar en otros componentes de dentro) */
+function ownParts(n: FNode, out: FNode[] = []): FNode[] {
+  for (const c of n.children ?? []) {
+    if (c.type === "TEXT" || (c.type === "SVG" && c.icon)) out.push(c)
+    else if (!c.component) ownParts(c, out)
+  }
+  return out
+}
+
+/** Nombre por función de cada texto e icono del componente (únicos dentro del componente) */
+function assignRoles(node: FNode, slot: string) {
+  const parts = ownParts(node)
+  const texts = parts.filter((p) => p.type === "TEXT"), icons = parts.filter((p) => p.type === "SVG")
+  const used = new Set<string>()
+  const unique = (r: string) => { let k = r, i = 2; while (used.has(k)) k = `${r} ${i++}`; used.add(k); return k }
+  // Textos: el que da su etiqueta (título, descripción, valor…) y, si no, el más grande es el título
+  const named = texts.map((t) => ({ t, r: t.name === "placeholder" || t.name === "valor" ? t.name : roleFromHint(t.hint) }))
+  if (texts.length === 1 && (named[0].r === "texto" || named[0].r === "etiqueta")) named[0].r = "texto"
+  else if (texts.length > 1 && !named.some((x) => x.r === "título")) {
+    const big = [...named].sort((a, b) => (b.t.text!.size - a.t.text!.size) || (b.t.text!.weight - a.t.text!.weight))[0]
+    if (big.t.text!.size > Math.min(...texts.map((t) => t.text!.size)) || big.t.text!.weight > Math.min(...texts.map((t) => t.text!.weight))) {
+      big.r = "título"
+      for (const x of named) if (x !== big && x.r === "texto") x.r = "descripción"
+    }
+  }
+  for (const x of named) { x.t.role = unique(x.r); x.t.name = x.t.role }
+  // Iconos: a la izquierda o a la derecha del texto si van sueltos en el componente; si no, «icono»
+  const kids = node.children ?? []
+  const anchor = kids.findIndex((k) => k.type === "TEXT" || (!k.component && k.type === "FRAME" && countText(k) > 0))
+  const direct = (ic: FNode) => kids.indexOf(ic)
+  for (const ic of icons) {
+    const i = direct(ic)
+    ic.role = unique(TOGGLE_ICONS.has(slot) && i >= 0 && anchor >= 0 ? (i < anchor ? "icono izquierda" : "icono derecha") : "icono")
+  }
+  // Iconos a los lados que se encienden y apagan (botón, insignia, opción de menú…): siempre los dos huecos
+  if (TOGGLE_ICONS.has(slot) && anchor >= 0 && !(node.component!.props.tamaño ?? "").startsWith("icon")) {
+    const has = (r: string) => icons.some((ic) => ic.role === r)
+    node.component!.toggles = { "icono izquierda": has("icono izquierda"), "icono derecha": has("icono derecha") }
+  }
+}
+
+/** Función de un texto según de dónde sale (data-slot o etiqueta HTML) */
+function roleFromHint(hint?: string) {
+  const h = hint ?? ""
+  if (/title$|^h[1-6]$/.test(h)) return "título"
+  if (/description$/.test(h)) return "descripción"
+  if (/(^|-)label$|^label$|^legend$/.test(h)) return "etiqueta"
+  if (/value$/.test(h)) return "valor"
+  if (/shortcut$|^kbd$/.test(h)) return "atajo"
+  if (/(^|-)(error|message)$/.test(h)) return "mensaje"
+  if (/^(code|pre)$/.test(h)) return "código"
+  if (/^a$|link$/.test(h)) return "enlace"
+  return "texto"
+}
+const textName = (hint?: string) => roleFromHint(hint)
+
+/** Cajas sin data-slot: por su etiqueta HTML o por lo que llevan dentro (nunca div, fila ni columna) */
+const TAG_NAMES: Record<string, string> = { header: "cabecera", footer: "pie", nav: "navegación", main: "contenido", section: "sección", aside: "lateral",
+  form: "formulario", ul: "lista", ol: "lista", li: "elemento", p: "párrafo", a: "enlace", label: "etiqueta", img: "imagen", fieldset: "grupo de campos",
+  h1: "título", h2: "título", h3: "título", h4: "título", h5: "título", h6: "título", table: "tabla", tr: "fila de tabla", td: "celda", th: "celda", figure: "figura" }
+function nameByContent(n: FNode) {
+  const kids = (n.children ?? []).filter((k) => !k.absolute)
+  if (!kids.length) return n.fill || n.stroke ? "fondo" : "espacio"
+  const sets = kids.map((k) => k.component?.set)
+  if (sets.every((x) => x === "button" || x === "back-button")) return "acciones"
+  if (kids.every((k) => k.type === "TEXT")) return kids.length > 1 ? "textos" : kids[0].name
+  if (kids.every((k) => k.type === "SVG")) return "iconos"
+  if (sets[0] && sets.every((x) => x === sets[0])) return "lista"
+  if (kids.length === 2 && kids.some((k) => k.type === "SVG" || k.component?.set === "avatar" || k.component?.set === "icon-badge")) return "contenido con icono"
+  return "contenido"
+}
+
 /** Campos y barras: su ancho no depende del texto de dentro (como FIXED_WIDTH del plugin) */
 const FIELDS = new Set(["input", "textarea", "select-trigger", "native-select", "input-group", "password-input", "code-input", "slider", "progress", "separator", "skeleton"])
-/** Componentes cuyo icono va con interruptores en Figma, no como variante */
-const WITH_TOGGLES = new Set(["button"])
-/** Estados que no tienen sentido en una pieza (un botón no tiene error) */
-const NO_STATE: Record<string, string[]> = { button: ["error"] }
+/** Componentes con iconos a los lados que se encienden y apagan (interruptores), con el icono intercambiable */
+const TOGGLE_ICONS = new Set(["button", "badge", "toggle", "toggle-group-item", "tabs-trigger", "tab-trigger", "dropdown-menu-item", "context-menu-item",
+  "menubar-item", "select-item", "command-item", "sidebar-menu-button", "app-sidebar-item", "navigation-menu-link", "pagination-link", "breadcrumb-link"])
+/** Piezas que se pueden marcar o activar: «seleccionado» (sí/no) va aparte del estado (hover, foco…) */
+const SELECTABLE = new Set(["checkbox", "switch", "radio-group-item", "toggle", "toggle-group-item", "tabs-trigger", "tab-trigger", "choice-card", "setting-row",
+  "app-sidebar-item", "app-tab-bar-item", "sidebar-menu-button", "pagination-link", "navigation-menu-link", "select-item", "command-item"])
+/** Solo los campos (y sus etiquetas) tienen estado de error; un botón, una pestaña o una tarjeta, no */
+const ERROR_OK = new Set(["input", "textarea", "select-trigger", "native-select", "input-group", "password-input", "code-input", "input-otp-slot",
+  "checkbox", "radio-group-item", "switch", "label", "choice-card", "slider"])
+const NO_STATE: Record<string, string[]> = new Proxy({}, { get: (_t, k: string) => (ERROR_OK.has(k) ? [] : ["error"]) })
 
 // Componentes que llevan dentro su control (casilla, interruptor…): su estado es el del control
 const CONTAINS_CONTROL = new Set(["choice-card", "setting-row"])
@@ -756,17 +840,22 @@ function addStates(screen: FNode, seen: Set<string>) {
   addSection(screen, "Estados", items)
 }
 
-function stripStates(n: FNode) { delete n.states; for (const c of n.children ?? []) stripStates(c) }
+function stripStates(n: FNode) { delete n.states; delete n.hint; for (const c of n.children ?? []) stripStates(c) }
 
+/** Estado de interacción: error, deshabilitado, visible o normal (lo marcado va aparte, en «seleccionado») */
 function stateOf(el: Element, slot: string) {
-  const step = el.getAttribute("data-step")
-  if (step) return `paso ${step} de ${el.getAttribute("data-total")}`
-  if (el.getAttribute("aria-invalid") === "true" || el.querySelector("[aria-invalid=true]") || el.closest("[data-invalid=true]")) return "error"
+  // Error: el propio campo, o un campo compuesto con un campo con error dentro, o su etiqueta dentro de un campo con error
+  const field = ERROR_OK.has(slot)
+  if (el.getAttribute("aria-invalid") === "true" || (field && (!!el.querySelector("[aria-invalid=true]") || !!el.closest("[data-invalid=true]")))) return field ? "error" : "normal"
   if (el.hasAttribute("data-disabled") || el.hasAttribute("disabled")) return "deshabilitado"
-  if (el.getAttribute("data-state") === "checked" || (CONTAINS_CONTROL.has(slot) && el.querySelector("[data-state=checked]"))) return "marcado"
   if (el.getAttribute("data-state") === "visible") return "visible"
-  if (el.getAttribute("data-active") === "true" || el.getAttribute("data-state") === "active" || el.getAttribute("data-state") === "on" || el.getAttribute("aria-current") === "page") return "activo"
   return "normal"
+}
+
+function selectedOf(el: Element, slot: string) {
+  const ds = el.getAttribute("data-state")
+  return ds === "checked" || ds === "active" || ds === "on" || el.getAttribute("data-active") === "true" || el.getAttribute("aria-current") === "page" ||
+    el.getAttribute("aria-selected") === "true" || (CONTAINS_CONTROL.has(slot) && !!el.querySelector("[data-state=checked]"))
 }
 
 function countText(n: FNode): number { return (n.type === "TEXT" ? 1 : 0) + (n.children ?? []).reduce((s, c) => s + countText(c), 0) }
@@ -793,10 +882,68 @@ export type FigmaExport = {
   collections: FigmaCollection[]
   effects: FigmaEffect[]
   screens: { id: string; label: string; node: FNode }[]
+  sets: Record<string, SetInfo>
+  definitions: Record<string, FNode>
 }
 
 /** Recorre las pantallas ya dibujadas en la web (un elemento por pantalla) y arma el archivo para el plugin. */
-type FlowInput = { view?: "mobile" | "desktop"; prototype: { slug: string; label: string; description: string; links?: PrototypeLink[] }; screens: { id: string; label: string; el: HTMLElement; open?: FNode[] }[] }
+type FlowInput = { view?: "mobile" | "desktop"; prototype: { slug: string; label: string; description: string; links?: PrototypeLink[] }; screens: { id: string; label: string; el: HTMLElement; open?: FNode[]; description?: string }[] }
+
+/** Clave de una variante (igual que en el plugin): conjunto|propiedad=valor, … en orden alfabético */
+export const variantKey = (c: NonNullable<FNode["component"]>) => c.set + "|" + Object.keys(c.props).sort().map((k) => k + "=" + c.props[k]).join(", ")
+const rolesOf = (n: FNode) => ownParts(n).map((p) => p.role).filter(Boolean) as string[]
+
+export type SetInfo = { description?: string; optional: string[] }
+/** Para cada variante, la vez que sale más completa (con más textos e iconos): de ahí sale el componente maestro.
+ *  Lo que no sale en todas sus apariciones es opcional (en Figma, un interruptor para mostrarlo). */
+function setsAndDefinitions(screens: { id: string; label: string; node: FNode; description?: string }[][]) {
+  const defs: Record<string, FNode> = {}
+  const seen: Record<string, string[][]> = {}
+  const sets: Record<string, SetInfo> = {}
+  const walk = (n: FNode, card?: { id: string; label: string; description?: string }) => {
+    if (n.component) {
+      const c = n.component, key = variantKey(c)
+      const roles = rolesOf(n)
+      ;(seen[key] = seen[key] ?? []).push(roles)
+      if (!defs[key] || roles.length > rolesOf(defs[key]).length) defs[key] = n
+      const info = (sets[c.set] = sets[c.set] ?? { optional: [] })
+      if (card?.description && (!info.description || card.id === c.set)) info.description = card.id === c.set ? card.description : `Pieza de «${card.label}». ${card.description}`
+    }
+    for (const k of n.children ?? []) walk(k, card)
+  }
+  for (const list of screens) for (const s of list) walk(s.node, s)
+  for (const [key, occ] of Object.entries(seen)) {
+    const set = key.split("|")[0], all = rolesOf(defs[key])
+    for (const r of all) if (!r.startsWith("icono izquierda") && !r.startsWith("icono derecha") && occ.some((o) => !o.includes(r)) && !sets[set].optional.includes(r)) sets[set].optional.push(r)
+  }
+  // Iconos que se encienden y apagan (botón, insignia…): el maestro lleva siempre los dos, ocultos si no venían
+  const donors: Record<string, FNode> = {}
+  let anyIcon: FNode | undefined
+  const findIcons = (n: FNode) => {
+    if (n.component?.toggles) for (const k of n.children ?? []) if (k.type === "SVG" && k.role) donors[n.component.set + "|" + (n.component.props.tamaño ?? "")] ??= k
+    if (n.type === "SVG" && n.icon) anyIcon ??= n
+    for (const k of n.children ?? []) findIcons(k)
+  }
+  for (const list of screens) for (const s of list) findIcons(s.node)
+  const definitions: Record<string, FNode> = {}
+  for (const [k, n] of Object.entries(defs)) {
+    const c = clone(n); delete c.link; delete c.absolute
+    if (c.component?.toggles) {
+      const kids = c.children ?? []
+      const anchor = kids.findIndex((x) => x.type === "TEXT" || (!x.component && x.type === "FRAME" && countText(x) > 0))
+      const donor = donors[c.component.set + "|" + (c.component.props.tamaño ?? "")] ?? Object.values(donors).find((d) => d) ?? anyIcon
+      for (const side of ["icono izquierda", "icono derecha"]) {
+        if (!donor || anchor < 0 || kids.some((x) => x.role === side)) continue
+        const ic = clone(donor); ic.role = side; ic.hidden = true; ic.sizing = { h: "FIXED", v: "FIXED" }
+        const at = kids.indexOf(kids.find((x) => x.type === "TEXT" || (!x.component && x.type === "FRAME" && countText(x) > 0))!)
+        kids.splice(side === "icono izquierda" ? at : at + 1, 0, ic)
+      }
+      c.children = kids
+    }
+    definitions[k] = c
+  }
+  return { sets, definitions }
+}
 
 function flowScreens(ctx: Ctx, flow: FlowInput) {
   return flow.screens.flatMap((s) => {
@@ -815,7 +962,7 @@ function oneScreen(ctx: Ctx, flow: FlowInput, s: FlowInput["screens"][number]) {
     delete node._h
     markLinks(node, (flow.prototype.links ?? []).filter((l) => l.from === s.id))
     if (s.open?.length) addSection(node, "Abierto", s.open.map(clone))
-    return { id: s.id, label: s.label, node }
+    return { id: s.id, label: s.label, node, description: s.description }
   }
 }
 
@@ -850,11 +997,12 @@ export function buildFigmaExport(opts: {
   const { collections, effects } = tokensToFigma(opts.tokens)
   const screens = flowScreens(makeCtx(opts.tokens, opts.mode), opts)
   for (const s of screens) stripStates(s.node)
+  const { sets, definitions } = setsAndDefinitions([screens])
   return {
     format: FIGMA_FORMAT, system: opts.system,
     prototype: { slug: opts.prototype.slug, label: opts.prototype.label, description: opts.prototype.description },
     mode: opts.mode === "dark" ? "Oscuro" : "Claro", view: opts.view, createdAt: new Date().toISOString(),
-    collections, effects, screens,
+    collections, effects, screens, sets, definitions,
   }
 }
 
@@ -867,16 +1015,17 @@ export function buildFigmaBundle(opts: {
   const { collections, effects } = tokensToFigma(opts.tokens)
   const ctx = makeCtx(opts.tokens, opts.mode)
   const seenStates = new Set<string>()
+  const flows = opts.flows.map((f) => {
+    const screens = flowScreens(ctx, f)
+    // Cada variante con sus estados una sola vez, aunque el catálogo vaya en varias páginas
+    if (f.prototype.slug.startsWith("catalogo")) for (const s of screens) addStates(s.node, seenStates)
+    for (const s of screens) stripStates(s.node)
+    return { view: f.view, prototype: { slug: f.prototype.slug, label: f.prototype.label, description: f.prototype.description }, screens }
+  })
+  const { sets, definitions } = setsAndDefinitions(flows.map((f) => f.screens))
   return {
     format: FIGMA_BUNDLE_FORMAT, system: opts.system,
     mode: opts.mode === "dark" ? "Oscuro" : "Claro", view: opts.view, createdAt: new Date().toISOString(),
-    collections, effects,
-    flows: opts.flows.map((f) => {
-      const screens = flowScreens(ctx, f)
-      // Cada variante con sus estados una sola vez, aunque el catálogo vaya en varias páginas
-      if (f.prototype.slug.startsWith("catalogo")) for (const s of screens) addStates(s.node, seenStates)
-      for (const s of screens) stripStates(s.node)
-      return { view: f.view, prototype: { slug: f.prototype.slug, label: f.prototype.label, description: f.prototype.description }, screens }
-    }),
+    collections, effects, flows, sets, definitions,
   }
 }

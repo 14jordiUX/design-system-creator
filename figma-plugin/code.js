@@ -2,7 +2,9 @@
 // - Dibujar: lee el .json que descarga la web (Prototipos → Compartir → Llevar a Figma) y crea, en este archivo:
 //     · variables (Primitivos ocultos, Semánticos y Color con modos Claro / Oscuro) y estilos de sombra
 //     · una página de componentes (con variantes) y otra con las pantallas del flujo, conectadas como prototipo
-//   Todo color, espacio, radio y texto queda enlazado a su variable. Si las variables o los componentes ya existen
+//   Todo color, espacio, radio y texto queda enlazado a su variable; cada componente lleva sus propiedades (textos, iconos,
+//   partes opcionales), su descripción y su ficha; y el archivo se ordena: portada, fundamentos, componentes, catálogo y flujos.
+//   Al terminar, una revisión dice lo que no cumple las reglas (README). Si las variables o los componentes ya existen
 //   (por ejemplo, porque los has cambiado tú), se reutilizan: no se pisan tus cambios salvo que lo pidas.
 // - Exportar cambios: guarda en un .json las variables, los componentes y las pantallas tal como están ahora,
 //   para que Claude reconstruya el código igual que lo has dibujado.
@@ -19,13 +21,15 @@ figma.ui.onmessage = async (msg) => {
     if (msg.type === "draw") {
       const d = msg.data
       if (d && d.format === "dsc-figma-bundle@1") {
-        const opts = Object.assign({}, msg.options || {}, { done: {} })
+        const opts = Object.assign({}, msg.options || {}, { done: {}, sets: d.sets || {}, defs: d.definitions || {} })
         // Todo el sistema: cada flujo se dibuja (o actualiza) en su página, con los mismos tokens y componentes
+        let last = null
         for (let i = 0; i < d.flows.length; i++) {
           const f = d.flows[i]
-          await draw({ format: "dsc-figma@1", system: d.system, mode: d.mode, collections: d.collections, effects: d.effects, prototype: f.prototype, screens: f.screens, view: f.view || d.view }, opts)
+          last = await draw({ format: "dsc-figma@1", system: d.system, mode: d.mode, collections: d.collections, effects: d.effects, prototype: f.prototype, screens: f.screens, view: f.view || d.view }, opts)
         }
-      } else await draw(d, msg.options || {})
+        await finishFile(d, last)
+      } else await finishFile(d, await draw(d, Object.assign({}, msg.options || {}, { sets: (d && d.sets) || {}, defs: (d && d.definitions) || {} })))
     }
     if (msg.type === "export") await exportChanges()
   } catch (e) {
@@ -54,6 +58,38 @@ function solid(hex, variable) {
   return paint
 }
 const props = (o) => Object.keys(o).sort().map((k) => k + "=" + o[k]).join(", ")
+function parseProps(name) {
+  const o = {}
+  // «default» (o «default=default», de antes) es la variante sin propiedades
+  String(name || "").split(", ").forEach((kv) => { const i = kv.indexOf("="); if (i > 0 && kv !== "default=default") o[kv.slice(0, i)] = kv.slice(i + 1) })
+  return o
+}
+// Las capas de un componente que son suyas (textos e iconos), sin entrar en los componentes que lleva dentro
+function ownParts(n, out) {
+  out = out || []
+  for (const c of n.children || []) {
+    if (c.type === "TEXT" || (c.type === "SVG" && c.icon)) out.push(c)
+    else if (!c.component) ownParts(c, out)
+  }
+  return out
+}
+// Los componentes que lleva dentro (solo el primer nivel)
+function nestedOf(n, out) {
+  out = out || []
+  for (const c of n.children || []) { if (c.component) out.push(c); else nestedOf(c, out) }
+  return out
+}
+const rolesOfNode = (n) => ownParts(n).map((p) => p.role).filter(Boolean)
+const isIconLayer = (x) => x.type === "INSTANCE" && (x.name.indexOf("icon/") === 0 || x.name.indexOf("icono") === 0)
+// Instancias de primer nivel dentro de una capa (no los iconos ni lo que va dentro de otra instancia)
+function firstInstances(node, out) {
+  out = out || []
+  for (const c of node.children || []) {
+    if (c.type === "INSTANCE") { if (!isIconLayer(c)) out.push(c) }
+    else if ("children" in c && c.type !== "TEXT" && c.type !== "SLOT") firstInstances(c, out)
+  }
+  return out
+}
 
 // ---------- variables ----------
 // Nombres antiguos de colores (antes de que el nombre dijera dónde se aplican: bg / text / border).
@@ -82,6 +118,31 @@ function renameOldColors(existingVars, wanted) {
   }
   if (n) log(n + " variables de color con el nombre antiguo se han renombrado al nuevo (bg / text / border); lo que las usaba sigue enlazado.")
 }
+
+// Dónde se puede usar cada variable (así en Figma, al elegir un color de relleno, solo salen los de fondo, etc.)
+function scopesFor(name, type) {
+  const has = (p) => name.indexOf(p) === 0
+  if (type === "COLOR") {
+    if (has("color/bg/") || has("color/surface/")) return ["FRAME_FILL", "SHAPE_FILL"]
+    if (has("color/text/")) return ["TEXT_FILL", "SHAPE_FILL", "STROKE_COLOR"]     // los iconos van del color del texto
+    if (has("color/border/")) return ["STROKE_COLOR", "EFFECT_COLOR"]
+    if (has("color/chart/")) return ["FRAME_FILL", "SHAPE_FILL", "STROKE_COLOR"]
+    return ["ALL_FILLS", "STROKE_COLOR"]
+  }
+  if (type === "STRING") return has("text/family") ? ["FONT_FAMILY"] : []
+  if (type !== "FLOAT") return []
+  if (has("space/")) return ["GAP"]                                               // separación y márgenes de auto layout
+  if (has("radius/")) return ["CORNER_RADIUS"]
+  if (has("text/size")) return ["FONT_SIZE"]
+  if (has("text/weight")) return ["FONT_WEIGHT"]
+  if (has("text/leading")) return ["LINE_HEIGHT"]
+  if (has("control/height") || has("size/") || has("layout/")) return has("size/line") ? ["WIDTH_HEIGHT", "STROKE_FLOAT"] : ["WIDTH_HEIGHT"]
+  if (has("control/border") || has("control/focus")) return ["STROKE_FLOAT"]
+  if (has("state/opacity") || /opacity|gradient/.test(name)) return ["OPACITY"]
+  return []                                                                        // movimiento, capas…: no son de diseño
+}
+// Su nombre en el código (lo que ve un desarrollador en Dev Mode): la variable CSS de la web
+const codeName = (name) => "var(--" + name.replace(/\//g, "-") + ")"
 
 async function upsertVariables(collections, overwrite) {
   const existingCols = await figma.variables.getLocalVariableCollectionsAsync()
@@ -121,7 +182,9 @@ async function upsertVariables(collections, overwrite) {
       const isNew = !fv
       if (!fv) { fv = figma.variables.createVariable(v.name, fc, v.type); created++ }
       if (v.description && (isNew || overwrite)) fv.description = v.description
-      if (col.hidden || !col.register) fv.scopes = []   // primitivos y copias de modo no salen en los selectores: se diseña con semánticos de «Color»
+      // primitivos y copias de modo no salen en los selectores: se diseña con semánticos
+      try { fv.scopes = col.hidden || !col.register ? [] : scopesFor(v.name, v.type) } catch (e) { /* */ }
+      try { fv.setVariableCodeSyntax("WEB", codeName(v.name)) } catch (e) { /* */ }
       if (col.register) byName[v.name] = fv   // las de la colección aparte no se usan al dibujar
       plan.push({ fv, v, modeIds, write: isNew || overwrite })
     }
@@ -249,6 +312,9 @@ class Drawer {
     this.links = []             // { node, to }
     this.toggled = []           // instancias con interruptores (icono izquierda/derecha, texto): se ajustan al final
     this.compX = 0; this.compY = 0
+    this.styles = {}            // estilos de texto ya preparados en esta pasada
+    this.defs = {}              // set|props → la pieza completa (la que tiene más partes): de ella sale el maestro
+    this.sets = {}              // set → { description, optional: partes que no siempre van }
   }
 
   async text(n, parent) {
@@ -268,24 +334,73 @@ class Drawer {
       for (const f of now) if (f !== figma.mixed) await figma.loadFontAsync(f)
       t.fontName = font
     }
-    t.fontSize = n.text.size
-    if (n.text.lineHeight) t.lineHeight = { value: n.text.lineHeight, unit: "PIXELS" }
-    if (n.text.letterSpacing) t.letterSpacing = { value: n.text.letterSpacing, unit: "PIXELS" }
-    if (n.text.upper) t.textCase = "UPPER"
-    t.textDecoration = n.text.underline ? "UNDERLINE" : "NONE"
+    const style = await this.styleFor(n, font)
+    if (style) {
+      try { await t.setTextStyleIdAsync(style.id) } catch (e) { /* */ }
+      // El interlineado puede variar de un texto a otro con el mismo estilo: se ajusta en el texto
+      const lh = style.lineHeight
+      if (n.text.lineHeight && (!lh || lh.unit !== "PIXELS" || Math.abs(lh.value - n.text.lineHeight) > 0.5)) t.lineHeight = { value: n.text.lineHeight, unit: "PIXELS" }
+    }
+    if (!style || t.textStyleId !== style.id) {
+      t.fontSize = n.text.size
+      if (n.text.lineHeight) t.lineHeight = { value: n.text.lineHeight, unit: "PIXELS" }
+      if (n.text.letterSpacing) t.letterSpacing = { value: n.text.letterSpacing, unit: "PIXELS" }
+      t.textCase = n.text.upper ? "UPPER" : "ORIGINAL"
+      t.textDecoration = n.text.underline ? "UNDERLINE" : "NONE"
+      const len = t.characters.length
+      for (const field of ["fontSize", "fontWeight", "fontFamily"]) {
+        const v = tokenVar(this.vars, n.text.bind[field])
+        if (v && len) { try { t.setRangeBoundVariable(0, len, field, v) } catch (e) { /* si la fuente no lo permite */ } }
+      }
+    }
     t.textAlignHorizontal = n.text.align
     t.fills = [solid(n.text.color.color, tokenVar(this.vars, n.text.color.token))]
-    const len = t.characters.length
-    for (const field of ["fontSize", "fontWeight", "fontFamily"]) {
-      const v = tokenVar(this.vars, n.text.bind[field])
-      if (v && len) { try { t.setRangeBoundVariable(0, len, field, v) } catch (e) { /* si la fuente no lo permite */ } }
-    }
     if (n.text.single) t.textAutoResize = "WIDTH_AND_HEIGHT"
     else { t.textAutoResize = "HEIGHT"; t.resize(Math.max(1, n.w + 1), Math.max(1, n.h)) }
-    t.name = n.name
+    t.name = n.role || n.name
+  }
+
+  // Estilo de texto (texto/<tamaño>/<peso>): uno por cada combinación que se usa, con sus variables enlazadas
+  async styleFor(n, font) {
+    const T = n.text, b = T.bind || {}
+    const last = (tok, raw) => (tok ? tok.split(/[./]/).pop() : String(raw))
+    const WEIGHTS = { 400: "normal", 500: "emphasis", 600: "strong", 700: "heavy" }
+    let name = "texto/" + last(b.fontSize, T.size) + "/" + (b.fontWeight ? last(b.fontWeight) : WEIGHTS[T.weight] || String(T.weight))
+    if (b.fontFamily && !/base$/.test(b.fontFamily)) name += "/" + last(b.fontFamily, "")
+    if (T.upper) name += " · mayúsculas"
+    if (T.underline) name += " · subrayado"
+    if (this.styles[name]) return this.styles[name]
+    if (!this.styleList) { try { this.styleList = await figma.getLocalTextStylesAsync() } catch (e) { this.styleList = [] } }
+    let st = this.styleList.find((x) => x.name === name)
+    const isNew = !st
+    try {
+      if (!st) { st = figma.createTextStyle(); st.name = name; if (this.styleList.indexOf(st) < 0) this.styleList.push(st) }
+      if (isNew || this.update) {
+        st.fontName = font
+        st.fontSize = T.size
+        st.lineHeight = T.lineHeight ? { value: T.lineHeight, unit: "PIXELS" } : { unit: "AUTO" }
+        st.letterSpacing = { value: T.letterSpacing || 0, unit: "PIXELS" }
+        st.textCase = T.upper ? "UPPER" : "ORIGINAL"
+        st.textDecoration = T.underline ? "UNDERLINE" : "NONE"
+        for (const field of ["fontSize", "fontWeight", "fontFamily"]) {
+          const v = tokenVar(this.vars, b[field])
+          if (v) { try { st.setBoundVariable(field, v) } catch (e) { /* */ } }
+        }
+      }
+    } catch (e) { log("No he podido crear el estilo de texto «" + name + "»: " + e.message, "warn"); return null }
+    this.styles[name] = st
+    return st
   }
 
   async icon(n) {
+    const inst = (await this.iconComp(n)).createInstance()
+    inst.resize(n.w, n.h)
+    paintIcon(inst, solid(n.fill.color, tokenVar(this.vars, n.fill.token)))
+    return inst
+  }
+
+  // El componente del icono (icon/<nombre>): el que ya hay en el archivo o uno nuevo
+  async iconComp(n) {
     if (!this.icons[n.name]) {
       // ¿Ya está en el archivo? Se reutiliza (así no se duplica al volver a dibujar)
       await figma.loadAllPagesAsync()
@@ -300,10 +415,7 @@ class Drawer {
       this.place(comp)
       this.icons[n.name] = comp
     }
-    const inst = this.icons[n.name].createInstance()
-    inst.resize(n.w, n.h)
-    paintIcon(inst, solid(n.fill.color, tokenVar(this.vars, n.fill.token)))
-    return inst
+    return this.icons[n.name]
   }
 
   place(comp) {
@@ -344,7 +456,11 @@ class Drawer {
       frame.counterAxisAlignItems = L.cross === "STRETCH" ? "MIN" : L.cross === "BASELINE" && L.mode !== "HORIZONTAL" ? "MIN" : L.cross
       if (L.wrap && L.mode === "HORIZONTAL") frame.layoutWrap = "WRAP"
       frame.primaryAxisSizingMode = "FIXED"; frame.counterAxisSizingMode = "FIXED"
-      if (n.bind) for (const f of ["paddingTop", "paddingRight", "paddingBottom", "paddingLeft", "itemSpacing"]) bindIf(frame, f, this.vars, n.bind[f])
+      for (const f of ["paddingTop", "paddingRight", "paddingBottom", "paddingLeft", "itemSpacing"]) {
+        // Sin token en la web (las secciones que añade el catálogo, p. ej.): la variable semántica que vale eso
+        const tok = (n.bind && n.bind[f]) || (frame[f] > 0 ? this.spaceFor(f, frame[f]) : undefined)
+        bindIf(frame, f, this.vars, tok)
+      }
     }
   }
 
@@ -361,8 +477,51 @@ class Drawer {
       for (const c of n.children || []) await this.node(c, out, n, false)
     }
     this.fit(out, n, parentNode)
+    this.bindSize(out, n)
+    this.mark(out, n)
     if (n.link) this.links.push({ node: out, to: n.link })
     return out
+  }
+
+  spaceFor(field, value) {
+    if (!this.values) return undefined
+    const pref = field === "itemSpacing" ? ["space/gap/", "space/inset/"] : ["space/inset/", "space/gap/"]
+    for (const p of pref) { const n = this.values.names.find((x) => x.indexOf(p) === 0 && Number(this.values(x)) === value); if (n) return n }
+    return undefined
+  }
+
+  // Alto o ancho fijo que viene de un token (alto del botón, tamaño del avatar): enlazado a su variable, solo si es fijo
+  bindSize(out, n) {
+    if (!n.bind || !("layoutMode" in out) || out.type === "INSTANCE") return
+    const fixed = (axis) => {
+      if ("layoutSizingHorizontal" in out && out.parent && out.parent.layoutMode && out.parent.layoutMode !== "NONE") {
+        const m = axis === "h" ? out.layoutSizingHorizontal : out.layoutSizingVertical
+        if (m !== "FIXED") return false
+      }
+      if (out.layoutMode === "NONE") return true
+      const hor = out.layoutMode === "HORIZONTAL"
+      return (axis === "h") === hor ? out.primaryAxisSizingMode === "FIXED" : out.counterAxisSizingMode === "FIXED"
+    }
+    if (n.bind.height && fixed("v")) bindIf(out, "height", this.vars, n.bind.height)
+    if (n.bind.width && fixed("h")) bindIf(out, "width", this.vars, n.bind.width)
+  }
+
+  // Cada texto e icono, con el nombre de lo que es (título, descripción, icono izquierda…): así sale en sus propiedades
+  mark(out, n) {
+    if (n.role) { out.name = n.role; try { out.setPluginData("role", n.role) } catch (e) { /* */ } }
+    if (n.hidden !== undefined || n.role) out.visible = !n.hidden
+  }
+
+  // ¿Esta pieza se puede poner como instancia y ajustarla con sus propiedades (textos, iconos, partes opcionales)?
+  viaProps(n) {
+    if (hasSlot(n)) return false
+    if (n.component.toggles) return true
+    const master = this.defs[n.component.set + "|" + props(n.component.props)]
+    if (!master) return false
+    const have = rolesOfNode(master)
+    if (!rolesOfNode(n).every((r) => have.indexOf(r) >= 0)) return false
+    const a = nestedOf(n).map((x) => x.component.set).join(","), b = nestedOf(master).map((x) => x.component.set).join(",")
+    return a === b
   }
 
   fit(out, n, parentNode) {
@@ -387,7 +546,7 @@ class Drawer {
     if (this.defining[key]) return null   // dentro de sí mismo: se dibuja como capa normal
     if (this.components[key]) return this.components[key]
     this.defining[key] = true
-    try { return await this.defineNew(n, key) } finally { delete this.defining[key] }
+    try { return await this.defineNew(this.defs[key] || n, key) } finally { delete this.defining[key] }
   }
 
   async defineNew(n, key) {
@@ -407,6 +566,7 @@ class Drawer {
     comp.setPluginData("set", n.component.set)
     if (hasSlot(n)) this.makeSlot(comp, n)
     selfSizing(comp, n)
+    this.bindSize(comp, n)
     this.slotFit(comp)
     this.components[key] = comp
     this.done[key] = true      // recién hecho: en los demás flujos de este archivo no se vuelve a rehacer
@@ -430,7 +590,9 @@ class Drawer {
     }
     comp.name = name
     try { comp.resize(Math.max(1, n.w), Math.max(1, n.h)) } catch (e) { /* */ }
+    for (const f of ["width", "height"]) { try { comp.setBoundVariable(f, null) } catch (e) { /* */ } }
     selfSizing(comp, n)
+    this.bindSize(comp, n)
     this.slotFit(comp)
     this.refreshed++
   }
@@ -449,7 +611,7 @@ class Drawer {
       slot.itemSpacing = comp.itemSpacing
       slot.primaryAxisAlignItems = comp.primaryAxisAlignItems
       slot.counterAxisAlignItems = comp.counterAxisAlignItems
-      if (n.bind) bindIf(slot, "itemSpacing", this.vars, n.bind.itemSpacing)
+      bindIf(slot, "itemSpacing", this.vars, (n.bind && n.bind.itemSpacing) || (slot.itemSpacing > 0 ? this.spaceFor("itemSpacing", slot.itemSpacing) : undefined))
       for (let i = 0; i < kids.length; i++) { if (flow[i] === false) continue; slot.appendChild(kids[i]); if (n.children && n.children[i]) this.fit(kids[i], n.children[i], n) }
       // Lo que queda suelto, delante del slot
       for (let i = 0; i < kids.length; i++) if (flow[i] === false) comp.appendChild(kids[i])
@@ -505,13 +667,19 @@ class Drawer {
   async patch(node, n, top) {
     const k = this.kindOf(n, top)
     if (k === "SVG") return
-    if (k === "TEXT") { await this.textStyle(node, n); return }
+    if (k === "TEXT") { await this.textStyle(node, n); this.mark(node, n); return }
     if (k === "INSTANCE" && node.type === "INSTANCE") {
-      if (n.type === "SVG") { try { node.resize(n.w, n.h) } catch (e) { /* */ } paintIcon(node, solid(n.fill.color, tokenVar(this.vars, n.fill.token))); return }
+      if (n.type === "SVG") {
+        if (n.icon) { await this.iconComp(n); const cur = await node.getMainComponentAsync(); if (cur !== this.icons[n.name]) node.swapComponent(this.icons[n.name]) }
+        try { node.resize(n.w, n.h) } catch (e) { /* */ }
+        paintIcon(node, solid(n.fill.color, tokenVar(this.vars, n.fill.token)))
+        this.mark(node, n)
+        return
+      }
       const comp = await this.definition(n)
       if (comp) {
         const cur = await node.getMainComponentAsync(); if (cur !== comp) node.swapComponent(comp)
-        if (n.component && n.component.toggles) this.toggled.push({ inst: node, n: n }); else await this.overrides(node, n)
+        if (this.viaProps(n)) this.toggled.push({ inst: node, n: n }); else await this.overrides(node, n)
       }
       return
     }
@@ -541,20 +709,22 @@ class Drawer {
   async ensureRoles(frame, n) {
     const kids = n.children || [], layers = frame.children.slice()
     let L = null, T = null, R = null
-    kids.forEach((k, i) => { const l = layers[i]; if (!l) return; if (k.role === "icono izquierda") L = l; else if (k.role === "icono derecha") R = l; else if (k.role === "texto") T = l })
-    if (T) T.name = "texto"
+    kids.forEach((k, i) => { const l = layers[i]; if (!l) return; if (k.role === "icono izquierda") L = l; else if (k.role === "icono derecha") R = l; else if (!T && (k.type === "TEXT" || (!k.component && collect(k, "TEXT").length))) T = l })
+    if (T && T.type === "TEXT" && !T.name) T.name = "texto"
     const size = L || R ? (L || R).width : this.iconSizeFor(n)
     const make = async () => {
       const ic = await this.placeholderIcon()
       const inst = ic.createInstance()
       inst.resize(size, size)
-      if (T && T.fills !== figma.mixed && T.fills.length) paintIcon(inst, T.fills[0])
+      const tt = T && (T.type === "TEXT" ? T : ("findAll" in T ? T.findAll((x) => x.type === "TEXT")[0] : null))
+      if (tt && tt.fills !== figma.mixed && tt.fills.length) paintIcon(inst, tt.fills[0])
       try { inst.layoutSizingHorizontal = "FIXED"; inst.layoutSizingVertical = "FIXED" } catch (e) { /* */ }
       return inst
     }
     if (!L) { L = await make(); frame.insertChild(T ? frame.children.indexOf(T) : 0, L) }
     if (!R) { R = await make(); frame.insertChild(T ? frame.children.indexOf(T) + 1 : frame.children.length, R) }
     L.name = "icono izquierda"; R.name = "icono derecha"
+    try { L.setPluginData("role", "icono izquierda"); R.setPluginData("role", "icono derecha") } catch (e) { /* */ }
     L.visible = false; R.visible = false     // el maestro, sin iconos: cada botón enciende los suyos
   }
 
@@ -585,30 +755,51 @@ class Drawer {
     return comp
   }
 
-  // Al final (cuando el componente ya tiene sus propiedades): qué iconos se ven, cuáles son y el texto
-  async setToggles(inst, n) {
+  // Al final (cuando el componente ya tiene sus propiedades): sus textos, qué iconos se ven, cuáles son y qué
+  // partes opcionales lleva. Lo mismo, por dentro, en los componentes que lleva dentro (un botón dentro de una tarjeta).
+  async setProps(inst, n, depth) {
     if (inst.removed) return
-    const defs = inst.componentProperties
-    const find = (name, type) => Object.keys(defs).find((k) => k.split("#")[0] === name && defs[k].type === type)
+    let defs
+    try { defs = inst.componentProperties } catch (e) { return }
+    const byRole = {}
+    for (const p of ownParts(n)) if (p.role && !byRole[p.role]) byRole[p.role] = p
     const want = {}
-    for (const side of ["icono izquierda", "icono derecha"]) {
-      const k = find(side, "BOOLEAN")
-      if (k) want[k] = !!n.component.toggles[side]
-      const svg = (n.children || []).find((c) => c.role === side)
-      const sk = find(side + " · cuál", "INSTANCE_SWAP")
-      // Solo si cambia: «cambiar» al mismo icono hace que Figma lo deje con el color del icono original
-      if (sk && svg && svg.icon) { await this.icon(svg); const id = this.icons[svg.name].id; if (defs[sk].value !== id) want[sk] = id }
+    for (const k of Object.keys(defs)) {
+      const name = k.split("#")[0], d = defs[k]
+      if (d.type === "TEXT") { const p = byRole[name]; if (p && p.type === "TEXT" && d.value !== p.text.chars) want[k] = p.text.chars }
+      else if (d.type === "BOOLEAN") {
+        if (name.indexOf("con ") === 0) want[k] = !!byRole[name.slice(4)]
+        else if (n.component.toggles && name in n.component.toggles) want[k] = !!n.component.toggles[name]
+        else if (name.indexOf("icono") === 0) want[k] = !!byRole[name]
+      } else if (d.type === "INSTANCE_SWAP") {
+        const p = byRole[name.replace(/ · cuál$/, "")]
+        // Solo si cambia: «cambiar» al mismo icono hace que Figma lo deje con el color del icono original
+        if (p && p.icon) { await this.iconComp(p); const id = this.icons[p.name].id; if (d.value !== id) want[k] = id }
+      }
     }
-    const t = (n.children || []).find((c) => c.role === "texto"), tk = find("texto", "TEXT")
-    if (t && tk) want[tk] = t.text.chars
-    try { inst.setProperties(want) } catch (e) { log("No he podido ajustar los iconos o el texto de un «" + n.component.set + "»: " + e.message, "warn") }
-    // Al cambiar el icono, Figma puede quedarse con el color del icono original: se pinta con el del botón
-    for (const side of ["icono izquierda", "icono derecha"]) {
-      const svg = (n.children || []).find((c) => c.role === side)
-      // La capa por su interruptor (al cambiar de icono, Figma le puede cambiar el nombre)
-      const bk = find(side, "BOOLEAN")
-      const l = inst.children.find((x) => x.componentPropertyReferences && bk && x.componentPropertyReferences.visible === bk) || inst.children.find((x) => x.name === side)
-      if (svg && svg.fill && l) paintIcon(l, solid(svg.fill.color, tokenVar(this.vars, svg.fill.token)))
+    if (Object.keys(want).length) { try { inst.setProperties(want) } catch (e) { log("No he podido ajustar los textos o iconos de un «" + n.component.set + "»: " + e.message, "warn") } }
+    // Colores: los de esta pantalla (al cambiar el icono, Figma puede quedarse con el color del original)
+    const mine = inst.findAll((x) => !!x.componentPropertyReferences && Object.keys(x.componentPropertyReferences).some((r) => defs[x.componentPropertyReferences[r]]))
+    for (const l of mine) {
+      const refs = l.componentPropertyReferences
+      const key = refs.characters || refs.mainComponent || refs.visible
+      const role = key.split("#")[0].replace(/ · cuál$/, "").replace(/^con /, "")
+      const p = byRole[role]
+      if (!p) continue
+      if (p.type === "TEXT" && l.type === "TEXT") l.fills = [solid(p.text.color.color, tokenVar(this.vars, p.text.color.token))]
+      else if (p.type === "SVG" && p.fill) paintIcon(l, solid(p.fill.color, tokenVar(this.vars, p.fill.token)))
+    }
+    if (!Object.keys(defs).some((k) => defs[k].type !== "VARIANT")) await this.overrides(inst, n, true)
+    // Lo que lleva dentro: la variante que toca y sus textos
+    if ((depth || 0) > 6) return
+    const kidsN = nestedOf(n), kidsI = firstInstances(inst)
+    if (kidsN.length !== kidsI.length) return
+    for (let i = 0; i < kidsN.length; i++) {
+      const kn = kidsN[i], ki = kidsI[i]
+      if (hasSlot(kn)) continue
+      const comp = await this.definition(kn)
+      if (comp) { const cur = await ki.getMainComponentAsync(); if (cur !== comp) { try { ki.swapComponent(comp) } catch (e) { continue } } }
+      await this.setProps(ki, kn, (depth || 0) + 1)
     }
   }
 
@@ -616,20 +807,21 @@ class Drawer {
     const comp = await this.definition(n)
     if (!comp) return null
     // Misma variante pero otra forma (otro número de textos, iconos o capas): se dibuja tal cual, no como instancia
-    if (!n.component.toggles && !this.sameShape(comp, Object.assign({}, n, { sizing: undefined }), true)) return null
+    const viaProps = this.viaProps(n)
+    if (!viaProps && !this.sameShape(comp, Object.assign({}, n, { sizing: undefined }), true)) return null
     const inst = comp.createInstance()
-    if (n.component.toggles) this.toggled.push({ inst: inst, n: n })
+    if (viaProps) this.toggled.push({ inst: inst, n: n })
     else await this.overrides(inst, n)
     inst.name = n.component.set
     return inst
   }
 
-  async overrides(inst, n) {
+  async overrides(inst, n, own) {
     const slot = hasSlot(n) ? this.slotOf(inst) : null
     if (slot) { await this.fillSlot(slot, n); return }
     // Lo que cambia de una vez a otra: los textos y sus colores, y qué icono va
-    const texts = inst.findAll((x) => x.type === "TEXT")
-    const want = collect(n, "TEXT")
+    const texts = own ? inst.findAll((x) => x.type === "TEXT" && !x.componentPropertyReferences) : inst.findAll((x) => x.type === "TEXT")
+    const want = own ? [] : collect(n, "TEXT")
     for (let i = 0; i < Math.min(texts.length, want.length); i++) {
       const t = texts[i], w = want[i]
       if (t.characters !== w.text.chars) {
@@ -638,11 +830,12 @@ class Drawer {
       }
       t.fills = [solid(w.text.color.color, tokenVar(this.vars, w.text.color.token))]
     }
-    const icons = inst.findAll((x) => x.type === "INSTANCE" && x.name.indexOf("icon/") === 0)
+    const icons = own ? [] : inst.findAll(isIconLayer)
     const wantIcons = collect(n, "SVG").filter((x) => x.icon)
     for (let i = 0; i < Math.min(icons.length, wantIcons.length); i++) {
       const w = wantIcons[i]
-      if (icons[i].name !== w.name) { await this.icon(w); icons[i].swapComponent(this.icons[w.name]) }
+      const cur = await icons[i].getMainComponentAsync()
+      if (!cur || cur.name !== w.name) { await this.iconComp(w); icons[i].swapComponent(this.icons[w.name]) }
       paintIcon(icons[i], solid(w.fill.color, tokenVar(this.vars, w.fill.token)))
     }
   }
@@ -667,97 +860,203 @@ async function findComponent(set, p) {
       for (const c of s.children) componentIndex[s.name + "|" + c.name] = c
     }
   }
-  const exact = componentIndex[set + "|" + props(p)]
+  const exact = componentIndex[set + "|" + (props(p) || "default")] || (!Object.keys(p).length && componentIndex[set + "|default=default"])
   if (exact) return exact
   // La variante del archivo puede tener propiedades de más con su valor por defecto (posición=sola en un botón suelto)
   for (const key of Object.keys(componentIndex)) {
     if (key.split("|")[0] !== set) continue
-    const cur = {}
-    key.slice(set.length + 1).split(", ").forEach((kv) => { const [k, v] = kv.split("="); if (k) cur[k] = v })
+    const cur = parseProps(key.slice(set.length + 1))
     if (Object.keys(p).some((k) => cur[k] !== p[k])) continue
     if (Object.keys(cur).every((k) => k in p || cur[k] === defaultOf(k))) return componentIndex[key]
   }
   return null
 }
-const defaultOf = (k) => (k === "estado" ? "normal" : k === "posición" ? "sola" : "default")
+const defaultOf = (k) => (k === "estado" ? "normal" : k === "posición" ? "sola" : k === "seleccionado" ? "no" : "default")
 
-// Propiedades que ya no son variantes (el icono del botón ahora va con interruptores): se quitan del archivo.
-// Las variantes que quedan repetidas se juntan en una (sus instancias pasan a la que se queda).
-const DROPPED = { button: ["contenido"] }
-const NO_STATE = { button: ["error"] }
-async function migrateDropped() {
-  await figma.loadAllPagesAsync()
-  for (const set of figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })) {
-    const drop = DROPPED[set.name]
-    if (!drop || !set.children.some((c) => drop.some((k) => c.name.indexOf(k + "=") >= 0))) continue
-    const parse = (name) => { const o = {}; name.split(", ").forEach((kv) => { const [k, v] = kv.split("="); if (k) o[k] = v }); return o }
-    // Se queda la de solo texto (las demás se rehacen igual al poner al día)
-    const kids = set.children.slice().sort((a, b) => (parse(a.name).contenido === "texto" ? 0 : 1) - (parse(b.name).contenido === "texto" ? 0 : 1))
-    const kept = {}
-    for (const c of kids) {
-      const cur = parse(c.name)
-      drop.forEach((k) => delete cur[k])
-      const name = props(cur)
-      if (kept[name]) {
-        for (const i of await c.getInstancesAsync()) { try { i.swapComponent(kept[name]) } catch (e) { /* */ } }
-        c.remove()
-      } else { kept[name] = c; c.name = name }
-    }
-    log("«" + set.name + "»: " + drop.join(", ") + " ya no es una variante (ahora son interruptores).")
+// Qué propiedades y valores tiene cada componente según el .json (set → propiedad → valores)
+function schemaOf(defs) {
+  const out = {}
+  for (const key of Object.keys(defs || {})) {
+    const i = key.indexOf("|"), set = key.slice(0, i), p = parseProps(key.slice(i + 1))
+    const o = (out[set] = out[set] || {})
+    for (const k of Object.keys(p)) (o[k] = o[k] || {})[p[k]] = true
   }
-  // Estados que una pieza no tiene (un botón no tiene error): sus variantes se quitan y sus instancias pasan a «normal»
-  for (const set of figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })) {
-    const gone = NO_STATE[set.name]
-    if (!gone) continue
-    for (const c of set.children.slice()) {
-      const cur = {}
-      c.name.split(", ").forEach((kv) => { const [k, v] = kv.split("="); if (k) cur[k] = v })
-      if (gone.indexOf(cur.estado) < 0) continue
-      cur.estado = "normal"
-      const to = set.children.find((x) => x.name === props(cur))
-      if (to) { for (const i of await c.getInstancesAsync()) { try { i.swapComponent(to) } catch (e) { /* */ } } c.remove() }
-    }
-  }
-  componentIndex = null
+  return out
 }
 
-// Interruptores del botón: «icono izquierda» e «icono derecha» (sí/no), qué icono va en cada lado y el texto.
-// Se crean en el conjunto (no en cada variante) y se enlazan con las capas de todas las variantes.
-async function bindToggles() {
+// Archivos de antes: las variantes se pasan al orden nuevo sin perder nada.
+// - «marcado», «activo» → estado normal + seleccionado=sí (seleccionar no es un estado, es otra propiedad)
+// - error, solo en lo que de verdad lo tiene (campos, casillas…); el resto pasa a normal
+// - «contenido» (con icono, solo icono…) ya no es variante: ahora los iconos se encienden con su interruptor
+// Las variantes que quedan repetidas se juntan en una (sus instancias pasan a la que se queda).
+const LEGACY_DROPPED = { button: ["contenido"] }
+const LEGACY_NO_STATE = { button: ["error"] }
+async function migrateSchema(schema) {
+  await figma.loadAllPagesAsync()
+  let changed = 0
   for (const set of figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })) {
+    const sc = schema[set.name]
+    if (!sc && !LEGACY_DROPPED[set.name]) continue
+    const kids = set.children.filter((c) => c.type === "COMPONENT")
+    const parsed = kids.map((c) => parseProps(c.name))
+    const mapped = parsed.map((p) => {
+      const cur = Object.assign({}, p)
+      if (sc && sc.seleccionado && /^(marcado|activo|seleccionado|on)$/.test(cur.estado || "")) { cur.estado = "normal"; cur.seleccionado = "sí" }
+      if (sc && sc.seleccionado && !cur.seleccionado) cur.seleccionado = "no"
+      if (cur.estado === "error" && ((sc && !(sc.estado && sc.estado.error)) || (!sc && LEGACY_NO_STATE[set.name]))) cur.estado = "normal"
+      return cur
+    })
+    const allDefault = {}
+    mapped.forEach((p) => Object.keys(p).forEach((k) => { if (allDefault[k] === undefined) allDefault[k] = true; if (p[k] !== defaultOf(k)) allDefault[k] = false }))
+    const plan = kids.map((c, i) => {
+      const cur = mapped[i]
+      for (const k of Object.keys(cur)) {
+        if (k === "contenido" && (sc ? !sc.contenido : true)) delete cur[k]
+        else if (sc && !sc[k] && (k === "variante" || k === "tamaño" || k === "estado") && allDefault[k]) delete cur[k]
+      }
+      const to = props(cur) || "default"
+      return { c: c, from: c.name, to: to, score: to === c.name ? 0 : parsed[i].contenido === "texto" ? 1 : !parsed[i].estado || parsed[i].estado === "normal" ? 2 : 3 }
+    })
+    if (plan.every((x) => x.from === x.to)) continue
+    plan.sort((a, b) => a.score - b.score)
+    const kept = {}
+    for (const x of plan) {
+      if (kept[x.to]) {
+        for (const inst of await x.c.getInstancesAsync()) { try { inst.swapComponent(kept[x.to]) } catch (e) { /* */ } }
+        x.c.remove()
+        changed++
+      } else {
+        kept[x.to] = x.c
+        if (x.c.name !== x.to) { x.c.name = x.to; changed++ }
+      }
+    }
+    log("«" + set.name + "»: variantes pasadas al orden nuevo (seleccionado aparte, sin estados que no tiene, iconos con interruptor).")
+  }
+  componentIndex = null
+  return changed
+}
+
+// Partes de un componente con nombre de función (las marca el plugin; las de antes, por su nombre)
+const LEGACY_ROLES = { texto: 1, "icono izquierda": 1, "icono derecha": 1 }
+function roleLayers(comp) {
+  const out = []
+  const walk = (x) => {
+    for (const k of x.children || []) {
+      let role = ""
+      try { role = k.getPluginData("role") } catch (e) { /* */ }
+      if (!role && LEGACY_ROLES[k.name]) role = k.name
+      if (role && (k.type === "TEXT" || (k.type === "INSTANCE" && role.indexOf("icono") === 0))) out.push({ role: role, layer: k })
+      else if (k.type !== "INSTANCE" && k.type !== "TEXT" && k.type !== "SLOT" && "children" in k) walk(k)
+    }
+  }
+  walk(comp)
+  return out
+}
+
+// Propiedades de cada componente, en el conjunto (no en cada variante) y enlazadas con las capas de todas sus variantes:
+// - cada texto: una propiedad de texto con su nombre (título, descripción, texto…)
+// - lo que no siempre va (una descripción, un icono): un interruptor «con descripción», «icono»…
+// - los iconos del botón: «icono izquierda» / «icono derecha» (sí/no) y cuál va en cada lado («… · cuál»)
+// - los componentes que lleva dentro se muestran en sus propiedades (para cambiarlos sin entrar)
+// - la descripción del componente (la de la web)
+async function bindProperties(drawer) {
+  await figma.loadAllPagesAsync()
+  const iconComps = figma.root.findAllWithCriteria({ types: ["COMPONENT"] }).filter((c) => c.name.indexOf("icon/") === 0)
+  for (const set of figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })) {
+    const info = drawer.sets[set.name] || {}
+    if (info.description) { try { set.description = info.description } catch (e) { /* */ } }
     const variants = set.children.filter((c) => c.type === "COMPONENT")
-    const layer = (c, name) => c.children.find((x) => x.name === name)
-    if (!variants.some((c) => layer(c, "icono izquierda"))) continue
+    const layers = variants.map((c) => ({ c: c, parts: roleLayers(c) }))
+    const roles = []
+    layers.forEach((v) => v.parts.forEach((p) => { if (!roles.some((r) => r.role === p.role)) roles.push({ role: p.role, type: p.layer.type, sample: p.layer }) }))
+    for (const v of variants) for (const x of firstInstances(v)) { try { x.isExposedInstance = true } catch (e) { /* */ } }
+    if (!roles.length) continue
     try {
       const keyOf = (name, type) => Object.keys(set.componentPropertyDefinitions).find((k) => k.split("#")[0] === name && set.componentPropertyDefinitions[k].type === type)
       const ensure = (name, type, def) => keyOf(name, type) || set.addComponentProperty(name, type, def)
-      let icon = null
-      for (const c of variants) for (const r of ["icono izquierda", "icono derecha"]) { const l = layer(c, r); if (!icon && l && l.type === "INSTANCE") icon = await l.getMainComponentAsync() }
+      const optional = info.optional || []
       const keys = {}
-      for (const side of ["icono izquierda", "icono derecha"]) {
-        keys[side] = ensure(side, "BOOLEAN", false)
-        if (icon) keys[side + " · cuál"] = ensure(side + " · cuál", "INSTANCE_SWAP", icon.id)
-      }
-      const firstText = variants.map((c) => layer(c, "texto")).find((t) => t && t.type === "TEXT")
-      const tk = firstText ? ensure("texto", "TEXT", firstText.characters) : null
-      for (const c of variants) {
-        for (const side of ["icono izquierda", "icono derecha"]) {
-          const l = layer(c, side)
-          if (!l) continue
-          const refs = { visible: keys[side] }
-          if (l.type === "INSTANCE" && keys[side + " · cuál"]) refs.mainComponent = keys[side + " · cuál"]
-          l.componentPropertyReferences = refs
-          // El icono va del color del texto (en la web es currentColor): al enlazar o cambiar el icono, Figma puede perderlo
-          const tt = layer(c, "texto")
-          if (tt && tt.type === "TEXT" && tt.fills !== figma.mixed && tt.fills.length) paintIcon(l, tt.fills[0])
-        }
-        const t = layer(c, "texto")
-        if (t && t.type === "TEXT" && tk) {
-          await figma.loadFontAsync(t.fontName === figma.mixed ? { family: "Inter", style: "Regular" } : t.fontName)
-          t.componentPropertyReferences = { characters: tk }
+      for (const r of roles) {
+        const k = (keys[r.role] = {})
+        if (r.type === "TEXT") {
+          k.text = ensure(r.role, "TEXT", r.sample.characters)
+          if (optional.indexOf(r.role) >= 0) k.show = ensure("con " + r.role, "BOOLEAN", true)
+        } else {
+          const toggle = r.role === "icono izquierda" || r.role === "icono derecha"
+          if (toggle || optional.indexOf(r.role) >= 0) k.show = ensure(r.role, "BOOLEAN", !toggle)
+          const main = await r.sample.getMainComponentAsync()
+          if (main) {
+            k.swap = ensure(r.role + " · cuál", "INSTANCE_SWAP", main.id)
+            if (iconComps.length) { try { set.editComponentProperty(k.swap, { preferredValues: iconComps.slice(0, 60).map((c) => ({ type: "COMPONENT", key: c.key })) }) } catch (e) { /* sin clave (archivo sin publicar) */ } }
+          }
         }
       }
-    } catch (e) { log("No he podido crear los interruptores de «" + set.name + "»: " + e.message, "warn") }
+      for (const v of layers) {
+        const firstText = v.parts.map((p) => p.layer).find((l) => l.type === "TEXT")
+        for (const p of v.parts) {
+          const k = keys[p.role], refs = {}
+          if (p.layer.type === "TEXT") {
+            await figma.loadFontAsync(p.layer.fontName === figma.mixed ? { family: "Inter", style: "Regular" } : p.layer.fontName)
+            refs.characters = k.text
+            if (k.show) refs.visible = k.show
+          } else {
+            if (k.show) refs.visible = k.show
+            if (k.swap) refs.mainComponent = k.swap
+            // El icono del botón va del color del texto (en la web es currentColor): al cambiar el icono, Figma puede perderlo
+            if ((p.role === "icono izquierda" || p.role === "icono derecha") && firstText && firstText.fills !== figma.mixed && firstText.fills.length) paintIcon(p.layer, firstText.fills[0])
+          }
+          p.layer.componentPropertyReferences = refs
+        }
+      }
+    } catch (e) { log("No he podido crear las propiedades de «" + set.name + "»: " + e.message, "warn") }
+  }
+}
+
+// Orden de las variantes en su conjunto, como una tabla: una fila por variante y tamaño, una columna por estado
+const ESTADOS = ["normal", "hover", "foco", "pulsado", "deshabilitado", "error", "visible"]
+function arrangeSets() {
+  for (const set of figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })) {
+    const kids = set.children.filter((c) => c.type === "COMPONENT")
+    if (kids.length < 2) continue
+    const all = kids.map((c) => ({ c: c, p: parseProps(c.name) }))
+    const keys = {}
+    all.forEach((x) => Object.keys(x.p).forEach((k) => { (keys[k] = keys[k] || {})[x.p[k]] = true }))
+    const order = (k, v) => {
+      if (k === "estado") { const i = ESTADOS.indexOf(v); return i < 0 ? 99 : i }
+      const vals = Object.keys(keys[k] || {}).sort((a, b) => (a === defaultOf(k) ? -1 : b === defaultOf(k) ? 1 : a < b ? -1 : 1))
+      return vals.indexOf(v)
+    }
+    const MAIN = ["variante", "tamaño", "seleccionado", "posición"]
+    const rowKeys = MAIN.concat(Object.keys(keys).filter((k) => MAIN.indexOf(k) < 0 && k !== "estado").sort())
+    const rowOf = (p) => rowKeys.filter((k) => k in p).map((k) => String(order(k, p[k])).padStart(3, "0")).join(".")
+    const rows = {}
+    all.forEach((x) => { const r = rowOf(x.p); (rows[r] = rows[r] || []).push(x) })
+    const rowIds = Object.keys(rows).sort()
+    const cols = keys.estado ? Object.keys(keys.estado).sort((a, b) => order("estado", a) - order("estado", b)) : null
+    const pad = 24, gap = 24
+    const colW = {}
+    all.forEach((x) => { const c = cols ? x.p.estado : "_"; colW[c] = Math.max(colW[c] || 0, x.c.width) })
+    const colX = {}
+    let cx = pad
+    for (const c of cols || ["_"]) { colX[c] = cx; cx += (colW[c] || 0) + gap }
+    try { set.layoutMode = "NONE" } catch (e) { /* */ }
+    let y = pad, maxX = cx
+    for (const r of rowIds) {
+      const list = rows[r]
+      let h = 0, x = pad
+      list.sort((a, b) => order("estado", a.p.estado) - order("estado", b.p.estado))
+      for (const it of list) {
+        if (cols) it.c.x = colX[it.p.estado]
+        else { it.c.x = x; x += it.c.width + gap; maxX = Math.max(maxX, x) }
+        it.c.y = y
+        h = Math.max(h, it.c.height)
+      }
+      y += h + gap
+    }
+    // El orden de las capas también (en el panel de capas y al elegir variante)
+    let i = 0
+    for (const r of rowIds) for (const it of rows[r]) { try { set.insertChild(i++, it.c) } catch (e) { /* */ } }
+    try { set.resize(Math.max(1, maxX - gap + pad), Math.max(1, y - gap + pad)) } catch (e) { /* */ }
   }
 }
 
@@ -775,12 +1074,13 @@ function combineSets(drawer) {
     const comps = groups[set]
     // Todas las variantes con las mismas propiedades (las que falten, «no» / «default»)
     const names = {}
-    for (const c of comps) c.name.split(", ").forEach((kv) => { names[kv.split("=")[0]] = true })
+    for (const c of comps) Object.keys(parseProps(c.name)).forEach((k) => { names[k] = true })
+    const existing0 = figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] }).find((s) => s.name === set)
+    if (existing0) existing0.children.forEach((c) => Object.keys(parseProps(c.name)).forEach((k) => { names[k] = true }))
     for (const c of comps) {
-      const cur = {}
-      c.name.split(", ").forEach((kv) => { const [k, v] = kv.split("="); if (k) cur[k] = v })
-      for (const k of Object.keys(names)) if (!cur[k]) cur[k] = k === "estado" ? "normal" : k === "posición" ? "sola" : "default"
-      c.name = props(cur)
+      const cur = parseProps(c.name)
+      for (const k of Object.keys(names)) if (!cur[k]) cur[k] = defaultOf(k)
+      c.name = props(cur) || "default"
     }
     const existingSet = figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] }).find((s) => s.name === set)
     if (existingSet) {
@@ -791,6 +1091,7 @@ function combineSets(drawer) {
     cs.name = set
     cs.layoutMode = "HORIZONTAL"; cs.layoutWrap = "WRAP"; cs.itemSpacing = 24; cs.counterAxisSpacing = 24
     cs.paddingTop = cs.paddingRight = cs.paddingBottom = cs.paddingLeft = 24
+    for (const f of ["itemSpacing", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft"]) bindIf(cs, f, drawer.vars, drawer.spaceFor(f, 24))
     cs.primaryAxisSizingMode = "AUTO"; cs.counterAxisSizingMode = "AUTO"
     cs.x = 0; cs.y = y
     y += cs.height + 80
@@ -800,13 +1101,12 @@ function combineSets(drawer) {
   // también los que ya estaban completos en el archivo y solo se han puesto al día.
   for (const set of figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })) {
     const all = {}
-    set.children.forEach((c) => c.name.split(", ").forEach((kv) => { const k = kv.split("=")[0]; if (k) all[k] = true }))
+    set.children.forEach((c) => Object.keys(parseProps(c.name)).forEach((k) => { all[k] = true }))
     set.children.forEach((c) => {
-      const cur = {}
-      c.name.split(", ").forEach((kv) => { const [k, v] = kv.split("="); if (k) cur[k] = v })
-      let changed = false
-      for (const k of Object.keys(all)) if (!cur[k]) { cur[k] = k === "estado" ? "normal" : k === "posición" ? "sola" : "default"; changed = true }
-      if (changed) c.name = props(cur)
+      const cur = parseProps(c.name)
+      for (const k of Object.keys(all)) if (!cur[k]) cur[k] = defaultOf(k)
+      const name = props(cur) || "default"
+      if (c.name !== name) c.name = name
     })
   }
 }
@@ -843,7 +1143,7 @@ async function pageNamed(name, reuse) {
 async function draw(data, options) {
   if (!data || data.format !== "dsc-figma@1") throw new Error("Este archivo no es de la web Design System Creator (Llevar a Figma).")
   componentIndex = null
-  await migrateDropped()
+  await migrateSchema(schemaOf(options.defs))
   const update = !!options.update
   log((update ? "Actualizando con " : "Sistema ") + data.system.name + " · " + data.prototype.label + " (" + data.mode + ")")
   const vars = await upsertVariables(data.collections, update || !!options.overwrite)
@@ -869,6 +1169,9 @@ async function draw(data, options) {
   const flowPage = await pageNamed(pageName, update)
   const drawer = new Drawer(vars, effects, compPage, update)
   if (options.done) drawer.done = options.done
+  drawer.defs = options.defs || {}
+  drawer.values = valueTable(data.collections)
+  drawer.sets = options.sets || {}
   drawer.compY = compPage.children.reduce((m, n) => Math.max(m, n.y + n.height + 120), 0)
 
   await figma.setCurrentPageAsync(flowPage)
@@ -915,8 +1218,9 @@ async function draw(data, options) {
   }
   combineSets(drawer)
   preferInSlots(drawer)
-  await bindToggles()
-  for (const t of drawer.toggled) await drawer.setToggles(t.inst, t.n)
+  await bindProperties(drawer)
+  arrangeSets()
+  for (const t of drawer.toggled) await drawer.setProps(t.inst, t.n)
 
   // Prototipo: cada botón lleva a su pantalla
   for (const l of drawer.links) {
@@ -933,6 +1237,292 @@ async function draw(data, options) {
   if (update) log("Actualizado: " + drawer.refreshed + " variantes de componentes puestas al día, " + replaced + " pantallas sustituidas y " + (data.screens.length - replaced) + " nuevas. Lo que no venía en el archivo sigue igual.", "ok")
   else log("Listo: " + data.screens.length + " pantallas, " + Object.keys(drawer.components).length + " variantes de componentes y " + Object.keys(drawer.icons).length + " iconos. Pulsa ▶ (Presentar) para probar el flujo.", "ok")
   figma.notify(update ? "Archivo actualizado con " + data.system.name : "Flujo dibujado con " + data.system.name)
+  return drawer
+}
+
+// ---------- portada, fundamentos, documentación de componentes, orden de páginas y revisión ----------
+// Valor (ya resuelto, sin alias) de cada variable del .json, en el primer modo
+function valueTable(collections) {
+  const raw = {}
+  for (const c of collections || []) if (c.name.indexOf(" · ") < 0) for (const v of c.variables) raw[v.name] = v.values[c.modes[0]]
+  const res = (name, depth) => {
+    const v = raw[name]
+    if (v && typeof v === "object" && v.alias) return (depth || 0) > 8 ? undefined : res(v.alias, (depth || 0) + 1)
+    return v
+  }
+  res.names = Object.keys(raw)
+  return res
+}
+
+class Sheet {
+  constructor(drawer, values) {
+    this.vars = drawer.vars; this.styles = drawer.styleList || []; this.effects = drawer.effects; this.values = values
+  }
+  style(names) { for (const n of names) { const s = this.styles.find((x) => x.name === n); if (s) return s } return null }
+  async text(chars, styleNames, colorVar, size) {
+    const t = figma.createText()
+    const st = this.style(styleNames)
+    const font = st ? st.fontName : await fontFor("Inter", 400)
+    await figma.loadFontAsync(font)
+    t.fontName = font
+    t.characters = chars
+    if (st) { try { await t.setTextStyleIdAsync(st.id) } catch (e) { t.fontSize = size || 14 } } else t.fontSize = size || 14
+    t.fills = [solid("#000000", this.vars[colorVar] || this.vars["color/text/default"])]
+    t.name = chars.length > 30 ? "texto" : chars
+    return t
+  }
+  // Separación enlazada a la variable semántica que vale eso (así nada queda con un número suelto)
+  space(node, field, value) {
+    node[field] = value
+    const name = this.values.names.find((n) => (n.indexOf("space/gap/") === 0 || n.indexOf("space/inset/") === 0) && Number(this.values(n)) === value)
+    if (name) bindIf(node, field, this.vars, name)
+  }
+  frame(name, dir, gap, pad, fill) {
+    const f = figma.createFrame()
+    f.name = name
+    f.layoutMode = dir
+    f.primaryAxisSizingMode = "AUTO"; f.counterAxisSizingMode = "AUTO"
+    this.space(f, "itemSpacing", gap)
+    for (const side of ["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"]) this.space(f, side, pad)
+    f.fills = fill && this.vars[fill] ? [solid("#ffffff", this.vars[fill])] : []
+    return f
+  }
+  radius(node, name) {
+    const v = Number(this.values(name))
+    if (!(v >= 0)) return
+    for (const f of ["topLeftRadius", "topRightRadius", "bottomRightRadius", "bottomLeftRadius"]) { node[f] = Math.min(v, 999); bindIf(node, f, this.vars, name) }
+  }
+  card(name, width) {
+    const f = this.frame(name, "VERTICAL", 12, 24, "color/surface/card")
+    f.strokes = this.vars["color/border/default"] ? [solid("#e5e5e5", this.vars["color/border/default"])] : []
+    f.strokeWeight = 1
+    this.radius(f, "radius/card")
+    if (width) { f.counterAxisSizingMode = "FIXED"; f.resize(width, 100); f.primaryAxisSizingMode = "AUTO" }
+    return f
+  }
+  add(parent, child, fill) {
+    parent.appendChild(child)
+    if (fill) { try { child.layoutSizingHorizontal = "FILL" } catch (e) { /* */ } if (child.type === "TEXT") child.textAutoResize = "HEIGHT" }
+    return child
+  }
+}
+
+async function clearPage(name) {
+  const page = await pageNamed(name, true)
+  for (const c of page.children.slice()) c.remove()
+  return page
+}
+
+async function makeCover(sys, sheet) {
+  const page = await clearPage("Portada · " + sys)
+  const f = sheet.frame("Portada", "VERTICAL", 16, 96, "color/bg/action/primary/default")
+  page.appendChild(f)
+  f.primaryAxisSizingMode = "FIXED"; f.counterAxisSizingMode = "FIXED"; f.resize(1600, 960)
+  f.primaryAxisAlignItems = "MAX"
+  const on = "color/text/on-action/primary"
+  sheet.add(f, await sheet.text("Sistema de diseño", ["texto/lead/normal", "texto/body/normal"], on, 20))
+  sheet.add(f, await sheet.text(sys, ["texto/display/heavy", "texto/h1/heavy", "texto/h1/strong"], on, 64))
+  const d = new Date()
+  sheet.add(f, await sheet.text("Actualizado el " + d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear() + " · hecho con Design System Creator", ["texto/ui/normal", "texto/body/normal"], on, 14))
+  try { await figma.setFileThumbnailNodeAsync(f) } catch (e) { /* solo si el archivo lo permite */ }
+}
+
+// Muestras de todo lo que se usa: colores, textos, espacios, radios y sombras (enlazados a sus variables)
+async function makeFoundations(sys, data, sheet) {
+  const page = await clearPage("Fundamentos · " + sys)
+  const root = sheet.frame("Fundamentos", "VERTICAL", 48, 64, "color/bg/default")
+  page.appendChild(root)
+  root.counterAxisSizingMode = "FIXED"; root.resize(1600, 100); root.primaryAxisSizingMode = "AUTO"
+  const section = async (title, hint) => {
+    const s = sheet.add(root, sheet.frame(title, "VERTICAL", 16, 0), true)
+    sheet.add(s, await sheet.text(title, ["texto/h2/strong", "texto/h2/heavy", "texto/title/strong"], "color/text/default", 30))
+    if (hint) sheet.add(s, await sheet.text(hint, ["texto/body/normal", "texto/ui/normal"], "color/text/muted", 14), true)
+    return s
+  }
+  const wrapRow = (s, name) => { const r = sheet.add(s, sheet.frame(name, "HORIZONTAL", 16, 0), true); r.layoutWrap = "WRAP"; r.counterAxisSpacing = 16; return r }
+  const colorVars = (data.collections.find((c) => c.name === "Color") || { variables: [] }).variables
+  const groups = [["bg", "Fondos"], ["surface", "Superficies"], ["text", "Textos e iconos"], ["border", "Bordes"], ["chart", "Gráficos"]]
+  const sc = await section("Colores", "Cada color dice dónde se usa: fondo (bg), texto, borde… En Figma solo salen donde tocan.")
+  for (const [g, label] of groups) {
+    const list = colorVars.filter((v) => v.name.indexOf("color/" + g + "/") === 0)
+    if (!list.length) continue
+    sheet.add(sc, await sheet.text(label, ["texto/ui/emphasis", "texto/body/emphasis"], "color/text/default", 14))
+    const row = wrapRow(sc, label)
+    for (const v of list) {
+      const sw = sheet.frame(v.name, "VERTICAL", 8, 0)
+      row.appendChild(sw)
+      sw.counterAxisSizingMode = "FIXED"; sw.resize(176, 100); sw.primaryAxisSizingMode = "AUTO"
+      const chip = sheet.add(sw, figma.createFrame(), true)
+      chip.name = "muestra"; chip.resize(176, 64)
+      try { chip.layoutSizingVertical = "FIXED" } catch (e) { /* */ }
+      chip.fills = [solid(String(sheet.values(v.name) || "#cccccc"), sheet.vars[v.name])]
+      chip.strokes = sheet.vars["color/border/default"] ? [solid("#e5e5e5", sheet.vars["color/border/default"])] : []
+      chip.strokeWeight = 1
+      sheet.radius(chip, "radius/control")
+      sheet.add(sw, await sheet.text(v.name.replace(/^color\//, ""), ["texto/caption/emphasis", "texto/caption/normal"], "color/text/default", 12), true)
+      sheet.add(sw, await sheet.text(codeName(v.name), ["texto/caption/normal/code", "texto/caption/normal"], "color/text/muted", 11), true)
+    }
+  }
+  const st = await section("Textos", "Estilos de texto: tamaño y peso enlazados a sus variables.")
+  const styles = (sheet.styles || []).slice().sort((a, b) => b.fontSize - a.fontSize)
+  for (const s of styles) {
+    const t = await sheet.text(s.name.replace(/^texto\//, "") + " · " + Math.round(s.fontSize) + " px — El rápido zorro marrón", [s.name], "color/text/default", s.fontSize)
+    sheet.add(st, t, true)
+  }
+  const nums = (prefix) => sheet.values.names.filter((n) => n.indexOf(prefix) === 0 && typeof sheet.values(n) === "number")
+  const ss = await section("Espacios", "Márgenes (inset), separaciones (gap) y secciones.")
+  for (const n of nums("space/")) {
+    const r = sheet.add(ss, sheet.frame(n, "HORIZONTAL", 16, 0), true)
+    r.counterAxisAlignItems = "CENTER"
+    const label = sheet.add(r, await sheet.text(n.replace(/^space\//, "") + " · " + sheet.values(n) + " px", ["texto/ui/normal", "texto/body/normal"], "color/text/default", 14))
+    label.textAutoResize = "HEIGHT"; label.resize(220, label.height)
+    const bar = sheet.add(r, figma.createFrame())
+    bar.name = "medida"; bar.resize(Math.max(1, Number(sheet.values(n))), 16)
+    bar.fills = [solid("#3b82f6", sheet.vars["color/bg/action/primary/default"])]
+    bindIf(bar, "width", sheet.vars, n)
+  }
+  const rs = await section("Radios", "Esquinas: controles, tarjetas, ventanas, píldoras…")
+  const rrow = wrapRow(rs, "radios")
+  for (const n of nums("radius/")) {
+    const b = sheet.frame(n, "VERTICAL", 8, 16, "color/bg/muted")
+    rrow.appendChild(b)
+    b.primaryAxisSizingMode = "FIXED"; b.counterAxisSizingMode = "FIXED"; b.resize(140, 140)
+    b.strokes = sheet.vars["color/border/strong"] ? [solid("#cccccc", sheet.vars["color/border/strong"])] : []
+    b.strokeWeight = 1
+    sheet.radius(b, n)
+    sheet.add(b, await sheet.text(n.replace(/^radius\//, "") + " · " + sheet.values(n), ["texto/caption/normal", "texto/ui/normal"], "color/text/default", 12))
+  }
+  const effects = Object.keys(sheet.effects || {})
+  if (effects.length) {
+    const es = await section("Sombras", "Estilos de sombra (elevación).")
+    const erow = wrapRow(es, "sombras")
+    for (const name of effects) {
+      const b = sheet.frame(name, "VERTICAL", 8, 16, "color/surface/card")
+      erow.appendChild(b)
+      b.primaryAxisSizingMode = "FIXED"; b.counterAxisSizingMode = "FIXED"; b.resize(180, 120)
+      sheet.radius(b, "radius/card")
+      try { await b.setEffectStyleIdAsync(sheet.effects[name].id) } catch (e) { /* */ }
+      sheet.add(b, await sheet.text(name, ["texto/caption/normal", "texto/ui/normal"], "color/text/default", 12))
+    }
+  }
+}
+
+const PROP_TYPES = { VARIANT: "variante", TEXT: "texto", BOOLEAN: "sí / no", INSTANCE_SWAP: "icono a elegir", SLOT: "hueco para piezas" }
+// En la página de componentes: los iconos arriba y cada componente con su ficha al lado (qué es y sus propiedades)
+async function documentComponents(page, drawer, sheet) {
+  for (const n of page.children.slice()) { let d = ""; try { d = n.getPluginData("doc") } catch (e) { /* */ } if (d === "1") n.remove() }
+  const icons = page.children.filter((c) => c.type === "COMPONENT" && c.name.indexOf("icon/") === 0).sort((a, b) => (a.name < b.name ? -1 : 1))
+  let x = 0, y = 0, rowH = 0
+  for (const c of icons) {
+    if (x > 1600) { x = 0; y += rowH + 32; rowH = 0 }
+    c.x = x; c.y = y; x += c.width + 32; rowH = Math.max(rowH, c.height)
+  }
+  y += rowH + 160
+  const list = page.children.filter((c) => c.type === "COMPONENT_SET" || (c.type === "COMPONENT" && c.name.indexOf("icon/") !== 0)).sort((a, b) => (a.name < b.name ? -1 : 1))
+  for (const s of list) {
+    const doc = sheet.card("Ficha · " + s.name, 400)
+    page.appendChild(doc)
+    try { doc.setPluginData("doc", "1") } catch (e) { /* */ }
+    sheet.add(doc, await sheet.text(s.name, ["texto/h3/strong", "texto/title/strong", "texto/h2/strong"], "color/text/default", 22), true)
+    const info = drawer.sets[s.name] || {}
+    const desc = s.description || info.description
+    if (desc) sheet.add(doc, await sheet.text(desc, ["texto/body/normal", "texto/ui/normal"], "color/text/muted", 14), true)
+    const defs = s.type === "COMPONENT_SET" ? s.componentPropertyDefinitions : {}
+    const keys = Object.keys(defs || {})
+    if (s.type === "COMPONENT_SET") sheet.add(doc, await sheet.text(s.children.length + " variantes", ["texto/caption/normal", "texto/ui/normal"], "color/text/subtle", 12), true)
+    if (keys.length) {
+      sheet.add(doc, await sheet.text("Propiedades", ["texto/ui/strong", "texto/ui/emphasis"], "color/text/default", 14), true)
+      for (const k of keys) {
+        const d = defs[k]
+        const values = d.type === "VARIANT" ? (d.variantOptions || []).join(", ") : d.type === "TEXT" ? "«" + String(d.defaultValue || "").slice(0, 40) + "»" : ""
+        sheet.add(doc, await sheet.text(k.split("#")[0] + " — " + (PROP_TYPES[d.type] || d.type) + (values ? ": " + values : ""), ["texto/ui/normal", "texto/body/normal"], "color/text/default", 13), true)
+      }
+    }
+    doc.x = 0; doc.y = y
+    s.x = 480; s.y = y
+    y += Math.max(doc.height, s.height) + 160
+  }
+}
+
+// Orden de las páginas: portada y fundamentos, componentes, catálogo y, al final, los flujos (con separadores)
+async function orderPages(sys) {
+  await figma.loadAllPagesAsync()
+  const pages = () => figma.root.children.slice()
+  const find = (name) => pages().find((p) => p.name === name)
+  // La página vacía que trae todo archivo nuevo sobra
+  for (const p of pages()) if ((p.name === "Page 1" || p.name === "Página 1") && !p.children.length && figma.root.children.length > 1) { try { if (figma.currentPage === p) await figma.setCurrentPageAsync(figma.root.children.find((x) => x !== p)); p.remove() } catch (e) { /* */ } }
+  const seps = pages().filter((p) => /^-{3,}$/.test(p.name))
+  while (seps.length < 3) { const p = figma.createPage(); p.name = "---"; seps.push(p) }
+  const head = [find("Portada · " + sys), find("Fundamentos · " + sys), seps[0], find("Componentes · " + sys), seps[1]].filter(Boolean)
+  const catalog = pages().filter((p) => p.name.indexOf("Catálogo · ") === 0 && p.name.slice(-(" · " + sys).length) === " · " + sys)
+  const flows = pages().filter((p) => head.indexOf(p) < 0 && catalog.indexOf(p) < 0 && seps.indexOf(p) < 0 && p.name.indexOf(" · " + sys) > 0 && p.name.indexOf("Catálogo") !== 0)
+  const order = head.concat(catalog, [seps[2]], flows)
+  for (let i = 0; i < order.length; i++) { try { figma.root.insertChild(i, order[i]) } catch (e) { /* */ } }
+}
+
+// Revisión automática al terminar: lo que no cumple las reglas, para arreglarlo (o avisar a Claude)
+async function auditFile(sys) {
+  await figma.loadAllPagesAsync()
+  const pages = figma.root.children.filter((p) => p.name.indexOf(" · " + sys) > 0 && p.name.indexOf("Portada") !== 0 && p.name.indexOf("Fundamentos") !== 0 && p.name.indexOf("(antiguo)") < 0)
+  const c = { color: 0, space: 0, names: 0, hugFill: 0, free: 0, small: 0 }
+  const ex = { color: [], space: [], names: [], hugFill: [], free: [], small: [] }
+  const where = (n) => { const out = []; for (let x = n; x && x.type !== "PAGE"; x = x.parent) out.unshift(x.name); return out.slice(-3).join(" › ") }
+  const hit = (k, n) => { c[k]++; if (ex[k].length < 3 && ex[k].indexOf(where(n)) < 0) ex[k].push(where(n)) }
+  const DEFAULT = /^(Frame|Group|Rectangle|Ellipse|FRAME|GROUP|div|span|grupo|columna|fila)( \d+)?$/
+  const TOUCH = { button: 1, "icon-button": 1, "fab-button": 1, "back-button": 1, "app-tab-bar-item": 1, "toggle-group-item": 1, toggle: 1, "tab-trigger": 1, "tabs-trigger": 1, "pagination-link": 1 }
+  const walk = (n, mobile, inIcon) => {
+    const icon = inIcon || (n.type === "COMPONENT" && n.name.indexOf("icon/") === 0)
+    if (!icon && n.type !== "INSTANCE" && n.type !== "VECTOR") {
+      for (const k of ["fills", "strokes"]) {
+        const ps = n[k]
+        if (Array.isArray(ps)) for (const p of ps) if (p.type === "SOLID" && p.visible !== false && !(p.boundVariables && p.boundVariables.color)) hit("color", n)
+      }
+      if ("layoutMode" in n && n.layoutMode !== "NONE") {
+        const bv = n.boundVariables || {}
+        for (const f of ["itemSpacing", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft"]) if (n[f] > 0 && !bv[f]) { hit("space", n); break }
+        for (const k of n.children || []) {
+          const hor = n.layoutMode === "HORIZONTAL"
+          if ((n.primaryAxisSizingMode === "AUTO" && (hor ? k.layoutSizingHorizontal : k.layoutSizingVertical) === "FILL") ||
+              (n.counterAxisSizingMode === "AUTO" && (hor ? k.layoutSizingVertical : k.layoutSizingHorizontal) === "FILL")) hit("hugFill", k)
+        }
+      }
+      if (n.type === "FRAME" && n.parent && n.parent.type !== "PAGE" && n.layoutMode === "NONE" && (n.children || []).filter((k) => k.type !== "VECTOR").length > 1) hit("free", n)
+      if ((n.type === "FRAME" || n.type === "TEXT") && DEFAULT.test(n.name)) hit("names", n)
+    }
+    if (n.type === "INSTANCE") {
+      if (mobile && TOUCH[n.name] && (n.width < 44 || n.height < 44)) hit("small", n)
+      return
+    }
+    for (const k of n.children || []) walk(k, mobile, icon)
+  }
+  for (const p of pages) for (const k of p.children) walk(k, p.name.indexOf("Móvil") > 0, false)
+  const sets = figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })
+  const big = sets.filter((s) => s.children.length > 30 && s.name !== "button").map((s) => s.name + " (" + s.children.length + ")")
+  const noDesc = sets.filter((s) => !s.description).map((s) => s.name)
+  const vars = await figma.variables.getLocalVariablesAsync()
+  const noScope = vars.filter((v) => v.scopes && v.scopes.length === 1 && v.scopes[0] === "ALL_SCOPES").length
+  const lines = []
+  const say = (ok, good, bad, k) => lines.push(ok ? "✓ " + good : "⚠ " + bad + (k && ex[k].length ? " (p. ej. " + ex[k].join("; ") + ")" : ""))
+  say(!c.color, "todos los colores enlazados a variables", c.color + " colores sin variable", "color")
+  say(!c.space, "todos los márgenes y separaciones enlazados", c.space + " cajas con márgenes o separaciones sin variable", "space")
+  say(!c.names, "ninguna capa con nombre por defecto", c.names + " capas con nombre por defecto (Frame, div…)", "names")
+  say(!c.hugFill, "ninguna caja Hug con un hijo Fill", c.hugFill + " cajas que abrazan con un hijo que rellena", "hugFill")
+  say(!c.free, "nada en posición libre (todo auto layout)", c.free + " cajas sin auto layout con varias capas", "free")
+  say(!big.length, "ningún componente con más de 30 variantes (salvo el botón)", "componentes con muchas variantes: " + big.slice(0, 6).join(", "))
+  say(!noDesc.length, "todos los componentes con descripción", noDesc.length + " componentes sin descripción: " + noDesc.slice(0, 6).join(", "))
+  say(!noScope, "todas las variables con su uso (scope) y su nombre de código", noScope + " variables sin uso definido")
+  say(!c.small, "zonas táctiles de 44 px o más en móvil", c.small + " botones o pestañas de menos de 44 px en móvil (en la web el área táctil puede ser mayor)", "small")
+  log("Revisión del archivo:\n" + lines.join("\n"), lines.some((l) => l[0] === "⚠") ? "warn" : "ok")
+}
+
+async function finishFile(data, drawer) {
+  if (!drawer) return
+  const sys = data.system.name
+  const sheet = new Sheet(drawer, valueTable(data.collections))
+  const steps = [["portada", () => makeCover(sys, sheet)], ["fundamentos", () => makeFoundations(sys, data, sheet)], ["fichas de componentes", () => documentComponents(drawer.page, drawer, sheet)], ["orden de páginas", () => orderPages(sys)], ["revisión", () => auditFile(sys)]]
+  for (const [label, fn] of steps) {
+    try { await fn() } catch (e) { log("No he podido hacer " + label + ": " + (e && e.message ? e.message : e), "warn"); console.error(e) }
+  }
 }
 
 // ---------- exportar cambios (vuelta) ----------
@@ -977,6 +1567,7 @@ async function nodeOut(n) {
   if ("layoutSizingHorizontal" in n) o.sizing = { h: n.layoutSizingHorizontal, v: n.layoutSizingVertical }
   if (n.type === "TEXT") {
     o.text = { chars: n.characters, fontSize: n.fontSize, fontName: n.fontName, align: n.textAlignHorizontal }
+    if (typeof n.textStyleId === "string" && n.textStyleId) { const st = await figma.getStyleByIdAsync(n.textStyleId); if (st) o.text.style = st.name }
   }
   if (n.reactions && n.reactions.length) {
     const r = n.reactions[0]
@@ -990,7 +1581,19 @@ async function nodeOut(n) {
     }
     // Dentro de una instancia solo importan los textos e iconos que cambian
     o.texts = n.findAll((x) => x.type === "TEXT").map((t) => t.characters)
-    o.icons = n.findAll((x) => x.type === "INSTANCE" && x.name.indexOf("icon/") === 0).map((x) => x.name)
+    o.icons = []
+    for (const x of n.findAll((y) => isIconLayer(y) && y.visible !== false)) { const m = await x.getMainComponentAsync(); o.icons.push(m ? m.name : x.name) }
+    // Sus propiedades (textos, iconos encendidos, partes opcionales) tal como están en esta pantalla
+    try {
+      const cp = n.componentProperties, pr = {}
+      for (const k of Object.keys(cp)) {
+        if (cp[k].type === "VARIANT" || cp[k].type === "SLOT" || cp[k].value === undefined) continue
+        let v = cp[k].value
+        if (cp[k].type === "INSTANCE_SWAP") { const c = await figma.getNodeByIdAsync(String(v)); v = c ? c.name : v }
+        pr[k.split("#")[0]] = v
+      }
+      if (Object.keys(pr).length) o.props = pr
+    } catch (e) { /* */ }
     return o
   }
   if ("children" in n) o.children = await Promise.all(n.children.map(nodeOut))
