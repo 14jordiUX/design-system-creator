@@ -56,9 +56,39 @@ function solid(hex, variable) {
 const props = (o) => Object.keys(o).sort().map((k) => k + "=" + o[k]).join(", ")
 
 // ---------- variables ----------
+// Nombres antiguos de colores (antes de que el nombre dijera dónde se aplican: bg / text / border).
+// Al actualizar, la variable antigua se renombra a la nueva: así lo que ya la usaba sigue enlazado y no quedan duplicadas.
+const FEEDBACK_RENAME = { solid: "bg/feedback/X/default", hover: "bg/feedback/X/hover", subtle: "bg/feedback/X/subtle", "on-solid": "text/on-feedback/X", text: "text/feedback/X", border: "border/feedback/X/subtle" }
+function newColorName(name) {
+  let m = name.match(/^color\/action\/([\w-]+)\/([\w-]+)$/)
+  if (m) {
+    if (m[2] === "on") return "color/text/on-action/" + m[1]
+    if (m[1] === "disabled" && m[2] === "default") return "color/bg/action/disabled"
+    return "color/bg/action/" + m[1] + "/" + m[2]
+  }
+  m = name.match(/^color\/feedback\/([\w-]+)\/([\w-]+)$/)
+  if (m && FEEDBACK_RENAME[m[2]]) return "color/" + FEEDBACK_RENAME[m[2]].replace("X", m[1])
+  return null
+}
+
+function renameOldColors(existingVars, wanted) {
+  let n = 0
+  for (const v of existingVars) {
+    const to = newColorName(v.name)
+    // Solo si el .json ya trae el nombre nuevo (y no el antiguo)
+    if (!to || !wanted[to] || wanted[v.name]) continue
+    if (existingVars.some((x) => x.variableCollectionId === v.variableCollectionId && x.name === to)) continue
+    try { v.name = to; n++ } catch (e) { /* */ }
+  }
+  if (n) log(n + " variables de color con el nombre antiguo se han renombrado al nuevo (bg / text / border); lo que las usaba sigue enlazado.")
+}
+
 async function upsertVariables(collections, overwrite) {
   const existingCols = await figma.variables.getLocalVariableCollectionsAsync()
   const existingVars = await figma.variables.getLocalVariablesAsync()
+  const wanted = {}
+  for (const c of collections) for (const v of c.variables) wanted[v.name] = true
+  renameOldColors(existingVars, wanted)
   const byName = {}             // nombre → variable (las de este archivo, de cualquier colección)
   const plan = []
   let created = 0, updated = 0
