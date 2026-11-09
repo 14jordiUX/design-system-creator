@@ -21,7 +21,7 @@ import { getSystem, systems } from "@/lib/systems"
 import { useSystemTheme } from "@/lib/theme"
 import { prototypesFor, prototypeUrl, type Prototype } from "@/lib/prototypes"
 import { cn } from "@/lib/utils"
-import { buildFigmaExport } from "@/lib/figma-export"
+import { buildFigmaBundle, buildFigmaExport } from "@/lib/figma-export"
 import type { TokenFiles } from "@/lib/tokens"
 import pluginManifest from "../../../../figma-plugin/manifest.json?raw"
 import pluginCode from "../../../../figma-plugin/code.js?raw"
@@ -30,7 +30,7 @@ import { useDS } from "./context"
 import { CodeBlock } from "./Components"
 
 export default function Prototypes() {
-  const { ds } = useDS()
+  const { ds, mode, tokens } = useDS()
   const list = prototypesFor(ds.meta.id)
   return (
     <div>
@@ -49,6 +49,7 @@ export default function Prototypes() {
       ) : (
         <EmptyState icon={<Workflow className="size-icon-lg" />} title="No hay prototipos todavía" />
       )}
+      {list.length > 0 && <AllToFigma list={list} tokens={tokens} system={{ id: ds.meta.id, name: ds.meta.name }} mode={mode} />}
       <Alert className="mt-gap-2xl">
         <Lightbulb />
         <AlertTitle>¿Quieres otro flujo?</AlertTitle>
@@ -343,6 +344,67 @@ function ToFigma({ p, tokens, system, mode, view }: { p: Prototype; tokens: Toke
               <p.Component screen={s.id} go={() => {}} />
             </div>
           ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
+/** Todo el sistema para Figma en un solo archivo: tokens, todos los flujos y los componentes que usan. */
+function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens: TokenFiles; system: { id: string; name: string }; mode: "light" | "dark" }) {
+  const [busy, setBusy] = useState(false)
+  const [view, setView] = useState("mobile")
+  const refs = useRef<Record<string, HTMLDivElement | null>>({})
+  useEffect(() => {
+    if (!busy) return
+    let cancel = false
+    ;(async () => {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      if (cancel) return
+      try {
+        const data = buildFigmaBundle({
+          tokens, mode, system, view: view === "mobile" ? "mobile" : "desktop",
+          flows: list.map((p) => ({
+            prototype: { slug: p.slug, label: p.meta.label, description: p.meta.description, links: p.meta.links },
+            screens: p.meta.screens.map((s) => ({ id: s.id, label: s.label, el: refs.current[p.slug + "|" + s.id]! })).filter((s) => s.el),
+          })),
+        })
+        download(`figma-${system.id}-todo.json`, new Blob([JSON.stringify(data)], { type: "application/json" }))
+        toast.success("Archivo para Figma descargado", { description: `${list.length} flujos con ${system.name}. Ábrelo con el plugin «Design System Creator».` })
+      } catch (e: any) {
+        toast.error("No se ha podido preparar el archivo", { description: String(e.message || e) })
+      }
+      setBusy(false)
+    })()
+    return () => { cancel = true }
+  }, [busy, tokens, mode, system, view, list])
+
+  return (
+    <section className="mt-gap-2xl flex flex-col gap-gap-md rounded-card border-thin p-inset-lg">
+      <h3 className="flex items-center gap-gap-sm text-body font-strong"><PenTool className="size-icon-md text-primary" />Todo {system.name} para Figma</h3>
+      <p className="max-w-prose text-ui text-muted-foreground">
+        Un solo archivo con los tokens (como variables), los {list.length} flujos y todos los componentes que usan. En el plugin, «Dibujar en Figma»
+        lo dibuja todo (una página por flujo) y «Actualizar este archivo» lo pone al día. Cada flujo se puede descargar también por separado, en su pestaña Compartir.
+      </p>
+      <div className="flex flex-wrap items-center gap-gap-sm">
+        <ToggleGroup type="single" variant="outline" size="sm" value={view} onValueChange={(v) => v && setView(v)}>
+          <ToggleGroupItem value="mobile" aria-label="Móvil"><Smartphone />Móvil</ToggleGroupItem>
+          <ToggleGroupItem value="desktop" aria-label="Escritorio"><Monitor />Escritorio</ToggleGroupItem>
+        </ToggleGroup>
+        <span className="text-caption text-muted-foreground">Modo {mode === "dark" ? "oscuro" : "claro"} (el que tienes elegido arriba)</span>
+      </div>
+      <div className="flex flex-wrap gap-gap-sm">
+        <Button onClick={() => setBusy(true)} disabled={busy}>{busy ? <Loader2 className="animate-spin" /> : <Download />}Descargar todo para Figma</Button>
+        <Button variant="outline" onClick={downloadPlugin}><Puzzle />Descargar el plugin</Button>
+      </div>
+      {busy && (
+        <div inert aria-hidden className="pointer-events-none fixed top-0 left-full flex gap-gap-2xl">
+          {list.flatMap((p) => p.meta.screens.map((s) => (
+            <div key={p.slug + s.id} ref={(el) => { refs.current[p.slug + "|" + s.id] = el }} className={cn("h-desktop shrink-0 overflow-hidden", view === "mobile" ? "w-sheet" : "w-content")}>
+              <p.Component screen={s.id} go={() => {}} />
+            </div>
+          )))}
         </div>
       )}
     </section>

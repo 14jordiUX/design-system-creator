@@ -16,7 +16,16 @@ const log = (text, kind) => figma.ui.postMessage({ type: "log", text, kind: kind
 
 figma.ui.onmessage = async (msg) => {
   try {
-    if (msg.type === "draw") await draw(msg.data, msg.options || {})
+    if (msg.type === "draw") {
+      const d = msg.data
+      if (d && d.format === "dsc-figma-bundle@1") {
+        // Todo el sistema: cada flujo se dibuja (o actualiza) en su página, con los mismos tokens y componentes
+        for (let i = 0; i < d.flows.length; i++) {
+          const f = d.flows[i]
+          await draw({ format: "dsc-figma@1", system: d.system, mode: d.mode, view: d.view, collections: d.collections, effects: d.effects, prototype: f.prototype, screens: f.screens }, msg.options || {})
+        }
+      } else await draw(d, msg.options || {})
+    }
     if (msg.type === "export") await exportChanges()
   } catch (e) {
     log("Algo ha fallado: " + (e && e.message ? e.message : String(e)), "error")
