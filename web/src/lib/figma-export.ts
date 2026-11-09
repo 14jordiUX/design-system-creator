@@ -401,6 +401,30 @@ function sizeChildren(node: FNode, layout: NonNullable<FNode["layout"]>, cw: num
   }
 }
 
+/** Carrusel: la tira de diapositivas va con margen negativo (-ml) y cada diapositiva lo compensa con su padding (pl).
+ *  En auto layout no hay márgenes negativos: la tira se quedaba corrida y la primera tarjeta salía cortada.
+ *  Se pasa a lo que se ve: la tira empieza en 0 y el hueco entre diapositivas es el espacio (gap) de la tira. */
+function pullTrack(node: FNode) {
+  const flow = (node.children ?? []).filter((k) => !k.absolute)
+  if (flow.length !== 1 || !flow[0].layout) return
+  const t = flow[0], hor = t.layout!.mode === "HORIZONTAL"
+  const shift = -(hor ? t.x : t.y), side = hor ? 3 : 0
+  if (shift <= 0) return
+  const items = (t.children ?? []).filter((k) => !k.absolute)
+  if (!items.length || !items.every((k) => k.layout && Math.abs(k.layout.pad[side] - shift) < 1.5)) return
+  const padKey = hor ? "paddingLeft" : "paddingTop"
+  const tok = items[0].bind?.[padKey]
+  items.forEach((k, i) => {
+    k.layout!.pad[side] = 0
+    if (k.bind) delete k.bind[padKey]
+    if (hor) { k.w -= shift; k.x = i * (k.w + shift) } else { k.h -= shift; k.y = i * (k.h + shift) }
+    for (const c of k.children ?? []) { if (hor) c.x -= shift; else c.y -= shift }
+  })
+  t.layout!.gap += shift
+  if (tok) t.bind = { ...(t.bind ?? {}), itemSpacing: tok }
+  if (hor) { t.x = 0; t.w -= shift } else { t.y = 0; t.h -= shift }
+}
+
 function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): FNode | null {
   const cs = getComputedStyle(el)
   const r = el.getBoundingClientRect()
@@ -490,7 +514,9 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
   }
 
   const hints = {
-    grow: num(cs.flexGrow) > 0, wClass: hasSizeClass(el, "w"), hClass: hasSizeClass(el, "h"),
+    grow: num(cs.flexGrow) > 0, wClass: hasSizeClass(el, "w"),
+    // aspect-square y similares: el alto sale del ancho, así que en Figma va fijo (si abrazara, la tarjeta se aplastaría)
+    hClass: hasSizeClass(el, "h") || (!!cs.aspectRatio && cs.aspectRatio !== "auto"),
     fillW: classesOf(el).some((c) => ["w-full", "size-full"].includes(coreClass(c, false) ?? "")),
     fillH: classesOf(el).some((c) => ["h-full", "min-h-full", "size-full"].includes(coreClass(c, false) ?? "")),
   }
@@ -532,6 +558,7 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
   // Tamaño de cada hijo dentro del auto layout: rellenar (FILL), abrazar el contenido (HUG) o fijo (FIXED)
   if (layout) sizeChildren(node, layout, r.width - layout.pad[1] - layout.pad[3] - bw[1] - bw[3], r.height - layout.pad[0] - layout.pad[2] - bw[0] - bw[2])
   else for (const c of node.children) delete c._h
+  if (node.clip) pullTrack(node)
 
   const slot = slotName(el)
   if (slot) {
