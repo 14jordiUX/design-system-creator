@@ -284,8 +284,97 @@ function layoutOf(cs: CSSStyleDeclaration, kids: DOMRect[], box: DOMRect): FNode
   return { mode: stacked ? "VERTICAL" : "HORIZONTAL", gap: Math.max(0, gaps[0] ?? 0), pad, main: "MIN", cross: al }
 }
 
+const NO_BOX = { display: "block", paddingTop: "0", paddingRight: "0", paddingBottom: "0", paddingLeft: "0", borderTopWidth: "0", borderRightWidth: "0", borderBottomWidth: "0", borderLeftWidth: "0" } as unknown as CSSStyleDeclaration
+type Kid = { rect: DOMRect; absolute: boolean; make: () => FNode | null }
+
+/** Agrupa los hijos de una rejilla en columnas (o filas) apiladas; cada grupo con más de un hijo pasa a ser un marco con auto layout. */
+function gridGroups(ctx: Ctx, el: Element, kids: Kid[], box: DOMRect): Kid[] | null {
+  const flow = kids.filter((k) => !k.absolute)
+  if (flow.length < 2) return null
+  const cs = getComputedStyle(el)
+  const contentRight = box.right - num(cs.paddingRight) - num(cs.borderRightWidth)
+  const contentBottom = box.bottom - num(cs.paddingBottom) - num(cs.borderBottomWidth)
+  for (const axis of ["col", "row"] as const) {
+    const lo = (k: Kid) => (axis === "col" ? k.rect.left : k.rect.top), hi = (k: Kid) => (axis === "col" ? k.rect.right : k.rect.bottom)
+    let groups: Kid[][] = []
+    let end = -Infinity
+    for (const k of [...flow].sort((a, b) => lo(a) - lo(b))) {
+      if (lo(k) >= end - 1) { groups.push([k]); end = hi(k) } else { groups[groups.length - 1].push(k); end = Math.max(end, hi(k)) }
+    }
+    let stack = false
+    if (groups.length === flow.length && axis === "row") {
+      stack = true
+      // Una pila con huecos distintos (por ejemplo un margen extra bajo el icono): se corta por el hueco mayor
+      // y los trozos con su hueco más pequeño van en otro auto layout dentro
+      const gaps = groups.slice(1).map((g, i) => g[0].rect.top - groups[i][0].rect.bottom)
+      const big = Math.max(...gaps)
+      const cut: Kid[][] = [[groups[0][0]]]
+      gaps.forEach((gp, i) => { if (Math.abs(gp - big) < 1.5) cut.push([groups[i + 1][0]]); else cut[cut.length - 1].push(groups[i + 1][0]) })
+      groups = cut
+    }
+    if (groups.length < 2 || groups.length === flow.length) continue
+    const inner = groups.map((g) => {
+      const vertical = axis === "col" || stack
+      g.sort((a, b) => (vertical ? a.rect.top - b.rect.top : a.rect.left - b.rect.left))
+      const u = new DOMRect(Math.min(...g.map((k) => k.rect.left)), Math.min(...g.map((k) => k.rect.top)), 0, 0)
+      const rect = new DOMRect(u.x, u.y, Math.max(...g.map((k) => k.rect.right)) - u.x, Math.max(...g.map((k) => k.rect.bottom)) - u.y)
+      return { g, rect, layout: g.length > 1 ? layoutOf(NO_BOX, g.map((k) => k.rect), rect) : undefined }
+    })
+    if (inner.some((x) => x.g.length > 1 && (!x.layout || x.layout.mode !== (axis === "col" || stack ? "VERTICAL" : "HORIZONTAL")))) continue
+    const gapTok = (v: number) => pickNum(ctx, candidates(el, /^(gap|space-[xy])/), v)
+    const wrapped: Kid[] = inner.map(({ g, rect, layout }, i) => {
+      if (g.length === 1) return g[0]
+      const last = i === inner.length - 1
+      return {
+        rect, absolute: false, make: () => {
+          const children = g.map((k) => k.make()).filter(Boolean) as FNode[]
+          const dx = Math.round(rect.left - box.left), dy = Math.round(rect.top - box.top)
+          for (const c of children) { c.x -= dx; c.y -= dy }
+          const n: FNode = { type: "FRAME", name: stack ? "grupo" : axis === "col" ? "columna" : "fila", x: dx, y: dy, w: Math.round(rect.width), h: Math.round(rect.height), layout: layout!, children }
+          const t = layout!.gap > 0 ? gapTok(layout!.gap) : undefined
+          if (t) n.bind = { itemSpacing: t }
+          sizeChildren(n, layout!, rect.width, rect.height)
+          // La última columna que llega hasta el borde ocupa el resto (como 1fr)
+          const grow = !stack && last && (axis === "col" ? Math.abs(rect.right - contentRight) < 1.5 : Math.abs(rect.bottom - contentBottom) < 1.5)
+          n._h = { grow, wClass: false, hClass: false, fillW: false, fillH: false }
+          return n
+        },
+      }
+    })
+    return [...wrapped, ...kids.filter((k) => k.absolute)]
+  }
+  return null
+}
+
 function hasSizeClass(el: Element, axis: "w" | "h") {
   return classesOf(el).some((c) => { const k = coreClass(c, false); return !!k && (k.startsWith("size-") || k.startsWith(axis + "-")) && !/-(full|auto|fit)$/.test(k) })
+}
+
+/** Tamaño de cada hijo dentro del auto layout (cw/ch: el hueco de dentro, sin padding ni borde). */
+function sizeChildren(node: FNode, layout: NonNullable<FNode["layout"]>, cw: number, ch: number) {
+  for (const c of node.children!) {
+    const h = c._h ?? { grow: false, wClass: true, hClass: true, fillW: false, fillH: false }
+    delete c._h
+    if (c.absolute) continue
+    if (fixedSize(c)) { c.sizing = { h: "FIXED", v: "FIXED" }; continue }
+    const hugs = c.type === "TEXT" || !!c.layout
+    // Un marco que abraza su contenido no puede tener hijos que lo rellenan: en Figma se encogería hasta casi nada
+    // (el formulario del catálogo salía con los campos estrechos). En ese eje va con su ancho/alto fijo.
+    const fills = (axis: "h" | "v") => !!c.children?.some((k) => !k.absolute && k.sizing?.[axis] === "FILL")
+    const hug = (fixedClass: boolean, axis: "h" | "v") => (hugs && !fixedClass && !fills(axis) ? "HUG" : "FIXED")
+    const textW = c.type === "TEXT" ? (c.text!.single ? "HUG" : "FIXED") : null
+    if (layout.mode === "VERTICAL") {
+      c.sizing = {
+        h: h.fillW || Math.abs(c.w - cw) < 1.5 ? "FILL" : textW ?? hug(h.wClass, "h"),
+        v: h.grow || h.fillH ? "FILL" : c.type === "TEXT" ? "HUG" : hug(h.hClass, "v"),
+      }
+    } else {
+      c.sizing = {
+        h: h.grow || h.fillW ? "FILL" : textW ?? hug(h.wClass, "h"),
+        v: h.fillH || (layout.cross === "STRETCH" && Math.abs(c.h - ch) < 1.5 && !h.hClass) ? "FILL" : c.type === "TEXT" ? "HUG" : hug(h.hClass, "v"),
+      }
+    }
+  }
 }
 
 function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): FNode | null {
@@ -328,7 +417,6 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
   if (cs.overflow === "hidden" || cs.overflow === "clip") node.clip = true
 
   // Contenido: texto suelto, campos, iconos y elementos hijos
-  type Kid = { rect: DOMRect; absolute: boolean; make: () => FNode | null }
   const kids: Kid[] = []
   if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
     // Campos ocultos o invisibles (como el que hay debajo de las casillas del código) no se dibujan
@@ -389,7 +477,16 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
     if (only?.type === "TEXT") return { ...only, ...base, absolute: node.absolute, _h: hints }
   }
 
-  const layout = layoutOf(cs, kids.filter((k) => !k.absolute).map((k) => k.rect), r)
+  let layout = layoutOf(cs, kids.filter((k) => !k.absolute).map((k) => k.rect), r)
+  if (!layout) {
+    // Rejilla (grid) en dos dimensiones, como el Alert (icono | título y descripción): en Figma, auto layout anidado.
+    // Se agrupan los hijos por columnas (o por filas) y cada grupo es otro auto layout dentro.
+    const grouped = gridGroups(ctx, el, kids, r)
+    if (grouped) {
+      kids.splice(0, kids.length, ...grouped)
+      layout = layoutOf(cs, kids.filter((k) => !k.absolute).map((k) => k.rect), r)
+    }
+  }
   if (layout) {
     node.layout = layout
     const pc = (side: string) => candidates(el, new RegExp(`^p[${side}]?-`))
@@ -409,32 +506,8 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
   // Una capa encima que no pinta nada (sin fondo, borde ni contenido) sobra en Figma
   if (node.absolute && !node.fill && !node.stroke && !node.children.length) return null
   // Tamaño de cada hijo dentro del auto layout: rellenar (FILL), abrazar el contenido (HUG) o fijo (FIXED)
-  if (layout) {
-    const cw = r.width - layout.pad[1] - layout.pad[3] - bw[1] - bw[3], ch = r.height - layout.pad[0] - layout.pad[2] - bw[0] - bw[2]
-    for (const c of node.children) {
-      const h = c._h ?? { grow: false, wClass: true, hClass: true, fillW: false, fillH: false }
-      delete c._h
-      if (c.absolute) continue
-      if (fixedSize(c)) { c.sizing = { h: "FIXED", v: "FIXED" }; continue }
-      const hugs = c.type === "TEXT" || !!c.layout
-      // Un marco que abraza su contenido no puede tener hijos que lo rellenan: en Figma se encogería hasta casi nada
-      // (el formulario del catálogo salía con los campos estrechos). En ese eje va con su ancho/alto fijo.
-      const fills = (axis: "h" | "v") => !!c.children?.some((k) => !k.absolute && k.sizing?.[axis] === "FILL")
-      const hug = (fixedClass: boolean, axis: "h" | "v") => (hugs && !fixedClass && !fills(axis) ? "HUG" : "FIXED")
-      const textW = c.type === "TEXT" ? (c.text!.single ? "HUG" : "FIXED") : null
-      if (layout.mode === "VERTICAL") {
-        c.sizing = {
-          h: h.fillW || Math.abs(c.w - cw) < 1.5 ? "FILL" : textW ?? hug(h.wClass, "h"),
-          v: h.grow || h.fillH ? "FILL" : c.type === "TEXT" ? "HUG" : hug(h.hClass, "v"),
-        }
-      } else {
-        c.sizing = {
-          h: h.grow || h.fillW ? "FILL" : textW ?? hug(h.wClass, "h"),
-          v: h.fillH || (layout.cross === "STRETCH" && Math.abs(c.h - ch) < 1.5 && !h.hClass) ? "FILL" : c.type === "TEXT" ? "HUG" : hug(h.hClass, "v"),
-        }
-      }
-    }
-  } else for (const c of node.children) delete c._h
+  if (layout) sizeChildren(node, layout, r.width - layout.pad[1] - layout.pad[3] - bw[1] - bw[3], r.height - layout.pad[0] - layout.pad[2] - bw[0] - bw[2])
+  else for (const c of node.children) delete c._h
 
   const slot = slotName(el)
   if (slot) {
