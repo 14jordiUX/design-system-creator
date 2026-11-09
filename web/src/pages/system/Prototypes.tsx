@@ -1,6 +1,6 @@
 // Prototipos: flujos de varias pantallas que se pueden clicar (probar, test con usuarios y presentar).
 // Toda la pantalla del prototipo sale del sistema que se está viendo: si cambias de sistema, el mismo flujo cambia de look.
-import { useEffect, useMemo, useRef, useState } from "react"
+import { Component as ReactComponent, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { toBlob } from "html-to-image"
 import { strToU8, zipSync } from "fflate"
@@ -28,6 +28,9 @@ import pluginCode from "../../../../figma-plugin/code.js?raw"
 import pluginUi from "../../../../figma-plugin/ui.html?raw"
 import { useDS } from "./context"
 import { CodeBlock } from "./Components"
+import { DEMOS } from "./demos"
+import { ALL_COMPONENTS } from "@/lib/nav"
+import { customFor } from "@/lib/custom"
 
 export default function Prototypes() {
   const { ds, mode, tokens } = useDS()
@@ -49,7 +52,7 @@ export default function Prototypes() {
       ) : (
         <EmptyState icon={<Workflow className="size-icon-lg" />} title="No hay prototipos todavía" />
       )}
-      {list.length > 0 && <AllToFigma list={list} tokens={tokens} system={{ id: ds.meta.id, name: ds.meta.name }} mode={mode} />}
+      <AllToFigma list={list} tokens={tokens} system={{ id: ds.meta.id, name: ds.meta.name }} mode={mode} />
       <Alert className="mt-gap-2xl">
         <Lightbulb />
         <AlertTitle>¿Quieres otro flujo?</AlertTitle>
@@ -350,8 +353,23 @@ function ToFigma({ p, tokens, system, mode, view }: { p: Prototype; tokens: Toke
   )
 }
 
-/** Todo el sistema para Figma en un solo archivo: tokens, todos los flujos y los componentes que usan. */
+/** El catálogo: cada componente (de shadcn/ui y propios) con todos sus ejemplos, como una «pantalla» por componente. */
+function catalogFor(systemId: string) {
+  const ui = ALL_COMPONENTS.filter((c) => DEMOS[c.slug]).map((c) => ({ slug: c.slug, label: c.label, group: c.group, examples: DEMOS[c.slug].examples }))
+  const own = customFor(systemId).map((c) => ({ slug: c.slug, label: c.label, group: "Propios", examples: c.demo.examples }))
+  return [...ui, ...own]
+}
+
+/** Si un ejemplo falla al dibujarse, se salta (el resto del catálogo sigue). */
+class Safe extends ReactComponent<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() { return { failed: true } }
+  render() { return this.state.failed ? null : this.props.children }
+}
+
+/** Todo el sistema para Figma en un solo archivo: tokens, el catálogo de componentes y todos los flujos. */
 function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens: TokenFiles; system: { id: string; name: string }; mode: "light" | "dark" }) {
+  const catalog = useMemo(() => catalogFor(system.id), [system.id])
   const [busy, setBusy] = useState(false)
   const [view, setView] = useState("mobile")
   const refs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -365,27 +383,34 @@ function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens:
       try {
         const data = buildFigmaBundle({
           tokens, mode, system, view: view === "mobile" ? "mobile" : "desktop",
-          flows: list.map((p) => ({
-            prototype: { slug: p.slug, label: p.meta.label, description: p.meta.description, links: p.meta.links },
-            screens: p.meta.screens.map((s) => ({ id: s.id, label: s.label, el: refs.current[p.slug + "|" + s.id]! })).filter((s) => s.el),
-          })),
+          flows: [
+            {
+              prototype: { slug: "catalogo", label: "Catálogo", description: "Todos los componentes del sistema con sus variantes y estados." },
+              screens: catalog.map((c) => ({ id: c.slug, label: c.label, el: refs.current["catalogo|" + c.slug]! })).filter((s) => s.el),
+            },
+            ...list.map((p) => ({
+              prototype: { slug: p.slug, label: p.meta.label, description: p.meta.description, links: p.meta.links },
+              screens: p.meta.screens.map((s) => ({ id: s.id, label: s.label, el: refs.current[p.slug + "|" + s.id]! })).filter((s) => s.el),
+            })),
+          ],
         })
         download(`figma-${system.id}-todo.json`, new Blob([JSON.stringify(data)], { type: "application/json" }))
-        toast.success("Archivo para Figma descargado", { description: `${list.length} flujos con ${system.name}. Ábrelo con el plugin «Design System Creator».` })
+        toast.success("Archivo para Figma descargado", { description: `${catalog.length} componentes y ${list.length} flujos con ${system.name}. Ábrelo con el plugin «Design System Creator».` })
       } catch (e: any) {
         toast.error("No se ha podido preparar el archivo", { description: String(e.message || e) })
       }
       setBusy(false)
     })()
     return () => { cancel = true }
-  }, [busy, tokens, mode, system, view, list])
+  }, [busy, tokens, mode, system, view, list, catalog])
 
   return (
     <section className="mt-gap-2xl flex flex-col gap-gap-md rounded-card border-thin p-inset-lg">
       <h3 className="flex items-center gap-gap-sm text-body font-strong"><PenTool className="size-icon-md text-primary" />Todo {system.name} para Figma</h3>
       <p className="max-w-prose text-ui text-muted-foreground">
-        Un solo archivo con los tokens (como variables), los {list.length} flujos y todos los componentes que usan. En el plugin, «Dibujar en Figma»
-        lo dibuja todo (una página por flujo) y «Actualizar este archivo» lo pone al día. Cada flujo se puede descargar también por separado, en su pestaña Compartir.
+        Un solo archivo con todo: los tokens (como variables), el catálogo entero de componentes ({catalog.length}, con sus variantes y estados) y los {list.length} flujos.
+        En el plugin, «Dibujar en Figma» lo dibuja todo (el catálogo y una página por flujo) y «Actualizar este archivo» lo pone al día.
+        Cada flujo se puede descargar también por separado, en su pestaña Compartir.
       </p>
       <div className="flex flex-wrap items-center gap-gap-sm">
         <ToggleGroup type="single" variant="outline" size="sm" value={view} onValueChange={(v) => v && setView(v)}>
@@ -399,7 +424,21 @@ function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens:
         <Button variant="outline" onClick={downloadPlugin}><Puzzle />Descargar el plugin</Button>
       </div>
       {busy && (
-        <div inert aria-hidden className="pointer-events-none fixed top-0 left-full flex gap-gap-2xl">
+        <div inert aria-hidden className="pointer-events-none fixed top-0 left-full flex items-start gap-gap-2xl">
+          {catalog.map((c) => (
+            <div key={"catalogo" + c.slug} ref={(el) => { refs.current["catalogo|" + c.slug] = el }} className="flex w-content shrink-0 flex-col gap-gap-xl bg-background p-inset-2xl">
+              <div className="flex flex-col gap-gap-2xs">
+                <p className="text-caption text-muted-foreground">{c.group}</p>
+                <h2 className="text-h2 font-strong tracking-heading">{c.label}</h2>
+              </div>
+              {c.examples.map((ex) => (
+                <div key={ex.title} className="flex flex-col gap-gap-sm">
+                  <p className="text-ui font-emphasis text-muted-foreground">{ex.title}</p>
+                  <div className="flex min-h-area-min items-center justify-center rounded-card border-thin p-inset-2xl"><Safe>{ex.render}</Safe></div>
+                </div>
+              ))}
+            </div>
+          ))}
           {list.flatMap((p) => p.meta.screens.map((s) => (
             <div key={p.slug + s.id} ref={(el) => { refs.current[p.slug + "|" + s.id] = el }} className={cn("h-desktop shrink-0 overflow-hidden", view === "mobile" ? "w-sheet" : "w-content")}>
               <p.Component screen={s.id} go={() => {}} />

@@ -1,15 +1,17 @@
 // Prototipo «Onboarding»: 3 pantallas para dar la bienvenida, elegir intereses y activar avisos.
-// Componentes: Card, Steps (propio), Field, Checkbox, Switch, Button y Badge (shadcn/ui). Ninguna clase fuera de los tokens.
+// Componentes: Card, Field, Button y Badge (shadcn/ui) y los propios Steps, Icon Badge, Choice Card, Setting Row y Step Footer. Ninguna clase fuera de los tokens.
 //
 // Cómo funciona un prototipo: recibe `screen` (la pantalla que toca) y `go(id)` (para ir a otra).
 import { useState } from "react"
-import { ArrowLeft, Bell, CalendarDays, ChartLine, MessagesSquare, Sparkles, UsersRound } from "lucide-react"
+import { Bell, CalendarDays, ChartLine, MessagesSquare, Sparkles, UsersRound } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldTitle } from "@/components/ui/field"
-import { Switch } from "@/components/ui/switch"
+import { FieldError, FieldGroup } from "@/components/ui/field"
+import { ChoiceCard } from "@/components/custom/choice-card"
+import { IconBadge } from "@/components/custom/icon-badge"
+import { SettingRow } from "@/components/custom/setting-row"
+import { StepFooter } from "@/components/custom/step-footer"
 import { Steps } from "@/components/custom/steps"
 
 export const meta = {
@@ -61,9 +63,7 @@ function Welcome({ go }: { go: Props["go"] }) {
   return (
     <Card>
       <CardHeader className="items-center text-center">
-        <span className="mx-auto mb-gap-sm flex size-avatar-xl items-center justify-center rounded-pill bg-primary text-primary-foreground">
-          <Sparkles className="size-icon-lg" />
-        </span>
+        <IconBadge className="mx-auto mb-gap-sm"><Sparkles /></IconBadge>
         <Badge variant="secondary" className="mx-auto">Nuevo</Badge>
         <CardTitle className="text-title">Te damos la bienvenida</CardTitle>
         <CardDescription>En menos de un minuto dejamos la app a tu medida. Puedes cambiarlo todo más tarde.</CardDescription>
@@ -93,23 +93,14 @@ function Interests({ go, picked, setPicked }: { go: Props["go"]; picked: string[
       <CardContent>
         <FieldGroup className="gap-gap-sm">
           {INTERESTS.map(({ id, icon: Icon, title, text }) => (
-            <FieldLabel key={id} htmlFor={`interes-${id}`}>
-              <Field orientation="horizontal">
-                <Icon className="size-icon-md text-muted-foreground" />
-                <FieldContent>
-                  <FieldTitle>{title}</FieldTitle>
-                  <FieldDescription>{text}</FieldDescription>
-                </FieldContent>
-                <Checkbox id={`interes-${id}`} checked={picked.includes(id)} onCheckedChange={(v) => toggle(id, v === true)} />
-              </Field>
-            </FieldLabel>
+            <ChoiceCard key={id} id={`interes-${id}`} icon={<Icon />} title={title} description={text}
+              checked={picked.includes(id)} onCheckedChange={(v) => toggle(id, v)} />
           ))}
           {empty && <FieldError>Elige al menos uno para continuar.</FieldError>}
         </FieldGroup>
       </CardContent>
-      <CardFooter className="justify-between gap-gap-sm">
-        <Button variant="ghost" onClick={() => go("bienvenida")}><ArrowLeft />Atrás</Button>
-        <Button onClick={() => { setTried(true); if (picked.length) go("avisos") }}>Continuar</Button>
+      <CardFooter>
+        <StepFooter onBack={() => go("bienvenida")} onNext={() => { setTried(true); if (picked.length) go("avisos") }} />
       </CardFooter>
     </Card>
   )
@@ -127,27 +118,12 @@ function Notifications({ go, count }: { go: Props["go"]; count: number }) {
       </CardHeader>
       <CardContent>
         <FieldGroup>
-          <Field orientation="horizontal">
-            <Bell className="size-icon-md text-muted-foreground" />
-            <FieldContent>
-              <FieldLabel htmlFor="aviso-movil">Avisos en el móvil</FieldLabel>
-              <FieldDescription>Recordatorios y cambios importantes.</FieldDescription>
-            </FieldContent>
-            <Switch id="aviso-movil" defaultChecked />
-          </Field>
-          <Field orientation="horizontal">
-            <MessagesSquare className="size-icon-md text-muted-foreground" />
-            <FieldContent>
-              <FieldLabel htmlFor="aviso-email">Resumen por email</FieldLabel>
-              <FieldDescription>Una vez a la semana, los lunes.</FieldDescription>
-            </FieldContent>
-            <Switch id="aviso-email" />
-          </Field>
+          <SettingRow id="aviso-movil" icon={<Bell />} title="Avisos en el móvil" description="Recordatorios y cambios importantes." defaultChecked />
+          <SettingRow id="aviso-email" icon={<MessagesSquare />} title="Resumen por email" description="Una vez a la semana, los lunes." />
         </FieldGroup>
       </CardContent>
-      <CardFooter className="justify-between gap-gap-sm">
-        <Button variant="ghost" onClick={() => go("intereses")}><ArrowLeft />Atrás</Button>
-        <Button onClick={() => go("bienvenida")}>Terminar</Button>
+      <CardFooter>
+        <StepFooter onBack={() => go("intereses")} onNext={() => go("bienvenida")} nextLabel="Terminar" />
       </CardFooter>
     </Card>
   )
