@@ -179,8 +179,10 @@ function paintIcon(node, paint) {
 class Drawer {
   constructor(vars, effects, componentsPage, update) {
     this.vars = vars; this.effects = effects; this.page = componentsPage
-    this.update = !!update      // rehacer por dentro los componentes que ya existen
+    this.update = !!update      // poner al día los componentes que ya existen
     this.refreshed = 0
+    this.rebuilt = []           // componentes que han cambiado de estructura (se rehacen enteros)
+    this.defining = {}          // componentes que se están creando ahora (un componente no puede llevarse dentro a sí mismo)
     this.components = {}        // set|props → ComponentNode
     this.icons = {}             // icon/<nombre> → ComponentNode
     this.links = []             // { node, to }
@@ -192,6 +194,18 @@ class Drawer {
     parent.appendChild(t)
     t.fontName = await fontFor(n.text.family, n.text.weight)
     t.characters = n.text.chars
+    await this.textStyle(t, n)
+    return t
+  }
+
+  // Estilo de un texto (todo menos lo que dice): se usa al crearlo y al poner al día un componente
+  async textStyle(t, n) {
+    const font = await fontFor(n.text.family, n.text.weight)
+    if (t.fontName === figma.mixed || t.fontName.family !== font.family || t.fontName.style !== font.style) {
+      const now = t.fontName === figma.mixed && t.characters.length ? t.getRangeAllFontNames(0, t.characters.length) : [t.fontName]
+      for (const f of now) if (f !== figma.mixed) await figma.loadFontAsync(f)
+      t.fontName = font
+    }
     t.fontSize = n.text.size
     if (n.text.lineHeight) t.lineHeight = { value: n.text.lineHeight, unit: "PIXELS" }
     if (n.text.letterSpacing) t.letterSpacing = { value: n.text.letterSpacing, unit: "PIXELS" }
@@ -203,10 +217,9 @@ class Drawer {
       const v = tokenVar(this.vars, n.text.bind[field])
       if (v && len) { try { t.setRangeBoundVariable(0, len, field, v) } catch (e) { /* si la fuente no lo permite */ } }
     }
-    t.name = n.name
     if (n.text.single) t.textAutoResize = "WIDTH_AND_HEIGHT"
     else { t.textAutoResize = "HEIGHT"; t.resize(Math.max(1, n.w + 1), Math.max(1, n.h)) }
-    return t
+    t.name = n.name
   }
 
   async icon(n) {
@@ -277,7 +290,7 @@ class Drawer {
     let out
     if (n.type === "TEXT") out = await this.text(n, parent)
     else if (n.type === "SVG") { out = n.icon ? await this.icon(n) : figma.createNodeFromSvg(n.svg); parent.appendChild(out) }
-    else if (n.component && !asDefinition) { out = await this.instance(n); parent.appendChild(out) }
+    else if (n.component && !asDefinition && (out = await this.instance(n))) parent.appendChild(out)
     else {
       out = figma.createFrame()
       parent.appendChild(out)
@@ -308,7 +321,13 @@ class Drawer {
 
   async definition(n) {
     const key = n.component.set + "|" + props(n.component.props)
+    if (this.defining[key]) return null   // dentro de sí mismo: se dibuja como capa normal
     if (this.components[key]) return this.components[key]
+    this.defining[key] = true
+    try { return await this.defineNew(n, key) } finally { delete this.defining[key] }
+  }
+
+  async defineNew(n, key) {
     // ¿Ya existe en el archivo (quizá cambiado por ti)? Entonces se reutiliza tal cual
     const existing = await findComponent(n.component.set, n.component.props)
     if (existing && this.update) { this.components[key] = existing; await this.refresh(existing, n); return existing }
@@ -327,20 +346,69 @@ class Drawer {
 
   // Rehace un componente que ya existe con lo que trae el .json, sin cambiar el componente en sí:
   // así no se rompen sus instancias (en otras pantallas o archivos) y todas reciben el cambio.
+  // Si tiene las mismas capas, se cambian sus propiedades una a una: así las instancias de cualquier página
+  // conservan sus textos e iconos. Si ha cambiado de estructura, se rehace entero.
   async refresh(comp, n) {
     const def = Object.assign({}, n, { sizing: undefined, link: undefined })
     const name = comp.name     // el nombre es la variante (variante=…, tamaño=…): no se toca
-    for (const c of comp.children.slice()) c.remove()
-    await this.box(def, comp)
+    if (this.sameShape(comp, def, true)) await this.patch(comp, def, true)
+    else {
+      for (const c of comp.children.slice()) c.remove()
+      await this.box(def, comp)
+      for (const c of n.children || []) await this.node(c, comp, n, false)
+      this.rebuilt.push(n.component.set)
+    }
     comp.name = name
-    for (const c of n.children || []) await this.node(c, comp, n, false)
     try { comp.resize(Math.max(1, n.w), Math.max(1, n.h)) } catch (e) { /* */ }
     this.refreshed++
   }
 
+  kindOf(n, top) {
+    if (n.type === "TEXT") return "TEXT"
+    if (n.type === "SVG") return n.icon ? "INSTANCE" : "SVG"
+    if (n.component && !top) return "INSTANCE"
+    return "FRAME"
+  }
+
+  sameShape(node, n, top) {
+    const k = this.kindOf(n, top)
+    if (k === "SVG") return true
+    if (k === "TEXT" || k === "INSTANCE") return node.type === k
+    if (node.type !== "FRAME" && node.type !== "COMPONENT") return false
+    const kids = n.children || []
+    if (node.children.length !== kids.length) return false
+    for (let i = 0; i < kids.length; i++) if (!this.sameShape(node.children[i], kids[i], false)) return false
+    return true
+  }
+
+  async patch(node, n, top) {
+    const k = this.kindOf(n, top)
+    if (k === "SVG") return
+    if (k === "TEXT") { await this.textStyle(node, n); return }
+    if (k === "INSTANCE") {
+      if (n.type === "SVG") { try { node.resize(n.w, n.h) } catch (e) { /* */ } paintIcon(node, solid(n.fill.color, tokenVar(this.vars, n.fill.token))); return }
+      const comp = await this.definition(n)
+      if (comp) { const cur = await node.getMainComponentAsync(); if (cur !== comp) node.swapComponent(comp); await this.overrides(node, n) }
+      return
+    }
+    await this.box(n, node)
+    const kids = n.children || []
+    for (let i = 0; i < kids.length; i++) {
+      await this.patch(node.children[i], kids[i], false)
+      this.fit(node.children[i], kids[i], n)
+    }
+  }
+
   async instance(n) {
     const comp = await this.definition(n)
+    if (!comp) return null
     const inst = comp.createInstance()
+    await this.overrides(inst, n)
+    inst.name = n.component.set
+    return inst
+  }
+
+  async overrides(inst, n) {
     // Lo que cambia de una vez a otra: los textos y sus colores, y qué icono va
     const texts = inst.findAll((x) => x.type === "TEXT")
     const want = collect(n, "TEXT")
@@ -359,8 +427,6 @@ class Drawer {
       if (icons[i].name !== w.name) { await this.icon(w); icons[i].swapComponent(this.icons[w.name]) }
       paintIcon(icons[i], solid(w.fill.color, tokenVar(this.vars, w.fill.token)))
     }
-    inst.name = n.component.set
-    return inst
   }
 }
 
@@ -448,7 +514,21 @@ async function draw(data, options) {
     log((update ? "Actualizando «" : "Dibujando «") + s.label + "»…")
     // Al actualizar, la pantalla que ya existe se sustituye en el mismo sitio (los enlaces se rehacen después)
     const old = update ? flowPage.children.find((c) => c.type === "FRAME" && c.name === s.label) : null
-    const frame = await drawer.node(Object.assign({}, s.node, { sizing: undefined }), flowPage, null, true)
+    // Se dibuja en un marco aparte; si algo falla a medias, se quita y la pantalla anterior se queda como estaba
+    const holder = figma.createFrame()
+    flowPage.appendChild(holder)
+    holder.name = "(dibujando " + s.label + ")"; holder.fills = []; holder.x = x; holder.y = -100000
+    let frame
+    try {
+      frame = await drawer.node(Object.assign({}, s.node, { sizing: undefined }), holder, null, true)
+    } catch (e) {
+      holder.remove()
+      log("No he podido dibujar «" + s.label + "»: " + (e && e.message ? e.message : e) + ". La dejo como estaba.", "error")
+      if (old) frames[s.id] = old
+      continue
+    }
+    flowPage.appendChild(frame)
+    holder.remove()
     frame.name = s.label
     frame.clipsContent = true
     if (old) { frame.x = old.x; frame.y = old.y; old.remove(); replaced++ }
@@ -475,7 +555,8 @@ async function draw(data, options) {
   const first = frames[data.screens[0].id]
   if (first) flowPage.flowStartingPoints = [{ nodeId: first.id, name: data.prototype.label }]
   figma.viewport.scrollAndZoomIntoView(Object.keys(frames).map((k) => frames[k]))
- if (update) log("Actualizado: " + drawer.refreshed + " variantes de componentes rehechas, " + replaced + " pantallas sustituidas y " + (data.screens.length - replaced) + " nuevas. Lo que no venía en el archivo sigue igual.", "ok")
+  if (drawer.rebuilt.length) log("Han cambiado de forma y se han rehecho enteros: " + drawer.rebuilt.filter((x, i, a) => a.indexOf(x) === i).join(", ") + ". Si otros flujos de este archivo los usan, actualízalos también con su .json para que no pierdan sus textos.", "warn")
+  if (update) log("Actualizado: " + drawer.refreshed + " variantes de componentes puestas al día, " + replaced + " pantallas sustituidas y " + (data.screens.length - replaced) + " nuevas. Lo que no venía en el archivo sigue igual.", "ok")
   else log("Listo: " + data.screens.length + " pantallas, " + Object.keys(drawer.components).length + " variantes de componentes y " + Object.keys(drawer.icons).length + " iconos. Pulsa ▶ (Presentar) para probar el flujo.", "ok")
   figma.notify(update ? "Archivo actualizado con " + data.system.name : "Flujo dibujado con " + data.system.name)
 }
