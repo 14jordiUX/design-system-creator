@@ -68,3 +68,4 @@ Pedidas por Jordi al revisar el catálogo en Figma. Cualquier componente o panta
    - Ancho fijo y alto Hug si dentro hay algo que rellena, como el texto del Alert: el texto se ajusta al ancho y la caja crece hacia abajo.
    - Los campos (input, textarea, select…) y las barras (progress, slider, separator) tienen ancho fijo.
    - Los que no escalan tienen tamaño fijo: casilla, interruptor, avatar, botón de icono… (lista `FIXED_SIZE` en `web/src/lib/figma-export.ts`).
+5. **Listas con slot.** Tabs (`tabs-list`), Toggle Group (`toggle-group`) y Tab propio (`tab-list`) son componentes con un **slot** («opciones»). Dentro van las pestañas u opciones que pida cada pantalla, y el componente preferido del slot es el suyo: `tabs-trigger`, `toggle-group-item` o `tab-trigger`. Si Figma no admite slots, se dibujan como antes. La lista está en `SLOT_LISTS`, en `web/src/lib/figma-export.ts`.

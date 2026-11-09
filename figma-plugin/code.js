@@ -211,6 +211,7 @@ class Drawer {
     this.update = !!update      // poner al día los componentes que ya existen
     this.done = {}              // componentes ya puestos al día (compartido entre los flujos de un mismo archivo)
     this.refreshed = 0
+    this.slotted = []           // componentes lista con slot (al final se les pone el componente preferido)
     this.rebuilt = []           // componentes que han cambiado de estructura (se rehacen enteros)
     this.defining = {}          // componentes que se están creando ahora (un componente no puede llevarse dentro a sí mismo)
     this.components = {}        // set|props → ComponentNode
@@ -371,7 +372,9 @@ class Drawer {
     this.page.appendChild(comp)
     holder.remove()
     comp.setPluginData("set", n.component.set)
+    if (n.component.slot) this.makeSlot(comp, n)
     selfSizing(comp, n)
+    this.slotFit(comp)
     this.components[key] = comp
     this.done[key] = true      // recién hecho: en los demás flujos de este archivo no se vuelve a rehacer
     return comp
@@ -394,7 +397,48 @@ class Drawer {
     comp.name = name
     try { comp.resize(Math.max(1, n.w), Math.max(1, n.h)) } catch (e) { /* */ }
     selfSizing(comp, n)
+    this.slotFit(comp)
     this.refreshed++
+  }
+
+  // Componente lista (pestañas, grupo de botones): lo de dentro va en un slot, para poner las que hagan falta
+  makeSlot(comp, n) {
+    if (typeof comp.createSlot !== "function") return
+    try {
+      const kids = comp.children.slice()
+      const slot = comp.createSlot()
+      slot.name = "opciones"
+      slot.fills = []
+      slot.layoutMode = comp.layoutMode
+      slot.itemSpacing = comp.itemSpacing
+      slot.primaryAxisAlignItems = comp.primaryAxisAlignItems
+      slot.counterAxisAlignItems = comp.counterAxisAlignItems
+      if (n.bind) bindIf(slot, "itemSpacing", this.vars, n.bind.itemSpacing)
+      for (let i = 0; i < kids.length; i++) { slot.appendChild(kids[i]); if (n.children && n.children[i]) this.fit(kids[i], n.children[i], n) }
+      try { comp.setBoundVariable("itemSpacing", null) } catch (e) { /* */ }
+      comp.itemSpacing = 0
+      this.slotted.push({ comp: comp, slot: slot, prefer: n.component.slot })
+    } catch (e) { log("No he podido crear el slot de «" + n.component.set + "»: " + e.message, "warn") }
+  }
+
+  slotOf(node) {
+    return (node.children || []).find((x) => x.type === "SLOT") || null
+  }
+
+  // El slot ocupa el ancho del componente si este es fijo; si abraza, el slot también
+  slotFit(comp) {
+    const slot = this.slotOf(comp)
+    if (!slot) return
+    const hor = comp.layoutMode === "HORIZONTAL"
+    const fixedW = (hor ? comp.primaryAxisSizingMode : comp.counterAxisSizingMode) === "FIXED"
+    const fixedH = (hor ? comp.counterAxisSizingMode : comp.primaryAxisSizingMode) === "FIXED"
+    try { slot.layoutSizingHorizontal = fixedW ? "FILL" : "HUG"; slot.layoutSizingVertical = fixedH ? "FILL" : "HUG" } catch (e) { /* */ }
+  }
+
+  // Lo que va en el slot de una instancia (o del componente al ponerlo al día): las opciones que trae el .json
+  async fillSlot(slot, n) {
+    for (const c of slot.children.slice()) c.remove()
+    for (const c of n.children || []) await this.node(c, slot, n, false)
   }
 
   kindOf(n, top) {
@@ -406,6 +450,8 @@ class Drawer {
 
   sameShape(node, n, top) {
     const k = this.kindOf(n, top)
+    // Con slot: lo de dentro cambia en cada pantalla, cuenta solo que tenga su slot
+    if (top && n.component && n.component.slot && this.slotOf(node)) return true
     if (k === "SVG") return true
     if (k === "TEXT") return node.type === k
     if (node.type === "INSTANCE") return k === "INSTANCE"
@@ -429,6 +475,15 @@ class Drawer {
       return
     }
     await this.box(n, node)
+    const slot = top && n.component && n.component.slot ? this.slotOf(node) : null
+    if (slot) {
+      try { node.setBoundVariable("itemSpacing", null) } catch (e) { /* */ }
+      node.itemSpacing = 0
+      slot.itemSpacing = n.layout ? n.layout.gap : 0
+      if (n.bind) bindIf(slot, "itemSpacing", this.vars, n.bind.itemSpacing)
+      await this.fillSlot(slot, n)
+      return
+    }
     const kids = n.children || []
     for (let i = 0; i < kids.length; i++) {
       await this.patch(node.children[i], kids[i], false)
@@ -448,6 +503,8 @@ class Drawer {
   }
 
   async overrides(inst, n) {
+    const slot = n.component && n.component.slot ? this.slotOf(inst) : null
+    if (slot) { await this.fillSlot(slot, n); return }
     // Lo que cambia de una vez a otra: los textos y sus colores, y qué icono va
     const texts = inst.findAll((x) => x.type === "TEXT")
     const want = collect(n, "TEXT")
@@ -518,6 +575,25 @@ function combineSets(drawer) {
     cs.primaryAxisSizingMode = "AUTO"; cs.counterAxisSizingMode = "AUTO"
     cs.x = 0; cs.y = y
     y += cs.height + 80
+  }
+}
+
+// En cada slot, el componente que se suele meter (pestaña, opción…) sale el primero al elegir qué poner
+function preferInSlots(drawer) {
+  const sets = figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })
+  for (const s of drawer.slotted) {
+    const want = sets.find((x) => x.name === s.prefer)
+    const ref = s.slot.componentPropertyReferences && s.slot.componentPropertyReferences.slotContentId
+    if (!want || !ref) continue
+    const owners = [s.comp.parent && s.comp.parent.type === "COMPONENT_SET" ? s.comp.parent : null, s.comp].filter(Boolean)
+    for (const o of owners) {
+      try {
+        if (o.componentPropertyDefinitions && o.componentPropertyDefinitions[ref]) {
+          o.editComponentProperty(ref, { preferredValues: [{ type: "COMPONENT_SET", key: want.key }] })
+          break
+        }
+      } catch (e) { log("No he podido poner «" + s.prefer + "» como preferido en el slot: " + e.message, "warn"); break }
+    }
   }
 }
 
@@ -597,6 +673,7 @@ async function draw(data, options) {
     }
   }
   combineSets(drawer)
+  preferInSlots(drawer)
 
   // Prototipo: cada botón lleva a su pantalla
   for (const l of drawer.links) {
