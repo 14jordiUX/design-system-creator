@@ -6,6 +6,9 @@
 //   (por ejemplo, porque los has cambiado tú), se reutilizan: no se pisan tus cambios salvo que lo pidas.
 // - Exportar cambios: guarda en un .json las variables, los componentes y las pantallas tal como están ahora,
 //   para que Claude reconstruya el código igual que lo has dibujado.
+// - Actualizar: lee un .json nuevo (con cambios hechos por Claude) y los aplica en este mismo archivo: pisa los valores
+//   de las variables, rehace por dentro los componentes que ya existen (sin borrarlos, así todas sus instancias se
+//   actualizan) y sustituye las pantallas del flujo en su sitio. Lo que no viene en el .json no se toca.
 
 figma.showUI(__html__, { width: 420, height: 600, themeColors: true })
 
@@ -174,8 +177,10 @@ function paintIcon(node, paint) {
 }
 
 class Drawer {
-  constructor(vars, effects, componentsPage) {
+  constructor(vars, effects, componentsPage, update) {
     this.vars = vars; this.effects = effects; this.page = componentsPage
+    this.update = !!update      // rehacer por dentro los componentes que ya existen
+    this.refreshed = 0
     this.components = {}        // set|props → ComponentNode
     this.icons = {}             // icon/<nombre> → ComponentNode
     this.links = []             // { node, to }
@@ -306,6 +311,7 @@ class Drawer {
     if (this.components[key]) return this.components[key]
     // ¿Ya existe en el archivo (quizá cambiado por ti)? Entonces se reutiliza tal cual
     const existing = await findComponent(n.component.set, n.component.props)
+    if (existing && this.update) { this.components[key] = existing; await this.refresh(existing, n); return existing }
     if (existing) { this.components[key] = existing; return existing }
     const holder = figma.createFrame()
     this.page.appendChild(holder)
@@ -317,6 +323,19 @@ class Drawer {
     comp.setPluginData("set", n.component.set)
     this.components[key] = comp
     return comp
+  }
+
+  // Rehace un componente que ya existe con lo que trae el .json, sin cambiar el componente en sí:
+  // así no se rompen sus instancias (en otras pantallas o archivos) y todas reciben el cambio.
+  async refresh(comp, n) {
+    const def = Object.assign({}, n, { sizing: undefined, link: undefined })
+    const name = comp.name     // el nombre es la variante (variante=…, tamaño=…): no se toca
+    for (const c of comp.children.slice()) c.remove()
+    await this.box(def, comp)
+    comp.name = name
+    for (const c of n.children || []) await this.node(c, comp, n, false)
+    try { comp.resize(Math.max(1, n.w), Math.max(1, n.h)) } catch (e) { /* */ }
+    this.refreshed++
   }
 
   async instance(n) {
@@ -409,26 +428,31 @@ async function pageNamed(name, reuse) {
 async function draw(data, options) {
   if (!data || data.format !== "dsc-figma@1") throw new Error("Este archivo no es de la web Design System Creator (Llevar a Figma).")
   componentIndex = null
-  log("Sistema " + data.system.name + " · " + data.prototype.label + " (" + data.mode + ")")
-  const vars = await upsertVariables(data.collections, !!options.overwrite)
-  const effects = await upsertEffects(data.effects || [], !!options.overwrite)
+  const update = !!options.update
+  log((update ? "Actualizando con " : "Sistema ") + data.system.name + " · " + data.prototype.label + " (" + data.mode + ")")
+  const vars = await upsertVariables(data.collections, update || !!options.overwrite)
+  const effects = await upsertEffects(data.effects || [], update || !!options.overwrite)
 
   const compPage = await pageNamed("Componentes · " + data.system.name, true)
-  const flowPage = await pageNamed(data.prototype.label + " · " + data.system.name, false)
-  const drawer = new Drawer(vars, effects, compPage)
+  // Al actualizar se usa la página del flujo que ya existe; al dibujar, una nueva
+  const flowPage = await pageNamed(data.prototype.label + " · " + data.system.name, update)
+  const drawer = new Drawer(vars, effects, compPage, update)
   drawer.compY = compPage.children.reduce((m, n) => Math.max(m, n.y + n.height + 120), 0)
 
   await figma.setCurrentPageAsync(flowPage)
   const frames = {}
-  let x = 0
+  let x = flowPage.children.reduce((m, n) => Math.max(m, n.x + n.width + 160), 0)
   const gap = 160
+  let replaced = 0
   for (const s of data.screens) {
-    log("Dibujando «" + s.label + "»…")
+    log((update ? "Actualizando «" : "Dibujando «") + s.label + "»…")
+    // Al actualizar, la pantalla que ya existe se sustituye en el mismo sitio (los enlaces se rehacen después)
+    const old = update ? flowPage.children.find((c) => c.type === "FRAME" && c.name === s.label) : null
     const frame = await drawer.node(Object.assign({}, s.node, { sizing: undefined }), flowPage, null, true)
     frame.name = s.label
-    frame.x = x; frame.y = 0
     frame.clipsContent = true
-    x += frame.width + gap
+    if (old) { frame.x = old.x; frame.y = old.y; old.remove(); replaced++ }
+    else { frame.x = x; frame.y = 0; x += frame.width + gap }
     frames[s.id] = frame
     // El modo (claro u oscuro) de la pantalla
     const colorCol = (await figma.variables.getLocalVariableCollectionsAsync()).find((c) => c.name === "Color")
@@ -451,8 +475,9 @@ async function draw(data, options) {
   const first = frames[data.screens[0].id]
   if (first) flowPage.flowStartingPoints = [{ nodeId: first.id, name: data.prototype.label }]
   figma.viewport.scrollAndZoomIntoView(Object.keys(frames).map((k) => frames[k]))
-  log("Listo: " + data.screens.length + " pantallas, " + Object.keys(drawer.components).length + " variantes de componentes y " + Object.keys(drawer.icons).length + " iconos. Pulsa ▶ (Presentar) para probar el flujo.", "ok")
-  figma.notify("Flujo dibujado con " + data.system.name)
+ if (update) log("Actualizado: " + drawer.refreshed + " variantes de componentes rehechas, " + replaced + " pantallas sustituidas y " + (data.screens.length - replaced) + " nuevas. Lo que no venía en el archivo sigue igual.", "ok")
+  else log("Listo: " + data.screens.length + " pantallas, " + Object.keys(drawer.components).length + " variantes de componentes y " + Object.keys(drawer.icons).length + " iconos. Pulsa ▶ (Presentar) para probar el flujo.", "ok")
+  figma.notify(update ? "Archivo actualizado con " + data.system.name : "Flujo dibujado con " + data.system.name)
 }
 
 // ---------- exportar cambios (vuelta) ----------
