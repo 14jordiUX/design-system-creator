@@ -66353,17 +66353,6 @@ function combineSets(drawer) {
     const existingSet = figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] }).find((s) => s.name === set)
     if (existingSet) {
       for (const c of comps) existingSet.appendChild(c)
-      // Las variantes que ya había en el archivo también reciben las propiedades nuevas (p. ej. posición=sola),
-      // si no Figma avisa de «This variant is missing one or more properties»
-      const all = {}
-      existingSet.children.forEach((c) => c.name.split(", ").forEach((kv) => { const k = kv.split("=")[0]; if (k) all[k] = true }))
-      existingSet.children.forEach((c) => {
-        const cur = {}
-        c.name.split(", ").forEach((kv) => { const [k, v] = kv.split("="); if (k) cur[k] = v })
-        let changed = false
-        for (const k of Object.keys(all)) if (!cur[k]) { cur[k] = k === "estado" ? "normal" : k === "posición" ? "sola" : "default"; changed = true }
-        if (changed) c.name = props(cur)
-      })
       continue
     }
     const cs = figma.combineAsVariants(comps, drawer.page)
@@ -66373,6 +66362,20 @@ function combineSets(drawer) {
     cs.primaryAxisSizingMode = "AUTO"; cs.counterAxisSizingMode = "AUTO"
     cs.x = 0; cs.y = y
     y += cs.height + 80
+  }
+  // Las variantes que ya había en el archivo también reciben las propiedades nuevas (p. ej. posición=sola),
+  // si no Figma avisa de «This variant is missing one or more properties». Se repasan todos los componentes,
+  // también los que ya estaban completos en el archivo y solo se han puesto al día.
+  for (const set of figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })) {
+    const all = {}
+    set.children.forEach((c) => c.name.split(", ").forEach((kv) => { const k = kv.split("=")[0]; if (k) all[k] = true }))
+    set.children.forEach((c) => {
+      const cur = {}
+      c.name.split(", ").forEach((kv) => { const [k, v] = kv.split("="); if (k) cur[k] = v })
+      let changed = false
+      for (const k of Object.keys(all)) if (!cur[k]) { cur[k] = k === "estado" ? "normal" : k === "posición" ? "sola" : "default"; changed = true }
+      if (changed) c.name = props(cur)
+    })
   }
 }
 
