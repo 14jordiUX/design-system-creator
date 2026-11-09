@@ -360,6 +360,8 @@ function catalogFor(systemId: string) {
   return [...ui, ...own]
 }
 
+const VIEWS = ["mobile", "desktop"] as const
+
 /** Si un ejemplo falla al dibujarse, se salta (el resto del catálogo sigue). */
 class Safe extends ReactComponent<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
@@ -371,7 +373,6 @@ class Safe extends ReactComponent<{ children: ReactNode }, { failed: boolean }> 
 function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens: TokenFiles; system: { id: string; name: string }; mode: "light" | "dark" }) {
   const catalog = useMemo(() => catalogFor(system.id), [system.id])
   const [busy, setBusy] = useState(false)
-  const [view, setView] = useState("mobile")
   const refs = useRef<Record<string, HTMLDivElement | null>>({})
   useEffect(() => {
     if (!busy) return
@@ -382,16 +383,18 @@ function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens:
       if (cancel) return
       try {
         const data = buildFigmaBundle({
-          tokens, mode, system, view: view === "mobile" ? "mobile" : "desktop",
+          tokens, mode, system, view: "desktop",
           flows: [
             {
               prototype: { slug: "catalogo", label: "Catálogo", description: "Todos los componentes del sistema con sus variantes y estados." },
               screens: catalog.map((c) => ({ id: c.slug, label: c.label, el: refs.current["catalogo|" + c.slug]! })).filter((s) => s.el),
             },
-            ...list.map((p) => ({
+            // Cada flujo dos veces: en móvil y en escritorio (cada uno en su página de Figma)
+            ...list.flatMap((p) => VIEWS.map((v) => ({
+              view: v,
               prototype: { slug: p.slug, label: p.meta.label, description: p.meta.description, links: p.meta.links },
-              screens: p.meta.screens.map((s) => ({ id: s.id, label: s.label, el: refs.current[p.slug + "|" + s.id]! })).filter((s) => s.el),
-            })),
+              screens: p.meta.screens.map((s) => ({ id: s.id, label: s.label, el: refs.current[v + "|" + p.slug + "|" + s.id]! })).filter((s) => s.el),
+            }))),
           ],
         })
         download(`figma-${system.id}-todo.json`, new Blob([JSON.stringify(data)], { type: "application/json" }))
@@ -402,7 +405,7 @@ function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens:
       setBusy(false)
     })()
     return () => { cancel = true }
-  }, [busy, tokens, mode, system, view, list, catalog])
+  }, [busy, tokens, mode, system, list, catalog])
 
   return (
     <section className="mt-gap-2xl flex flex-col gap-gap-md rounded-card border-thin p-inset-lg">
@@ -413,11 +416,7 @@ function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens:
         Cada flujo se puede descargar también por separado, en su pestaña Compartir.
       </p>
       <div className="flex flex-wrap items-center gap-gap-sm">
-        <ToggleGroup type="single" variant="outline" size="sm" value={view} onValueChange={(v) => v && setView(v)}>
-          <ToggleGroupItem value="mobile" aria-label="Móvil"><Smartphone />Móvil</ToggleGroupItem>
-          <ToggleGroupItem value="desktop" aria-label="Escritorio"><Monitor />Escritorio</ToggleGroupItem>
-        </ToggleGroup>
-        <span className="text-caption text-muted-foreground">Modo {mode === "dark" ? "oscuro" : "claro"} (el que tienes elegido arriba)</span>
+        <span className="text-caption text-muted-foreground">Los flujos van en móvil y en escritorio (cada tamaño en su página). Modo {mode === "dark" ? "oscuro" : "claro"}, el que tienes elegido arriba.</span>
       </div>
       <div className="flex flex-wrap gap-gap-sm">
         <Button onClick={() => setBusy(true)} disabled={busy}>{busy ? <Loader2 className="animate-spin" /> : <Download />}Descargar todo para Figma</Button>
@@ -439,11 +438,11 @@ function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens:
               ))}
             </div>
           ))}
-          {list.flatMap((p) => p.meta.screens.map((s) => (
-            <div key={p.slug + s.id} ref={(el) => { refs.current[p.slug + "|" + s.id] = el }} className={cn("h-desktop shrink-0 overflow-hidden", view === "mobile" ? "w-sheet" : "w-content")}>
+          {VIEWS.flatMap((v) => list.flatMap((p) => p.meta.screens.map((s) => (
+            <div key={v + p.slug + s.id} ref={(el) => { refs.current[v + "|" + p.slug + "|" + s.id] = el }} className={cn("h-desktop shrink-0 overflow-hidden", v === "mobile" ? "w-sheet" : "w-content")}>
               <p.Component screen={s.id} go={() => {}} />
             </div>
-          )))}
+          ))))}
         </div>
       )}
     </section>
