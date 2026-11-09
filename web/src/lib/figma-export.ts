@@ -180,6 +180,9 @@ function inherited(el: Element | null, stop: Element, prefix: RegExp, test: (t: 
 }
 
 const num = (v: string) => parseFloat(v) || 0
+// Componentes que no escalan nunca: van con ancho y alto fijos en el auto layout (no «hug» ni «fill»)
+const FIXED_SIZE = new Set(["switch", "checkbox", "avatar", "input-otp-slot", "spinner"])
+const fixedSize = (c: FNode) => !!c.component && (FIXED_SIZE.has(c.component.set) || (c.component.set === "button" && c.component.props.tamaño.startsWith("icon")))
 // Desplazado en horizontal con transform (la barra de Progress, la bolita de Switch): en Figma va suelto en su sitio, si no el auto layout lo recoloca
 const moved = (cs: CSSStyleDeclaration) => {
   // Solo en horizontal (los iconos llevan pequeños ajustes verticales que no cuentan).
@@ -402,6 +405,7 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
       const h = c._h ?? { grow: false, wClass: true, hClass: true, fillW: false, fillH: false }
       delete c._h
       if (c.absolute) continue
+      if (fixedSize(c)) { c.sizing = { h: "FIXED", v: "FIXED" }; continue }
       const hugs = c.type === "TEXT" || !!c.layout
       const hug = (fixedClass: boolean) => (hugs && !fixedClass ? "HUG" : "FIXED")
       const textW = c.type === "TEXT" ? (c.text!.single ? "HUG" : "FIXED") : null
