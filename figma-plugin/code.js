@@ -316,7 +316,7 @@ class Drawer {
     frame.fills = n.fill ? [solid(n.fill.color, tokenVar(this.vars, n.fill.token))] : []
     if (n.stroke) {
       frame.strokes = [solid(n.stroke.color, tokenVar(this.vars, n.stroke.token))]
-      frame.strokeAlign = "INSIDE"
+      frame.strokeAlign = n.stroke.outside ? "OUTSIDE" : "INSIDE"   // fuera: el anillo de foco
       const [t, r, b, l] = n.stroke.weights
       frame.strokeTopWeight = t; frame.strokeRightWeight = r; frame.strokeBottomWeight = b; frame.strokeLeftWeight = l
       const sw = n.bind && n.bind.strokeWeight
@@ -402,7 +402,7 @@ class Drawer {
     this.page.appendChild(comp)
     holder.remove()
     comp.setPluginData("set", n.component.set)
-    if (n.component.slot) this.makeSlot(comp, n)
+    if (hasSlot(n)) this.makeSlot(comp, n)
     selfSizing(comp, n)
     this.slotFit(comp)
     this.components[key] = comp
@@ -435,7 +435,9 @@ class Drawer {
   makeSlot(comp, n) {
     if (typeof comp.createSlot !== "function") return
     try {
+      // Lo que va suelto encima (la X de cerrar de un diálogo) se queda en el componente, fuera del slot
       const kids = comp.children.slice()
+      const flow = (n.children || []).map((c) => !c.absolute)
       const slot = comp.createSlot()
       slot.name = "opciones"
       slot.fills = []
@@ -444,7 +446,9 @@ class Drawer {
       slot.primaryAxisAlignItems = comp.primaryAxisAlignItems
       slot.counterAxisAlignItems = comp.counterAxisAlignItems
       if (n.bind) bindIf(slot, "itemSpacing", this.vars, n.bind.itemSpacing)
-      for (let i = 0; i < kids.length; i++) { slot.appendChild(kids[i]); if (n.children && n.children[i]) this.fit(kids[i], n.children[i], n) }
+      for (let i = 0; i < kids.length; i++) { if (flow[i] === false) continue; slot.appendChild(kids[i]); if (n.children && n.children[i]) this.fit(kids[i], n.children[i], n) }
+      // Lo que queda suelto, delante del slot
+      for (let i = 0; i < kids.length; i++) if (flow[i] === false) comp.appendChild(kids[i])
       try { comp.setBoundVariable("itemSpacing", null) } catch (e) { /* */ }
       comp.itemSpacing = 0
       this.slotted.push({ comp: comp, slot: slot, prefer: n.component.slot })
@@ -468,7 +472,7 @@ class Drawer {
   // Lo que va en el slot de una instancia (o del componente al ponerlo al día): las opciones que trae el .json
   async fillSlot(slot, n) {
     for (const c of slot.children.slice()) c.remove()
-    for (const c of n.children || []) await this.node(c, slot, n, false)
+    for (const c of n.children || []) if (!c.absolute) await this.node(c, slot, n, false)
   }
 
   kindOf(n, top) {
@@ -481,7 +485,7 @@ class Drawer {
   sameShape(node, n, top) {
     const k = this.kindOf(n, top)
     // Con slot: lo de dentro cambia en cada pantalla, cuenta solo que tenga su slot
-    if (top && n.component && n.component.slot && this.slotOf(node)) return true
+    if (top && hasSlot(n) && this.slotOf(node)) return true
     if (k === "SVG") return true
     if (k === "TEXT") return node.type === k
     if (node.type === "INSTANCE") return k === "INSTANCE"
@@ -505,7 +509,7 @@ class Drawer {
       return
     }
     await this.box(n, node)
-    const slot = top && n.component && n.component.slot ? this.slotOf(node) : null
+    const slot = top && hasSlot(n) ? this.slotOf(node) : null
     if (slot) {
       try { node.setBoundVariable("itemSpacing", null) } catch (e) { /* */ }
       node.itemSpacing = 0
@@ -533,7 +537,7 @@ class Drawer {
   }
 
   async overrides(inst, n) {
-    const slot = n.component && n.component.slot ? this.slotOf(inst) : null
+    const slot = hasSlot(n) ? this.slotOf(inst) : null
     if (slot) { await this.fillSlot(slot, n); return }
     // Lo que cambia de una vez a otra: los textos y sus colores, y qué icono va
     const texts = inst.findAll((x) => x.type === "TEXT")
@@ -555,6 +559,9 @@ class Drawer {
     }
   }
 }
+
+// Componente con slot: lista (con su preferido) o caja ("" = sin preferido)
+function hasSlot(n) { return !!n.component && typeof n.component.slot === "string" }
 
 function collect(n, type, out) {
   out = out || []
@@ -612,6 +619,7 @@ function combineSets(drawer) {
 function preferInSlots(drawer) {
   const sets = figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })
   for (const s of drawer.slotted) {
+    if (!s.prefer) continue      // caja sin preferido (Card, Dialog…): se llena con lo que quieras
     const want = sets.find((x) => x.name === s.prefer)
     const ref = s.slot.componentPropertyReferences && s.slot.componentPropertyReferences.slotContentId
     if (!want || !ref) continue

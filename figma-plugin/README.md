@@ -69,3 +69,11 @@ Pedidas por Jordi al revisar el catálogo en Figma. Cualquier componente o panta
    - Los campos (input, textarea, select…) y las barras (progress, slider, separator) tienen ancho fijo.
    - Los que no escalan tienen tamaño fijo: casilla, interruptor, avatar, botón de icono… (lista `FIXED_SIZE` en `web/src/lib/figma-export.ts`).
 5. **Listas con slot.** Tabs (`tabs-list`), Toggle Group (`toggle-group`) y Tab propio (`tab-list`) son componentes con un **slot** («opciones»). Dentro van las pestañas u opciones que pida cada pantalla, y el componente preferido del slot es el suyo: `tabs-trigger`, `toggle-group-item` o `tab-trigger`. Si Figma no admite slots, se dibujan como antes. La lista está en `SLOT_LISTS`, en `web/src/lib/figma-export.ts`.
+6. **Cajas con slot.** Card, Dialog, Alert Dialog, Sheet, Drawer, Popover y Hover Card tienen un slot sin preferido, para meter dentro lo que haga falta. Lo que va suelto encima, como la X de cerrar, se queda fuera del slot. Los menús (Dropdown, Context, Menubar) tienen un slot con su opción como preferida.
+7. **Estados.** En el catálogo, cada pieza interactiva sale también en sus estados, cada uno como variante (`estado=…`), en la sección «Estados» de su tarjeta. Se leen de sus clases:
+   - `hover:` → hover
+   - `active:` → pulsado
+   - `focus-visible:` → foco, con el anillo por fuera
+   - `disabled:` → deshabilitado
+   - `aria-invalid:` → error
+8. **Lo que se abre encima.** Diálogos, menús, paneles y tooltips se abren un momento al descargar, se miden y salen en la sección «Abierto» del catálogo como componentes.
