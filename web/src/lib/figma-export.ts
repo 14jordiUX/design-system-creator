@@ -115,7 +115,10 @@ const COMPONENT_SLOTS = new Set(["button", "badge", "checkbox", "input", "input-
   "textarea", "select-trigger", "native-select", "radio-group-item", "toggle", "toggle-group-item", "tabs-trigger", "slider",
   "progress", "skeleton", "pagination-link", "breadcrumb-link",
   // propios
-  "choice-card", "setting-row", "password-input", "icon-badge", "brand", "back-button", "step-footer", "code-input"])
+  "choice-card", "setting-row", "password-input", "icon-badge", "brand", "back-button", "step-footer", "code-input",
+  "stat-card", "appointment-card", "fab-button", "tab-trigger", "app-sidebar-item", "app-tab-bar-item",
+  // piezas de shadcn/ui con forma fija (cambia el texto, no la estructura)
+  "item", "accordion-item", "bubble", "attachment", "marker", "command-item", "sidebar-menu-button", "navigation-menu-link"])
 
 function rgba(c: string): [number, number, number, number] | null {
   if (!c) return null
@@ -206,7 +209,9 @@ function iconName(svg: Element) {
 }
 
 function slotName(el: Element) {
-  const slot = el.getAttribute("data-slot")
+  let slot = el.getAttribute("data-slot")
+  // Un botón que abre algo (menú, diálogo, popover…) lleva el data-slot del disparador, pero sigue siendo un Button
+  if (slot?.endsWith("-trigger") && el.hasAttribute("data-variant") && el.hasAttribute("data-size") && el.tagName === "BUTTON") slot = "button"
   if (!slot || !COMPONENT_SLOTS.has(slot)) return null
   // Una etiqueta que envuelve un campo entero es una tarjeta de opción (con su casilla o interruptor), no una etiqueta
   if (slot === "field-label" && el.querySelector(":scope > [data-slot=field]")) return "choice-card"
@@ -412,17 +417,20 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
       if (c.absolute) continue
       if (fixedSize(c)) { c.sizing = { h: "FIXED", v: "FIXED" }; continue }
       const hugs = c.type === "TEXT" || !!c.layout
-      const hug = (fixedClass: boolean) => (hugs && !fixedClass ? "HUG" : "FIXED")
+      // Un marco que abraza su contenido no puede tener hijos que lo rellenan: en Figma se encogería hasta casi nada
+      // (el formulario del catálogo salía con los campos estrechos). En ese eje va con su ancho/alto fijo.
+      const fills = (axis: "h" | "v") => !!c.children?.some((k) => !k.absolute && k.sizing?.[axis] === "FILL")
+      const hug = (fixedClass: boolean, axis: "h" | "v") => (hugs && !fixedClass && !fills(axis) ? "HUG" : "FIXED")
       const textW = c.type === "TEXT" ? (c.text!.single ? "HUG" : "FIXED") : null
       if (layout.mode === "VERTICAL") {
         c.sizing = {
-          h: h.fillW || Math.abs(c.w - cw) < 1.5 ? "FILL" : textW ?? hug(h.wClass),
-          v: h.grow || h.fillH ? "FILL" : c.type === "TEXT" ? "HUG" : hug(h.hClass),
+          h: h.fillW || Math.abs(c.w - cw) < 1.5 ? "FILL" : textW ?? hug(h.wClass, "h"),
+          v: h.grow || h.fillH ? "FILL" : c.type === "TEXT" ? "HUG" : hug(h.hClass, "v"),
         }
       } else {
         c.sizing = {
-          h: h.grow || h.fillW ? "FILL" : textW ?? hug(h.wClass),
-          v: h.fillH || (layout.cross === "STRETCH" && Math.abs(c.h - ch) < 1.5 && !h.hClass) ? "FILL" : c.type === "TEXT" ? "HUG" : hug(h.hClass),
+          h: h.grow || h.fillW ? "FILL" : textW ?? hug(h.wClass, "h"),
+          v: h.fillH || (layout.cross === "STRETCH" && Math.abs(c.h - ch) < 1.5 && !h.hClass) ? "FILL" : c.type === "TEXT" ? "HUG" : hug(h.hClass, "v"),
         }
       }
     }
