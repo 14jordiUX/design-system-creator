@@ -34,7 +34,12 @@
 <button class="primary" id="draw" disabled>Dibujar en Figma</button>
 
 <hr />
-<h2>2. Exportar tus cambios</h2>
+<h2>2. Actualizar este archivo con cambios de Claude</h2>
+<p>Elige arriba el .json nuevo y pulsa aquí. Cambia en su sitio las variables, los componentes y las pantallas de ese flujo: no duplica nada y todas las instancias se actualizan. Si has cambiado algo en Figma que Claude aún no tiene, expórtalo antes (paso 3), porque se sustituye.</p>
+<button class="secondary" id="update" disabled>Actualizar este archivo</button>
+
+<hr />
+<h2>3. Exportar tus cambios</h2>
 <p>Guarda las variables, los componentes y las pantallas de la página actual (o lo que tengas seleccionado) en un archivo para Claude.</p>
 <button class="secondary" id="export">Exportar cambios (.json)</button>
 
@@ -44,7 +49,7 @@
   let data = null
   const $ = (id) => document.getElementById(id)
   const log = (text, kind) => { const d = document.createElement("div"); d.textContent = text; d.className = kind || ""; $("log").appendChild(d); $("log").scrollTop = 1e9 }
-  const busy = (b) => { $("draw").disabled = b || !data; $("export").disabled = b }
+  const busy = (b) => { $("draw").disabled = b || !data; $("update").disabled = b || !data; $("export").disabled = b }
 
   function load(file) {
     const r = new FileReader()
@@ -66,6 +71,7 @@
   $("drop").ondrop = (e) => { e.preventDefault(); $("drop").classList.remove("over"); e.dataTransfer.files[0] && load(e.dataTransfer.files[0]) }
 
   $("draw").onclick = () => { busy(true); $("log").innerHTML = ""; parent.postMessage({ pluginMessage: { type: "draw", data, options: { overwrite: $("overwrite").checked } } }, "*") }
+  $("update").onclick = () => { busy(true); $("log").innerHTML = ""; parent.postMessage({ pluginMessage: { type: "draw", data, options: { update: true } } }, "*") }
   $("export").onclick = () => { busy(true); $("log").innerHTML = ""; parent.postMessage({ pluginMessage: { type: "export" } }, "*") }
 
   onmessage = (e) => {

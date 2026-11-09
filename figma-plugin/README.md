@@ -25,6 +25,17 @@ Si no tienes instalada la fuente del sistema, usa Inter y te avisa.
 
 **Plan gratis de Figma:** solo permite un modo por colección. El modo oscuro se guarda entonces en otra colección, «Color · Oscuro», con las mismas variables (las pantallas se ven en claro). Al exportar los cambios vuelve igual.
 
+## Actualizar con cambios de Claude
+
+Cuando Claude cambia algo (un color, un componente, un texto de pantalla…), descarga otra vez el .json en la web
+(«Llevar a Figma»), suéltalo en el plugin y pulsa **Actualizar este archivo**. En el mismo archivo:
+- pisa los valores de las variables y estilos con los nuevos (y añade los que falten);
+- rehace por dentro los componentes que ya existen, sin borrarlos: todas sus instancias reciben el cambio;
+- sustituye las pantallas del flujo en el mismo sitio (y rehace los enlaces del prototipo).
+
+Lo que no viene en el .json (otras páginas, otros componentes) no se toca. Si has cambiado algo en Figma que Claude
+aún no tiene, expórtalo antes, porque se sustituye.
+
 ## Exportar tus cambios
 
 Ve a la página del flujo (o selecciona las pantallas) y pulsa **Exportar cambios (.json)**. Súbeselo a Claude en el chat.
