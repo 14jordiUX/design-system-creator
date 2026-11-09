@@ -102,7 +102,7 @@ export type FNode = {
   text?: { chars: string; family: string; weight: number; size: number; lineHeight?: number; letterSpacing?: number; align: string; upper?: boolean; color: Paint; bind: Bind; single: boolean }
   svg?: string
   icon?: string                                        // nombre del icono (lucide) → componente icon/<nombre>
-  component?: { set: string; props: Record<string, string> }
+  component?: { set: string; props: Record<string, string>; slot?: string } // slot: lo que va en su slot (otro componente)
   link?: string                                        // al clicar, va a esta pantalla
   _h?: { grow: boolean; wClass: boolean; hClass: boolean; fillW: boolean; fillH: boolean } // solo mientras se mide
   children?: FNode[]
@@ -118,7 +118,11 @@ const COMPONENT_SLOTS = new Set(["button", "badge", "checkbox", "input", "input-
   "choice-card", "setting-row", "password-input", "icon-badge", "brand", "back-button", "step-footer", "code-input",
   "stat-card", "appointment-card", "fab-button", "tab-trigger", "app-sidebar-item", "app-tab-bar-item",
   // piezas de shadcn/ui con forma fija (cambia el texto, no la estructura)
-  "item", "accordion-item", "bubble", "attachment", "marker", "command-item", "sidebar-menu-button", "navigation-menu-link"])
+  "item", "accordion-item", "bubble", "attachment", "marker", "command-item", "sidebar-menu-button", "navigation-menu-link",
+  // listas: en Figma son componentes con un slot donde van las pestañas u opciones (las que pida cada pantalla)
+  "tabs-list", "toggle-group", "tab-list"])
+/** Componentes lista → el componente que se mete en su slot (preferido en Figma). */
+const SLOT_LISTS: Record<string, string> = { "tabs-list": "tabs-trigger", "toggle-group": "toggle-group-item", "tab-list": "tab-trigger" }
 
 function rgba(c: string): [number, number, number, number] | null {
   if (!c) return null
@@ -525,6 +529,7 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
       estado: stateOf(el, slot),
     }
     node.component = { set: slot, props }
+    if (SLOT_LISTS[slot]) { node.component.slot = SLOT_LISTS[slot]; props.contenido = "lista" }
     node.name = slot
   }
   return node
