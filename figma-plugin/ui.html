@@ -27,7 +27,7 @@
 <h2>1. Dibujar un flujo</h2>
 <div class="drop" id="drop">
   <strong id="dropTitle">Suelta aquí el archivo .json</strong>
-  <span id="dropText">o haz clic para elegirlo. Lo descargas en la web: Prototipos → Compartir → Llevar a Figma.</span>
+  <span id="dropText">o haz clic para elegirlo. Lo descargas en la web: un flujo (Prototipos → el flujo → Compartir) o todo el sistema (Prototipos → Todo para Figma).</span>
   <input type="file" id="file" accept=".json,application/json" hidden />
 </div>
 <label class="check"><input type="checkbox" id="overwrite" /> <span>Actualizar los valores de las variables y estilos que ya existen en este archivo (si no, se respetan tus cambios y solo se añaden los que faltan).</span></label>
@@ -56,9 +56,14 @@
     r.onload = () => {
       try {
         data = JSON.parse(r.result)
-        if (data.format !== "dsc-figma@1") throw new Error("no es un archivo de «Llevar a Figma»")
-        $("dropTitle").textContent = data.prototype.label + " · " + data.system.name
-        $("dropText").textContent = data.screens.length + " pantallas, modo " + data.mode.toLowerCase() + ". Haz clic para cambiar de archivo."
+        if (data.format === "dsc-figma-bundle@1") {
+          $("dropTitle").textContent = "Todo " + data.system.name + " · " + data.flows.length + " flujos"
+          $("dropText").textContent = data.flows.map((f) => f.prototype.label).join(", ") + ". Modo " + data.mode.toLowerCase() + ". Haz clic para cambiar de archivo."
+        } else {
+          if (data.format !== "dsc-figma@1") throw new Error("no es un archivo de «Llevar a Figma»")
+          $("dropTitle").textContent = data.prototype.label + " · " + data.system.name
+          $("dropText").textContent = data.screens.length + " pantallas, modo " + data.mode.toLowerCase() + ". Haz clic para cambiar de archivo."
+        }
         busy(false)
       } catch (e) { data = null; busy(false); log("Este archivo no sirve: " + e.message, "error") }
     }

@@ -469,19 +469,10 @@ export type FigmaExport = {
 }
 
 /** Recorre las pantallas ya dibujadas en la web (un elemento por pantalla) y arma el archivo para el plugin. */
-export function buildFigmaExport(opts: {
-  tokens: TokenFiles; mode: Mode; system: { id: string; name: string }
-  prototype: { slug: string; label: string; description: string; links?: PrototypeLink[] }
-  view: "mobile" | "desktop"
-  screens: { id: string; label: string; el: HTMLElement }[]
-}): FigmaExport {
-  const table = { ...flatten(opts.tokens.primitives), ...flatten(opts.tokens.semantic), ...flatten(opts.mode === "dark" ? opts.tokens.dark : opts.tokens.light) }
-  const resolved: Record<string, unknown> = {}
-  for (const t of Object.values(table)) resolved[t.path] = resolve(t.value, table)
-  const semanticColors = Object.keys(flatten(opts.mode === "dark" ? opts.tokens.dark : opts.tokens.light))
-  const ctx: Ctx = { table, resolved, semanticColors }
-  const { collections, effects } = tokensToFigma(opts.tokens)
-  const screens = opts.screens.map((s) => {
+type FlowInput = { prototype: { slug: string; label: string; description: string; links?: PrototypeLink[] }; screens: { id: string; label: string; el: HTMLElement }[] }
+
+function flowScreens(ctx: Ctx, flow: FlowInput) {
+  return flow.screens.map((s) => {
     const r = s.el.getBoundingClientRect()
     const node = serialize(ctx, s.el, s.el, r) ?? { type: "FRAME", name: s.label, x: 0, y: 0, w: Math.round(r.width), h: Math.round(r.height) }
     node.name = s.label
@@ -489,13 +480,49 @@ export function buildFigmaExport(opts: {
     node.h = Math.max(node.h, Math.round(s.el.scrollHeight))
     node.sizing = { h: "FIXED", v: "FIXED" }
     delete node._h
-    markLinks(node, (opts.prototype.links ?? []).filter((l) => l.from === s.id))
+    markLinks(node, (flow.prototype.links ?? []).filter((l) => l.from === s.id))
     return { id: s.id, label: s.label, node }
   })
+}
+
+function makeCtx(tokens: TokenFiles, mode: Mode): Ctx {
+  const table = { ...flatten(tokens.primitives), ...flatten(tokens.semantic), ...flatten(mode === "dark" ? tokens.dark : tokens.light) }
+  const resolved: Record<string, unknown> = {}
+  for (const t of Object.values(table)) resolved[t.path] = resolve(t.value, table)
+  return { table, resolved, semanticColors: Object.keys(flatten(mode === "dark" ? tokens.dark : tokens.light)) }
+}
+
+export function buildFigmaExport(opts: {
+  tokens: TokenFiles; mode: Mode; system: { id: string; name: string }
+  prototype: { slug: string; label: string; description: string; links?: PrototypeLink[] }
+  view: "mobile" | "desktop"
+  screens: { id: string; label: string; el: HTMLElement }[]
+}): FigmaExport {
+  const { collections, effects } = tokensToFigma(opts.tokens)
+  const screens = flowScreens(makeCtx(opts.tokens, opts.mode), opts)
   return {
     format: FIGMA_FORMAT, system: opts.system,
     prototype: { slug: opts.prototype.slug, label: opts.prototype.label, description: opts.prototype.description },
     mode: opts.mode === "dark" ? "Oscuro" : "Claro", view: opts.view, createdAt: new Date().toISOString(),
     collections, effects, screens,
+  }
+}
+
+export const FIGMA_BUNDLE_FORMAT = "dsc-figma-bundle@1"
+
+/** Todo el sistema en un archivo: tokens una vez y todos los flujos (cada uno con sus pantallas). */
+export function buildFigmaBundle(opts: {
+  tokens: TokenFiles; mode: Mode; system: { id: string; name: string }; view: "mobile" | "desktop"; flows: FlowInput[]
+}) {
+  const { collections, effects } = tokensToFigma(opts.tokens)
+  const ctx = makeCtx(opts.tokens, opts.mode)
+  return {
+    format: FIGMA_BUNDLE_FORMAT, system: opts.system,
+    mode: opts.mode === "dark" ? "Oscuro" : "Claro", view: opts.view, createdAt: new Date().toISOString(),
+    collections, effects,
+    flows: opts.flows.map((f) => ({
+      prototype: { slug: f.prototype.slug, label: f.prototype.label, description: f.prototype.description },
+      screens: flowScreens(ctx, f),
+    })),
   }
 }
