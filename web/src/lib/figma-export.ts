@@ -376,6 +376,23 @@ function hasSizeClass(el: Element, axis: "w" | "h") {
   return classesOf(el).some((c) => { const k = coreClass(c, false); return !!k && (k.startsWith("size-") || k.startsWith(axis + "-")) && !/-(full|auto|fit)$/.test(k) })
 }
 
+/** ¿Mide justo lo que su contenido? Entonces abraza (el padre también abraza), aunque ocupe todo el ancho del padre. */
+function hugsExactly(c: FNode) {
+  if (!c.layout || c._h?.wClass) return false
+  const kids = (c.children ?? []).filter((k) => !k.absolute)
+  if (!kids.length || kids.some((k) => k.sizing?.h === "FILL" || (k.type === "TEXT" && !k.text!.single))) return false
+  const L = c.layout, pad = L.pad[1] + L.pad[3]
+  const inner = L.mode === "HORIZONTAL" ? kids.reduce((a, k) => a + k.w, 0) + L.gap * (kids.length - 1) : Math.max(...kids.map((k) => k.w))
+  return Math.abs(inner + pad - c.w) < 3
+}
+
+function inGridColumns(el: Element) {
+  const p = el.parentElement
+  if (!p) return false
+  const pcs = getComputedStyle(p)
+  return pcs.display.includes("grid") && pcs.gridTemplateColumns.trim().split(/\s+/).length > 1
+}
+
 /** Tamaño de cada hijo dentro del auto layout (cw/ch: el hueco de dentro, sin padding ni borde). */
 function sizeChildren(node: FNode, layout: NonNullable<FNode["layout"]>, cw: number, ch: number) {
   for (const c of node.children!) {
@@ -388,10 +405,13 @@ function sizeChildren(node: FNode, layout: NonNullable<FNode["layout"]>, cw: num
     // (el formulario del catálogo salía con los campos estrechos). En ese eje va con su ancho/alto fijo.
     const fills = (axis: "h" | "v") => !!c.children?.some((k) => !k.absolute && k.sizing?.[axis] === "FILL")
     const hug = (fixedClass: boolean, axis: "h" | "v") => (hugs && !fixedClass && !fills(axis) ? "HUG" : "FIXED")
-    const textW = c.type === "TEXT" ? (c.text!.single ? "HUG" : "FIXED") : null
+    // Textos: una línea abraza su texto (si va centrada o a la derecha en todo el ancho, rellena para mantener la alineación);
+    // varias líneas rellenan el ancho que tengan (el texto se ajusta a la caja), nunca un ancho fijo
+    const single = c.type === "TEXT" && c.text!.single
+    const textW = c.type === "TEXT" ? (single ? (layout.mode === "VERTICAL" && c.text!.align !== "LEFT" && Math.abs(c.w - cw) < 1.5 ? "FILL" : "HUG") : "FILL") : null
     if (layout.mode === "VERTICAL") {
       c.sizing = {
-        h: h.fillW || Math.abs(c.w - cw) < 1.5 ? "FILL" : textW ?? hug(h.wClass, "h"),
+        h: h.fillW || (c.type !== "TEXT" && Math.abs(c.w - cw) < 1.5 && !hugsExactly(c)) ? "FILL" : textW ?? hug(h.wClass, "h"),
         v: h.grow || h.fillH ? "FILL" : c.type === "TEXT" ? "HUG" : hug(h.hClass, "v"),
       }
     } else {
@@ -516,7 +536,8 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
   }
 
   const hints = {
-    grow: num(cs.flexGrow) > 0, wClass: hasSizeClass(el, "w"),
+    // En una rejilla de varias columnas (grid-cols-3…), cada pieza ocupa su columna: rellena
+    grow: num(cs.flexGrow) > 0 || inGridColumns(el), wClass: hasSizeClass(el, "w"),
     // aspect-square y similares: el alto sale del ancho, así que en Figma va fijo (si abrazara, la tarjeta se aplastaría)
     hClass: hasSizeClass(el, "h") || (!!cs.aspectRatio && cs.aspectRatio !== "auto"),
     fillW: classesOf(el).some((c) => ["w-full", "size-full"].includes(coreClass(c, false) ?? "")),
@@ -596,6 +617,8 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
   return node
 }
 
+/** Campos y barras: su ancho no depende del texto de dentro (como FIXED_WIDTH del plugin) */
+const FIELDS = new Set(["input", "textarea", "select-trigger", "native-select", "input-group", "password-input", "code-input", "slider", "progress", "separator", "skeleton"])
 /** Componentes cuyo icono va con interruptores en Figma, no como variante */
 const WITH_TOGGLES = new Set(["button"])
 /** Estados que no tienen sentido en una pieza (un botón no tiene error) */
@@ -677,7 +700,17 @@ function addSection(screen: FNode, title: string, items: FNode[]) {
   let x = 0, rowH = 0, h = 0
   for (const it of items) {
     it.x = 0; it.y = 0; delete it.absolute
-    it.sizing = { h: it.sizing?.h === "FILL" ? "FIXED" : it.sizing?.h ?? "FIXED", v: it.sizing?.v === "FILL" ? "FIXED" : it.sizing?.v ?? "FIXED" }
+    // Cada pieza con su tamaño natural: abraza su contenido si en la web lo abrazaba (un botón, una pestaña…);
+    // las que rellenaban (un campo) van con el ancho que tenían, porque en una fila no hay nada que rellenar
+    const fillsKid = (axis: "h" | "v") => !!it.children?.some((k) => !k.absolute && k.sizing?.[axis] === "FILL")
+    const nat = (axis: "h" | "v") => {
+      const cur = it.sizing?.[axis]
+      if (cur === "HUG" || (cur === "FIXED" && fixedSize(it))) return cur
+      // Campos y barras: su ancho no depende del texto (fijo). El resto, si puede abrazar su contenido, abraza
+      if (fillsKid(axis) || !it.layout || (axis === "h" && it.component && FIELDS.has(it.component.set))) return "FIXED"
+      return "HUG"
+    }
+    it.sizing = { h: nat("h"), v: nat("v") }
     if (x > 0 && x + it.w > inner) { h += rowH + gap; x = 0; rowH = 0 }
     x += it.w + gap; rowH = Math.max(rowH, it.h)
   }
@@ -792,9 +825,11 @@ export function measureOpen(tokens: TokenFiles, mode: Mode, el: HTMLElement): FN
     const r = el.getBoundingClientRect()
     const n = serialize(makeCtx(tokens, mode), el, el, r)
     if (!n) return null
+    // Con ancho propio (w-…) o con algo dentro que rellena: ancho fijo; si no (un tooltip), abraza su texto
+    const wFixed = !n.layout || !!n._h?.wClass || !!n.children?.some((k) => !k.absolute && k.sizing?.h === "FILL")
     delete n.absolute; delete n._h
     n.x = 0; n.y = 0
-    n.sizing = { h: "FIXED", v: n.layout ? "HUG" : "FIXED" }
+    n.sizing = { h: wFixed ? "FIXED" : "HUG", v: n.layout ? "HUG" : "FIXED" }
     return n
   } catch (e) { console.warn("No se ha podido medir", e); return null }
 }
