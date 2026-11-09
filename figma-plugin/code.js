@@ -601,6 +601,12 @@ class Drawer {
     const t = (n.children || []).find((c) => c.role === "texto"), tk = find("texto", "TEXT")
     if (t && tk) want[tk] = t.text.chars
     try { inst.setProperties(want) } catch (e) { log("No he podido ajustar los iconos o el texto de un «" + n.component.set + "»: " + e.message, "warn") }
+    // Al cambiar el icono, Figma puede quedarse con el color del icono original: se pinta con el del botón
+    for (const side of ["icono izquierda", "icono derecha"]) {
+      const svg = (n.children || []).find((c) => c.role === side)
+      const l = inst.children.find((x) => x.name === side)
+      if (svg && svg.fill && l) paintIcon(l, solid(svg.fill.color, tokenVar(this.vars, svg.fill.token)))
+    }
   }
 
   async instance(n) {
@@ -738,6 +744,9 @@ async function bindToggles() {
           const refs = { visible: keys[side] }
           if (l.type === "INSTANCE" && keys[side + " · cuál"]) refs.mainComponent = keys[side + " · cuál"]
           l.componentPropertyReferences = refs
+          // El icono va del color del texto (en la web es currentColor): al enlazar o cambiar el icono, Figma puede perderlo
+          const tt = layer(c, "texto")
+          if (tt && tt.type === "TEXT" && tt.fills !== figma.mixed && tt.fills.length) paintIcon(l, tt.fills[0])
         }
         const t = layer(c, "texto")
         if (t && t.type === "TEXT" && tk) {
