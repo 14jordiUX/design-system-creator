@@ -656,7 +656,13 @@ async function draw(data, options) {
   // Al actualizar se usa la página del flujo que ya existe; al dibujar, una nueva
   // Cada tamaño en su página: «Iniciar sesión · Base · Móvil» y «… · Escritorio» (el catálogo, sin tamaño)
   const base = data.prototype.label + " · " + data.system.name
-  const pageName = data.prototype.slug === "catalogo" || !data.view ? base : base + " · " + (data.view === "mobile" ? "Móvil" : "Escritorio")
+  const pageName = data.prototype.slug.indexOf("catalogo") === 0 || !data.view ? base : base + " · " + (data.view === "mobile" ? "Móvil" : "Escritorio")
+  if (update && data.prototype.slug.indexOf("catalogo-") === 0) {
+    // Antes el catálogo iba entero en una página; ahora va una por grupo. La antigua no se borra (por si la has tocado): se marca
+    await figma.loadAllPagesAsync()
+    const old = figma.root.children.find((x) => x.name === "Catálogo · " + data.system.name)
+    if (old) { old.name = "Catálogo (antiguo) · " + data.system.name; log("El catálogo ahora va en una página por grupo. La página antigua se llama «" + old.name + "»: bórrala cuando quieras.", "warn") }
+  }
   if (update && pageName !== base && data.view === "mobile") {
     // Archivos de antes (se dibujaban en móvil, en una página sin tamaño): esa página pasa a ser la de móvil
     await figma.loadAllPagesAsync()

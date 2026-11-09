@@ -759,13 +759,15 @@ export function buildFigmaBundle(opts: {
 }) {
   const { collections, effects } = tokensToFigma(opts.tokens)
   const ctx = makeCtx(opts.tokens, opts.mode)
+  const seenStates = new Set<string>()
   return {
     format: FIGMA_BUNDLE_FORMAT, system: opts.system,
     mode: opts.mode === "dark" ? "Oscuro" : "Claro", view: opts.view, createdAt: new Date().toISOString(),
     collections, effects,
     flows: opts.flows.map((f) => {
       const screens = flowScreens(ctx, f)
-      if (f.prototype.slug === "catalogo") { const seen = new Set<string>(); for (const s of screens) addStates(s.node, seen) }
+      // Cada variante con sus estados una sola vez, aunque el catálogo vaya en varias páginas
+      if (f.prototype.slug.startsWith("catalogo")) for (const s of screens) addStates(s.node, seenStates)
       for (const s of screens) stripStates(s.node)
       return { view: f.view, prototype: { slug: f.prototype.slug, label: f.prototype.label, description: f.prototype.description }, screens }
     }),

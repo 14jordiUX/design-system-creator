@@ -437,6 +437,7 @@ const OPENERS: Record<string, "click" | "press" | "focus" | "context"> = {
 }
 const OPEN_CONTENT = ["dialog-content", "alert-dialog-content", "sheet-content", "drawer-content", "popover-content", "dropdown-menu-content",
   "menubar-content", "tooltip-content", "hover-card-content", "context-menu-content"].map((x) => `[data-slot="${x}"]`).join(",")
+const slugify = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 async function measureOpened(card: HTMLElement, slug: string, tokens: TokenFiles, mode: "light" | "dark"): Promise<FNode[]> {
@@ -489,10 +490,11 @@ function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens:
         const data = buildFigmaBundle({
           tokens, mode, system, view: "desktop",
           flows: [
-            {
-              prototype: { slug: "catalogo", label: "Catálogo", description: "Todos los componentes del sistema con sus variantes y estados." },
-              screens: catalog.map((c) => ({ id: c.slug, label: c.label, el: refs.current["catalogo|" + c.slug]!, open: open[c.slug] })).filter((s) => s.el),
-            },
+            // El catálogo, una página por grupo (como en el menú de la web: Acciones, Formularios, Propios…)
+            ...[...new Set(catalog.map((c) => c.group))].map((g) => ({
+              prototype: { slug: `catalogo-${slugify(g)}`, label: "Catálogo · " + g, description: `Componentes de «${g}» con sus variantes y estados.` },
+              screens: catalog.filter((c) => c.group === g).map((c) => ({ id: c.slug, label: c.label, el: refs.current["catalogo|" + c.slug]!, open: open[c.slug] })).filter((s) => s.el),
+            })),
             // Cada flujo dos veces: en móvil y en escritorio (cada uno en su página de Figma)
             ...list.flatMap((p) => VIEWS.map((v) => ({
               view: v,
