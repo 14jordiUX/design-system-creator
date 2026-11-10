@@ -66979,6 +66979,8 @@ async function draw(data, options) {
   }
   const first = frames[data.screens[0].id]
   if (first) flowPage.flowStartingPoints = [{ nodeId: first.id, name: data.prototype.label }]
+  // Todo en su sitio, sin pisarse: las pantallas del flujo en orden (en filas si son muchas) y lo demás detrás
+  layoutPage(flowPage, data.screens.map((s) => frames[s.id]).filter((f, i, a) => f && !f.removed && a.indexOf(f) === i), 9000)
   figma.viewport.scrollAndZoomIntoView(Object.keys(frames).map((k) => frames[k]))
   if (drawer.rebuilt.length) log("Han cambiado de forma y se han rehecho enteros: " + drawer.rebuilt.filter((x, i, a) => a.indexOf(x) === i).join(", ") + ". Si otros flujos de este archivo los usan, actualízalos también con su .json para que no pierdan sus textos.", "warn")
   if (update) log("Actualizado: " + drawer.refreshed + " variantes de componentes puestas al día, " + replaced + " pantallas sustituidas y " + (data.screens.length - replaced) + " nuevas. Lo que no venía en el archivo sigue igual.", "ok")
@@ -67189,6 +67191,26 @@ async function documentComponents(page, drawer, sheet) {
     s.x = 480; s.y = y
     y += Math.max(doc.height, s.height) + 160
   }
+  // Lo demás que haya en la página (de versiones anteriores o tuyo), debajo, sin pisar nada
+  const placed = icons.concat(list)
+  let rx = 0, rowH2 = 0
+  for (const n of page.children.slice()) {
+    let d = ""; try { d = n.getPluginData("doc") } catch (e) { /* */ }
+    if (placed.indexOf(n) >= 0 || d === "1") continue
+    if (rx > 0 && rx + n.width > 4000) { rx = 0; y += rowH2 + 160; rowH2 = 0 }
+    n.x = rx; n.y = y; rx += n.width + 160; rowH2 = Math.max(rowH2, n.height)
+  }
+}
+
+// Coloca las capas de primer nivel de una página en filas, sin que se pisen: primero \`first\` (en su orden), luego el resto
+function layoutPage(page, first, maxW) {
+  const rest = page.children.filter((n) => first.indexOf(n) < 0).sort((a, b) => (a.y - b.y) || (a.x - b.x))
+  let x = 0, y = 0, rowH = 0
+  for (const n of first.concat(rest)) {
+    if (x > 0 && x + n.width > maxW) { x = 0; y += rowH + 160; rowH = 0 }
+    n.x = x; n.y = y
+    x += n.width + 160; rowH = Math.max(rowH, n.height)
+  }
 }
 
 // Orden de las páginas: portada y fundamentos, componentes, catálogo y, al final, los flujos (con separadores)
@@ -67266,7 +67288,7 @@ async function finishFile(data, drawer) {
   if (!drawer) return
   const sys = data.system.name
   const sheet = new Sheet(drawer, valueTable(data.collections))
-  const steps = [["portada", () => makeCover(sys, sheet)], ["fundamentos", () => makeFoundations(sys, data, sheet)], ["fichas de componentes", () => documentComponents(drawer.page, drawer, sheet)], ["orden de páginas", () => orderPages(sys)], ["revisión", () => auditFile(sys)]]
+  const steps = [["orden de variantes", async () => arrangeSets()], ["portada", () => makeCover(sys, sheet)], ["fundamentos", () => makeFoundations(sys, data, sheet)], ["fichas de componentes", () => documentComponents(drawer.page, drawer, sheet)], ["orden de páginas", () => orderPages(sys)], ["revisión", () => auditFile(sys)]]
   for (const [label, fn] of steps) {
     try { await fn() } catch (e) { log("No he podido hacer " + label + ": " + (e && e.message ? e.message : e), "warn"); console.error(e) }
   }
