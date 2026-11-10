@@ -79,7 +79,9 @@ function nestedOf(n, out) {
   for (const c of n.children || []) { if (c.component) out.push(c); else nestedOf(c, out) }
   return out
 }
-const rolesOfNode = (n) => ownParts(n).map((p) => p.role).filter(Boolean)
+const rolesOfNode = (n) => ownParts(n).concat(nestedOf(n)).map((p) => p.role).filter(Boolean)
+// Lo que se puede elegir como campo dentro de un Field («campo · cuál»)
+const FIELD_CONTROLS = ["input", "textarea", "select-trigger", "native-select", "input-group", "password-input", "code-input", "checkbox", "switch", "slider", "radio-group-item"]
 const isIconLayer = (x) => x.type === "INSTANCE" && (x.name.indexOf("icon/") === 0 || x.name.indexOf("icono") === 0)
 // Instancias de primer nivel dentro de una capa (no los iconos ni lo que va dentro de otra instancia)
 function firstInstances(node, out) {
@@ -487,7 +489,14 @@ class Drawer {
     if (!this.values) return undefined
     const pref = field === "itemSpacing" ? ["space/gap/", "space/inset/"] : ["space/inset/", "space/gap/"]
     for (const p of pref) { const n = this.values.names.find((x) => x.indexOf(p) === 0 && Number(this.values(x)) === value); if (n) return n }
-    return undefined
+    // A 1 px de una medida del sistema (un hueco de 3 que sale de medir textos): se queda con la más cercana
+    let best, dist = 1.01
+    for (const p of pref) for (const x of this.values.names) {
+      if (x.indexOf(p) !== 0) continue
+      const d = Math.abs(Number(this.values(x)) - value)
+      if (d < dist || (d === dist && best && Number(this.values(x)) > Number(this.values(best)))) { best = x; dist = d }
+    }
+    return best
   }
 
   // Alto o ancho fijo que viene de un token (alto del botón, tamaño del avatar): enlazado a su variable, solo si es fijo
@@ -520,7 +529,9 @@ class Drawer {
     if (!master) return false
     const have = rolesOfNode(master)
     if (!rolesOfNode(n).every((r) => have.indexOf(r) >= 0)) return false
-    const a = nestedOf(n).map((x) => x.component.set).join(","), b = nestedOf(master).map((x) => x.component.set).join(",")
+    // Los de dentro sin nombre (sin propiedad que los cambie) tienen que ser los mismos
+    const plain = (x) => nestedOf(x).filter((c) => !c.role).map((c) => c.component.set).join(",")
+    const a = plain(n), b = plain(master)
     return a === b
   }
 
@@ -679,6 +690,7 @@ class Drawer {
       const comp = await this.definition(n)
       if (comp) {
         const cur = await node.getMainComponentAsync(); if (cur !== comp) node.swapComponent(comp)
+        this.mark(node, n)
         if (this.viaProps(n)) this.toggled.push({ inst: node, n: n }); else await this.overrides(node, n)
       }
       return
@@ -762,7 +774,7 @@ class Drawer {
     let defs
     try { defs = inst.componentProperties } catch (e) { return }
     const byRole = {}
-    for (const p of ownParts(n)) if (p.role && !byRole[p.role]) byRole[p.role] = p
+    for (const p of ownParts(n).concat(nestedOf(n))) if (p.role && !byRole[p.role]) byRole[p.role] = p
     const want = {}
     for (const k of Object.keys(defs)) {
       const name = k.split("#")[0], d = defs[k]
@@ -775,6 +787,8 @@ class Drawer {
         const p = byRole[name.replace(/ · cuál$/, "")]
         // Solo si cambia: «cambiar» al mismo icono hace que Figma lo deje con el color del icono original
         if (p && p.icon) { await this.iconComp(p); const id = this.icons[p.name].id; if (d.value !== id) want[k] = id }
+        // Una pieza de dentro que se elige (el tipo de campo de un Field): la variante que toca
+        else if (p && p.component) { const comp = await this.definition(p); if (comp && d.value !== comp.id) want[k] = comp.id }
       }
     }
     if (Object.keys(want).length) { try { inst.setProperties(want) } catch (e) { log("No he podido ajustar los textos o iconos de un «" + n.component.set + "»: " + e.message, "warn") } }
@@ -793,9 +807,18 @@ class Drawer {
     // Lo que lleva dentro: la variante que toca y sus textos
     if ((depth || 0) > 6) return
     const kidsN = nestedOf(n), kidsI = firstInstances(inst)
-    if (kidsN.length !== kidsI.length) return
-    for (let i = 0; i < kidsN.length; i++) {
-      const kn = kidsN[i], ki = kidsI[i]
+    // Las de dentro con nombre (etiqueta, campo) se buscan por su propiedad; las demás, en orden
+    const pairs = [], used = []
+    for (const kn of kidsN.filter((x) => x.role)) {
+      const keys = Object.keys(defs).filter((k) => { const nm = k.split("#")[0]; return nm === kn.role + " · cuál" || nm === "con " + kn.role })
+      const free = kidsI.filter((x) => used.indexOf(x) < 0)
+      const ki = free.find((x) => { const r = x.componentPropertyReferences; return r && keys.some((k) => r.mainComponent === k || r.visible === k) }) || free.find((x) => x.name === kn.role)
+      if (ki) { used.push(ki); pairs.push([kn, ki]) }
+    }
+    const restN = kidsN.filter((x) => !x.role), restI = kidsI.filter((x) => used.indexOf(x) < 0)
+    if (restN.length === restI.length) restN.forEach((kn, i) => pairs.push([kn, restI[i]]))
+    for (const pr of pairs) {
+      const kn = pr[0], ki = pr[1]
       if (hasSlot(kn)) continue
       const comp = await this.definition(kn)
       if (comp) { const cur = await ki.getMainComponentAsync(); if (cur !== comp) { try { ki.swapComponent(comp) } catch (e) { continue } } }
@@ -871,7 +894,7 @@ async function findComponent(set, p) {
   }
   return null
 }
-const defaultOf = (k) => (k === "estado" ? "normal" : k === "posición" ? "sola" : k === "seleccionado" ? "no" : "default")
+const defaultOf = (k) => (k === "estado" ? "normal" : k === "posición" ? "sola" : k === "seleccionado" ? "no" : k === "orientación" ? "vertical" : "default")
 
 // Qué propiedades y valores tiene cada componente según el .json (set → propiedad → valores)
 function schemaOf(defs) {
@@ -945,7 +968,7 @@ function roleLayers(comp) {
       let role = ""
       try { role = k.getPluginData("role") } catch (e) { /* */ }
       if (!role && LEGACY_ROLES[k.name]) role = k.name
-      if (role && (k.type === "TEXT" || (k.type === "INSTANCE" && role.indexOf("icono") === 0))) out.push({ role: role, layer: k })
+      if (role && (k.type === "TEXT" || k.type === "INSTANCE")) out.push({ role: role, layer: k, nested: k.type === "INSTANCE" && role.indexOf("icono") !== 0 })
       else if (k.type !== "INSTANCE" && k.type !== "TEXT" && k.type !== "SLOT" && "children" in k) walk(k)
     }
   }
@@ -968,7 +991,7 @@ async function bindProperties(drawer) {
     const variants = set.children.filter((c) => c.type === "COMPONENT")
     const layers = variants.map((c) => ({ c: c, parts: roleLayers(c) }))
     const roles = []
-    layers.forEach((v) => v.parts.forEach((p) => { if (!roles.some((r) => r.role === p.role)) roles.push({ role: p.role, type: p.layer.type, sample: p.layer }) }))
+    layers.forEach((v) => v.parts.forEach((p) => { if (!roles.some((r) => r.role === p.role)) roles.push({ role: p.role, type: p.layer.type, sample: p.layer, nested: p.nested }) }))
     for (const v of variants) for (const x of firstInstances(v)) { try { x.isExposedInstance = true } catch (e) { /* */ } }
     if (!roles.length) continue
     const failed = []
@@ -982,6 +1005,15 @@ async function bindProperties(drawer) {
         if (r.type === "TEXT") {
           k.text = ensure(r.role, "TEXT", r.sample.characters)
           if (optional.indexOf(r.role) >= 0) k.show = ensure("con " + r.role, "BOOLEAN", true)
+        } else if (r.nested) {
+          // Pieza de dentro (la etiqueta o el campo de un Field): se enciende y apaga; el campo, además, se elige
+          if (optional.indexOf(r.role) >= 0) k.show = ensure("con " + r.role, "BOOLEAN", true)
+          const main = await r.sample.getMainComponentAsync()
+          if (main && r.role === "campo") {
+            k.swap = ensure("campo · cuál", "INSTANCE_SWAP", main.id)
+            const kinds = figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] }).filter((x) => FIELD_CONTROLS.indexOf(x.name) >= 0)
+            if (kinds.length) { try { set.editComponentProperty(k.swap, { preferredValues: kinds.map((c) => ({ type: "COMPONENT_SET", key: c.key })) }) } catch (e) { /* */ } }
+          }
         } else {
           const toggle = r.role === "icono izquierda" || r.role === "icono derecha"
           if (toggle || optional.indexOf(r.role) >= 0) k.show = ensure(r.role, "BOOLEAN", !toggle)
@@ -1000,6 +1032,9 @@ async function bindProperties(drawer) {
             await figma.loadFontAsync(p.layer.fontName === figma.mixed ? { family: "Inter", style: "Regular" } : p.layer.fontName)
             refs.characters = k.text
             if (k.show) refs.visible = k.show
+          } else if (p.nested) {
+            if (k.show) refs.visible = k.show
+            if (k.swap) refs.mainComponent = k.swap
           } else {
             if (k.show) refs.visible = k.show
             if (k.swap) refs.mainComponent = k.swap
@@ -1121,6 +1156,18 @@ function combineSets(drawer) {
   }
 }
 
+// Al ajustar las instancias pueden hacer falta variantes nuevas (un campo de contraseña dentro de un Field): se meten
+// en su conjunto con sus propiedades y se vuelven a ajustar las instancias (hasta que no falte ninguna)
+async function settle(drawer, list) {
+  const loose = () => Object.keys(drawer.components).some((k) => { const c = drawer.components[k]; return c && !c.removed && c.parent && c.parent.type !== "COMPONENT_SET" })
+  for (let i = 0; i < 3 && loose(); i++) {
+    combineSets(drawer)
+    await bindProperties(drawer)
+    arrangeSets()
+    for (const t of list) await drawer.setProps(t.inst, t.n)
+  }
+}
+
 // En cada slot, el componente que se suele meter (pestaña, opción…) sale el primero al elegir qué poner
 function preferInSlots(drawer) {
   const sets = figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] })
@@ -1233,6 +1280,7 @@ async function draw(data, options) {
   await bindProperties(drawer)
   arrangeSets()
   for (const t of drawer.toggled.slice(queueStart)) await drawer.setProps(t.inst, t.n)
+  await settle(drawer, drawer.toggled.slice(queueStart))
 
   // Prototipo: cada botón lleva a su pantalla
   for (const l of drawer.links) {
@@ -1558,6 +1606,7 @@ async function finishFile(data, drawer) {
   try {
     await bindProperties(drawer)
     for (const t of drawer.toggled) await drawer.setProps(t.inst, t.n)
+    await settle(drawer, drawer.toggled)
   } catch (e) { log("No he podido repasar las propiedades: " + e.message, "warn") }
   const sheet = new Sheet(drawer, valueTable(data.collections))
   const steps = [["orden de variantes", async () => arrangeSets()], ["portada", () => makeCover(sys, sheet)], ["fundamentos", () => makeFoundations(sys, data, sheet)], ["fichas de componentes", () => documentComponents(drawer.page, drawer, sheet)], ["orden de páginas", () => orderPages(sys)], ["revisión", () => auditFile(sys)]]

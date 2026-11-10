@@ -115,7 +115,7 @@ export type FNode = {
 
 const CT = classTokens as Record<string, string[]>
 // Componentes de shadcn/ui que pasan a ser componentes de Figma (las piezas «hoja»; los contenedores quedan como marcos)
-const COMPONENT_SLOTS = new Set(["button", "badge", "checkbox", "input", "input-group", "avatar", "alert", "input-otp-slot", "separator", "label", "field-label", "switch", "kbd", "spinner", "steps",
+const COMPONENT_SLOTS = new Set(["button", "badge", "checkbox", "input", "input-group", "avatar", "alert", "input-otp-slot", "separator", "label", "field-label", "field", "switch", "kbd", "spinner", "steps",
   // piezas de shadcn/ui que salen en el catálogo (siempre con la misma forma)
   "textarea", "select-trigger", "native-select", "radio-group-item", "toggle", "toggle-group-item", "tabs-trigger", "slider",
   "progress", "skeleton", "pagination-link", "breadcrumb-link",
@@ -255,7 +255,9 @@ function textStyle(ctx: Ctx, holder: Element, root: Element, chars: string, r: D
   const cs = getComputedStyle(holder)
   const size = num(cs.fontSize), weight = num(cs.fontWeight) || 400
   const lh = cs.lineHeight === "normal" ? undefined : num(cs.lineHeight)
-  const color = cs.color
+  // Texto con brillo animado (shimmer: color transparente sobre un degradado): su color es el del padre
+  let color = cs.color
+  for (let e = holder.parentElement; transparent(color) && e && e !== root.parentElement; e = e.parentElement) color = getComputedStyle(e).color
   const bind: Bind = {}
   const sizeTok = inherited(holder, root, /^text-/, (t) => ctx.table[t]?.type === "dimension" && Math.abs((px(ctx.resolved[t]) ?? -1) - size) < 0.5)
   if (sizeTok) bind.fontSize = sizeTok
@@ -504,7 +506,10 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
       const ph = !el.value
       const pcs = getComputedStyle(el, "::placeholder")
       const left = r.left + num(cs.paddingLeft) + num(cs.borderLeftWidth)
-      const tr = new DOMRect(left, r.top, Math.max(1, r.right - left - num(cs.paddingRight)), r.height)
+      // El texto ocupa su alto de línea: centrado en el campo de una línea; arriba (con su margen) en un área de texto
+      const lh = cs.lineHeight === "normal" ? Math.round(num(cs.fontSize) * 1.2) : num(cs.lineHeight)
+      const top = el instanceof HTMLTextAreaElement ? r.top + num(cs.paddingTop) + num(cs.borderTopWidth) : r.top + (r.height - lh) / 2
+      const tr = new DOMRect(left, top, Math.max(1, r.right - left - num(cs.paddingRight)), lh)
       kids.push({ rect: tr, absolute: false, make: () => {
         const t = textStyle(ctx, el, root, val, tr)
         if (ph) {
@@ -512,7 +517,7 @@ function serialize(ctx: Ctx, el: Element, root: Element, parentRect: DOMRect): F
           const tok = candidates(el, /^text-/).find((x) => ctx.table[x]?.type === "color" && sameColor(String(ctx.resolved[x]), pcs.color))
           t.color = { color: hex(rgba(pcs.color) ?? [0, 0, 0, 1]), token: tok }
         }
-        return { type: "TEXT", name: ph ? "placeholder" : "valor", x: Math.round(tr.left - r.left), y: 0, w: Math.round(tr.width), h: Math.round(r.height), text: { ...t, single: true } }
+        return { type: "TEXT", name: ph ? "placeholder" : "valor", x: Math.round(tr.left - r.left), y: Math.round(tr.top - r.top), w: Math.round(tr.width), h: Math.round(tr.height), text: { ...t, single: true } }
       } })
     }
   } else {
@@ -616,12 +621,27 @@ function componentize(ctx: Ctx, node: FNode, el: Element, slot: string) {
   // Pegado a otro (en un Button Group o un campo con prefijo): sin borde o sin esquinas redondeadas en un lado → su propia variante
   const pos = JOINABLE.has(slot) ? joinedSide(node) : undefined
   if (pos) props.posición = pos
+  if (slot === "field") props.orientación = el.getAttribute("data-orientation") || "vertical"
   node.component = { set: slot, props }
+  // Campo completo (etiqueta + campo + descripción): la etiqueta y el campo de dentro son partes con nombre,
+  // para encenderlas o apagarlas y para elegir el tipo de campo
+  if (slot === "field") for (const c of nestedOf(node)) {
+    if (c.component!.set === "label") c.role = "etiqueta"
+    else if (FIELD_CONTROLS.has(c.component!.set) && !nestedOf(node).some((x) => x !== c && x.role === "campo")) c.role = "campo"
+  }
   if (slot in SLOT_LISTS) node.component.slot = SLOT_LISTS[slot]
   else assignRoles(node, slot)
   if (STATEFUL.has(slot) && props.estado === "normal") { const sp = statePatches(ctx, el); for (const k of NO_STATE[slot] ?? []) delete sp[k]; if (Object.keys(sp).length) node.states = sp }
   node.name = slot
 }
+
+/** Componentes de dentro (solo el primer nivel) */
+function nestedOf(n: FNode, out: FNode[] = []): FNode[] {
+  for (const c of n.children ?? []) { if (c.component) out.push(c); else nestedOf(c, out) }
+  return out
+}
+/** Lo que puede ir como campo dentro de un Field (se elige en Figma con «campo · cuál») */
+export const FIELD_CONTROLS = new Set(["input", "textarea", "select-trigger", "native-select", "input-group", "password-input", "code-input", "checkbox", "switch", "slider", "radio-group-item"])
 
 /** Textos e iconos del componente (sin entrar en otros componentes de dentro) */
 function ownParts(n: FNode, out: FNode[] = []): FNode[] {
@@ -704,7 +724,7 @@ const TOGGLE_ICONS = new Set(["button", "badge", "toggle", "toggle-group-item", 
 const SELECTABLE = new Set(["checkbox", "switch", "radio-group-item", "toggle", "toggle-group-item", "tabs-trigger", "tab-trigger", "choice-card", "setting-row",
   "app-sidebar-item", "app-tab-bar-item", "sidebar-menu-button", "pagination-link", "navigation-menu-link", "select-item", "command-item"])
 /** Solo los campos (y sus etiquetas) tienen estado de error; un botón, una pestaña o una tarjeta, no */
-const ERROR_OK = new Set(["input", "textarea", "select-trigger", "native-select", "input-group", "password-input", "code-input", "input-otp-slot",
+const ERROR_OK = new Set(["field", "input", "textarea", "select-trigger", "native-select", "input-group", "password-input", "code-input", "input-otp-slot",
   "checkbox", "radio-group-item", "switch", "label", "choice-card", "slider"])
 const NO_STATE: Record<string, string[]> = new Proxy({}, { get: (_t, k: string) => (ERROR_OK.has(k) ? [] : ["error"]) })
 
@@ -891,7 +911,21 @@ type FlowInput = { view?: "mobile" | "desktop"; prototype: { slug: string; label
 
 /** Clave de una variante (igual que en el plugin): conjunto|propiedad=valor, … en orden alfabético */
 export const variantKey = (c: NonNullable<FNode["component"]>) => c.set + "|" + Object.keys(c.props).sort().map((k) => k + "=" + c.props[k]).join(", ")
-const rolesOf = (n: FNode) => ownParts(n).map((p) => p.role).filter(Boolean) as string[]
+const rolesOf = (n: FNode) => ownParts(n).concat(nestedOf(n)).map((p) => p.role).filter(Boolean) as string[]
+
+/** Campo vertical: [etiqueta] campo [descripción] [mensaje]. Lo que falte se añade de otro campo */
+function completeField(c: FNode, donors: Record<string, FNode>) {
+  if (c.component!.props.orientación !== "vertical") return
+  const kids = c.children ?? []
+  const at = kids.findIndex((k) => k.role === "campo")
+  if (at < 0) return
+  if (!kids.some((k) => k.role === "etiqueta") && donors.etiqueta) { kids.splice(at, 0, clone(donors.etiqueta)) }
+  if (!kids.some((k) => k.role === "descripción") && donors.descripción) {
+    const i = kids.findIndex((k) => k.role === "campo")
+    kids.splice(i + 1, 0, clone(donors.descripción))
+  }
+  c.children = kids
+}
 
 export type SetInfo = { description?: string; optional: string[] }
 /** Para cada variante, la vez que sale más completa (con más textos e iconos): de ahí sale el componente maestro.
@@ -925,9 +959,17 @@ function setsAndDefinitions(screens: { id: string; label: string; node: FNode; d
     for (const k of n.children ?? []) findIcons(k)
   }
   for (const list of screens) for (const s of list) findIcons(s.node)
+  // Etiqueta y descripción de algún campo (para el maestro del campo que no las lleve)
+  const fieldDonors: Record<string, FNode> = {}
+  const findField = (n: FNode) => {
+    if (n.component?.set === "field" && n.component.props.orientación === "vertical")
+      for (const k of n.children ?? []) if (k.role === "etiqueta" || k.role === "descripción") fieldDonors[k.role] ??= k
+    for (const k of n.children ?? []) findField(k)
+  }
+  for (const list of screens) for (const s of list) findField(s.node)
   const definitions: Record<string, FNode> = {}
   for (const [k, n] of Object.entries(defs)) {
-    const c = clone(n); delete c.link; delete c.absolute
+    const c = clone(n); delete c.link; delete c.absolute; delete c.role
     if (c.component?.toggles) {
       const kids = c.children ?? []
       const anchor = kids.findIndex((x) => x.type === "TEXT" || (!x.component && x.type === "FRAME" && countText(x) > 0))
@@ -940,8 +982,11 @@ function setsAndDefinitions(screens: { id: string; label: string; node: FNode; d
       }
       c.children = kids
     }
+    if (c.component?.set === "field") completeField(c, fieldDonors)
     definitions[k] = c
   }
+  // El campo: etiqueta y descripción siempre en el maestro (se apagan en cada pantalla con «con etiqueta», «con descripción»)
+  if (sets.field) for (const r of ["etiqueta", "descripción"]) if (!sets.field.optional.includes(r)) sets.field.optional.push(r)
   return { sets, definitions }
 }
 
