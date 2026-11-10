@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   AppHeader, AppMain, AppShell, AppSidebar, AppSidebarContent, AppSidebarFooter, AppSidebarGroup, AppSidebarHeader,
-  AppSidebarItem, AppSidebarTrigger, AppTabBar, AppTabBarItem, AppDetailBar, AppDetailBarButton, type AppSidebarState,
+  AppSidebarItem, AppSidebarTrigger, AppTabBar, AppTabBarItem, AppDetailBar, AppDetailBarButton, AppModal, type AppSidebarState,
 } from "./app-sidebar"
 
 type Item = { id: string; label: string; icon: React.ReactNode; count?: number }
@@ -68,12 +68,17 @@ function Desktop() {
   )
 }
 
-// Una tienda pequeña: la lista con la barra de pestañas flotante y, al pulsar algo, su página de detalle con <AppDetailBar>.
-// kind="cta": un producto, con volver + «Comprar». kind="filter": una categoría, con volver a la izquierda y filtrar + CTA a la derecha.
-const PRODUCTS = ["Zapatillas Nube", "Mochila Ruta", "Gorra Brisa", "Botella Monte"]
+// Una tienda pequeña con los tres niveles de navegación, todos abajo y con el mismo estilo flotante:
+// 1) la lista, con la barra de pestañas; 2) la página de detalle, con <AppDetailBar>; 3) una ventana <AppModal> que se cierra con la X.
+// kind="cta": un producto (volver + «Comprar»; la foto y la guía de tallas abren la ventana).
+// kind="filter": una categoría (volver a la izquierda, filtrar + CTA a la derecha; «Filtrar» y cada producto abren la ventana).
+const PRODUCTS = ["Zapatillas Nube", "Mochila Ruta", "Gorra Brisa", "Botella Monte", "Chaqueta Viento", "Calcetines Paso", "Gafas Sol", "Riñonera Senda"]
+const CATEGORIES = ["Zapatillas", "Mochilas", "Gorras", "Botellas", "Chaquetas", "Calcetines", "Gafas", "Riñoneras"]
+const SIZES = ["38", "39", "40", "41", "42", "43", "44", "45"]
 function DetailDemo({ kind }: { kind: "cta" | "filter" }) {
   const [page, setPage] = useState("inicio")
-  const [detail, setDetail] = useState<string | null>(kind === "cta" ? PRODUCTS[0] : "Zapatillas")
+  const [detail, setDetail] = useState<string | null>(kind === "cta" ? PRODUCTS[0] : CATEGORIES[0])
+  const [modal, setModal] = useState<string | null>(null)
   const tabs = NAV.flatMap((g) => g.items).slice(0, 4)
   const box = (key: string | number, label: string, onClick?: () => void) => (
     <button key={key} type="button" onClick={onClick}
@@ -81,6 +86,17 @@ function DetailDemo({ kind }: { kind: "cta" | "filter" }) {
       <span className="h-avatar-2xl w-full rounded-card bg-subtle" />
       <span className="text-ui font-emphasis">{label}</span>
     </button>)
+  const row = (label: string, value?: string, onClick?: () => void) => {
+    const Comp = onClick ? "button" : "div"
+    return (
+      <Comp key={label} type={onClick ? "button" : undefined} onClick={onClick}
+        className="flex items-center justify-between gap-gap-sm border-b-thin py-inset-sm text-start text-ui outline-none focus-visible:focus-ring">
+        <span>{label}</span>
+        <span className="text-muted-foreground">{value ?? "›"}</span>
+      </Comp>)
+  }
+  const grid = (items: string[], onPick: (n: string) => void) => (
+    <div className="grid grid-cols-2 gap-gap-md p-inset-lg">{items.map((n) => box(n, n, () => onPick(n)))}</div>)
   return (
     <AppShell mobileNav="tabbar" shortcut={false} className="h-full">
       <AppSidebar>
@@ -91,23 +107,26 @@ function DetailDemo({ kind }: { kind: "cta" | "filter" }) {
           </AppSidebarGroup>
         </AppSidebarContent>
       </AppSidebar>
-      <AppMain>
+      <AppMain key={detail ?? "lista"}>
         <AppHeader><span className="text-ui font-strong">{detail ?? "Tienda"}</span></AppHeader>
-        {detail == null ? (
-          <div className="grid grid-cols-2 gap-gap-md p-inset-lg">
-            {(kind === "cta" ? PRODUCTS : ["Zapatillas", "Mochilas", "Gorras", "Botellas"]).map((n) => box(n, n, () => setDetail(n)))}
-          </div>
-        ) : kind === "cta" ? (
+        {detail == null ? grid(kind === "cta" ? PRODUCTS : CATEGORIES, setDetail)
+        : kind === "cta" ? (
           <div className="flex flex-col gap-gap-md p-inset-lg">
-            <div className="aspect-[4/3] w-full rounded-card bg-subtle" />
+            <button type="button" aria-label="Ver la foto" onClick={() => setModal("Fotos")}
+              className="aspect-[4/3] w-full rounded-card bg-subtle outline-none focus-visible:focus-ring" />
             <div className="text-title font-strong">{detail}</div>
             <div className="text-body text-muted-foreground">Ligeras, cómodas y hechas para caminar todo el día. Envío en 24 horas y devolución gratis.</div>
+            <div className="flex flex-col">
+              {row("Guía de tallas", undefined, () => setModal("Guía de tallas"))}
+              {row("Material", "Malla reciclada")}
+              {row("Peso", "240 g")}
+              {row("Envío", "24 h")}
+              {row("Devolución", "30 días")}
+            </div>
+            <div className="text-ui font-strong">Opiniones</div>
+            {Array.from({ length: 4 }, (_, i) => <div key={i} className="h-avatar-2xl rounded-card bg-subtle" />)}
           </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-gap-md p-inset-lg">
-            {Array.from({ length: 6 }, (_, i) => box(i, `${detail} ${i + 1}`))}
-          </div>
-        )}
+        ) : grid(Array.from({ length: 10 }, (_, i) => `${detail} ${i + 1}`), setModal)}
         {detail == null ? (
           <AppTabBar variant="floating">
             {tabs.map((i) => <AppTabBarItem key={i.id} icon={i.icon} active={page === i.id} onClick={() => setPage(i.id)}>{i.label}</AppTabBarItem>)}
@@ -118,10 +137,33 @@ function DetailDemo({ kind }: { kind: "cta" | "filter" }) {
           </AppDetailBar>
         ) : (
           <AppDetailBar onBack={() => setDetail(null)} fill>
-            <AppDetailBarButton variant="ghost"><SlidersHorizontal />Filtrar</AppDetailBarButton>
+            <AppDetailBarButton variant="ghost" onClick={() => setModal("Filtros")}><SlidersHorizontal />Filtrar</AppDetailBarButton>
             <AppDetailBarButton grow>Ver cesta (2)</AppDetailBarButton>
           </AppDetailBar>
         )}
+        <AppModal open={modal != null} onClose={() => setModal(null)} title={modal}>
+          {modal === "Guía de tallas" ? (
+            <div className="flex flex-col p-inset-lg">{SIZES.map((t, i) => row(`Talla ${t}`, `${24 + i * 0.5} cm`.replace(".", ",")))}</div>
+          ) : modal === "Filtros" ? (
+            <div className="flex flex-col gap-gap-lg p-inset-lg">
+              {[["Talla", SIZES], ["Color", ["Negro", "Blanco", "Verde", "Azul"]], ["Precio", ["Hasta 30 €", "30–60 €", "Más de 60 €"]]].map(([g, opts]) => (
+                <div key={g as string} className="flex flex-col gap-gap-sm">
+                  <div className="text-ui font-strong">{g}</div>
+                  <ToggleGroup type="multiple" variant="outline" size="sm" className="flex-wrap">
+                    {(opts as string[]).map((o) => <ToggleGroupItem key={o} value={o}>{o}</ToggleGroupItem>)}
+                  </ToggleGroup>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-gap-md p-inset-lg">
+              <div className="aspect-[4/3] w-full rounded-card bg-subtle" />
+              <div className="text-title font-strong">{modal}</div>
+              <div className="text-body text-muted-foreground">Vista rápida: cierra con la X de abajo para volver a donde estabas.</div>
+              {Array.from({ length: 3 }, (_, i) => <div key={i} className="aspect-[4/3] w-full rounded-card bg-subtle" />)}
+            </div>
+          )}
+        </AppModal>
       </AppMain>
     </AppShell>
   )
@@ -158,11 +200,11 @@ export default {
       code: `<AppShell mobileNav="tabbar" className="h-dvh">\n  <AppSidebar>…</AppSidebar>\n  <AppMain>\n    <AppHeader>…</AppHeader>\n    …\n    <AppTabBar variant="floating">\n      <AppTabBarItem icon={<Home />} active>Inicio</AppTabBarItem>\n      <AppTabBarItem icon={<Inbox />} badge={4}>Bandeja</AppTabBarItem>\n      <AppTabBarItem icon={<Calendar />}>Agenda</AppTabBarItem>\n      <AppTabBarItem icon={<MessageSquare />}>Chat</AppTabBarItem>\n    </AppTabBar>\n  </AppMain>\n</AppShell>` },
     { title: "La animación, paso a paso", description: "Cambia entre los dos tamaños para repetir la animación. Para replicarla en otro sitio, todo sale de tokens: dura motion.duration.emphasis (320 ms en Base) con la curva motion.easing.emphasis (cubic-bezier(0.32, 0.72, 0, 1): arranca rápido y frena muy suave). Anima a la vez el ancho (de todo el hueco menos los márgenes a tantas pestañas × size.tab-bar.item, 48 px), el alto (de size.tab-bar.expanded, 64 px, a size.tab-bar.compact, 48 px) y el texto, que se pliega y se desvanece. El fondo de la pestaña activa se desliza de una a otra con la misma duración y curva. Reacciona después de motion.distance.scroll (24 px) de scroll en una dirección. Si el móvil tiene «reducir movimiento», cambia sin animación.", render: <FloatingStates />,
       code: `// Controlada por ti (por ejemplo, para encogerla mientras se reproduce un vídeo):\nconst [compact, setCompact] = useState(false)\n\n<AppTabBar variant="floating" compact={compact} onCompactChange={setCompact}>\n  …\n</AppTabBar>\n\n/* La misma animación en CSS, solo con tokens */\n.tab-bar {\n  height: var(--size-tab-bar-expanded);\n  transition: width var(--motion-duration-emphasis) var(--motion-easing-emphasis),\n              height var(--motion-duration-emphasis) var(--motion-easing-emphasis);\n}\n.tab-bar[data-compact] {\n  height: var(--size-tab-bar-compact);\n  width: calc(var(--tab-count) * var(--size-tab-bar-item) + var(--space-inset-2xs) * 2);\n}` },
-    { title: "Página de detalle: volver + una acción", description: "Al entrar en una página concreta (aquí, un producto), la barra de pestañas se cambia por <AppDetailBar>: con el mismo estilo flotante, un círculo para volver atrás y, al lado, una barra con la acción de esa página. Si no ocupan todo el ancho, se quedan centrados. Pulsa la flecha para volver a la lista y entra en otro producto.", render: (
+    { title: "Página de detalle: volver + una acción", description: "Al entrar en una página concreta (aquí, un producto), la barra de pestañas se cambia por <AppDetailBar>: con el mismo estilo flotante, un círculo para volver atrás y, al lado, una barra con la acción de esa página. Si no ocupan todo el ancho, se quedan centrados. Haz scroll para ver que la barra flota encima del contenido. Pulsa la foto o «Guía de tallas» para abrir el tercer nivel: una ventana que sube desde abajo y se cierra con la X, en el mismo sitio. Con la flecha vuelves a la lista, y la barra de pestañas aparece creciendo con la misma animación que al hacer scroll.", render: (
       <div className="h-sheet w-full max-w-sheet overflow-hidden rounded-card border-thin"><DetailDemo kind="cta" /></div>),
       code: `import { AppDetailBar, AppDetailBarButton } from "@/components/custom/app-sidebar"\n\n// Al final de <AppMain>, en lugar de <AppTabBar>:\n<AppDetailBar onBack={() => router.back()}>\n  <AppDetailBarButton>Comprar · 49 €</AppDetailBarButton>\n</AppDetailBar>` },
-    { title: "Página de detalle: volver a la izquierda, filtrar + acción a la derecha", description: "Con fill, la barra de acciones ocupa todo el ancho que deja el círculo. La acción con grow (la principal) se estira; las demás (Filtrar) tienen su tamaño. Cada acción es un Button de shadcn en forma de píldora, así que acepta variant, iconos, etc.", render: (
+    { title: "Página de detalle: volver a la izquierda, filtrar + acción a la derecha", description: "Con fill, la barra de acciones ocupa todo el ancho que deja el círculo. La acción con grow (la principal) se estira; las demás (Filtrar) tienen su tamaño. Cada acción es un Button de shadcn en forma de píldora, así que acepta variant, iconos, etc. «Filtrar» y cada producto abren una ventana (tercer nivel) que se cierra con la X de abajo.", render: (
       <div className="h-sheet w-full max-w-sheet overflow-hidden rounded-card border-thin"><DetailDemo kind="filter" /></div>),
-      code: `<AppDetailBar onBack={() => router.back()} fill>\n  <AppDetailBarButton variant="ghost"><SlidersHorizontal />Filtrar</AppDetailBarButton>\n  <AppDetailBarButton grow>Ver cesta (2)</AppDetailBarButton>\n</AppDetailBar>` },
+      code: `<AppDetailBar onBack={() => router.back()} fill>\n  <AppDetailBarButton variant="ghost"><SlidersHorizontal />Filtrar</AppDetailBarButton>\n  <AppDetailBarButton grow>Ver cesta (2)</AppDetailBarButton>\n</AppDetailBar>\n\n// Tercer nivel: sube desde abajo y se cierra con la X abajo en el centro\n<AppModal open={open} onClose={() => setOpen(false)} title="Filtros">\n  …\n</AppModal>` },
   ],
 } satisfies CustomDemo

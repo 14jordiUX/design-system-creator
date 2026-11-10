@@ -4,6 +4,7 @@
 //        o bien (mobileNav="tabbar") una barra inferior con 4 accesos + «Más», que abre la barra lateral completa.
 //        Esa barra puede ser flotante (variant="floating"): grande en reposo y pequeña, solo iconos, al bajar.
 //        En una página de detalle, <AppDetailBar> la sustituye: círculo para volver + barra con las acciones (comprar, filtrar…).
+//        Y un tercer nivel, <AppModal>: sube desde abajo y se cierra con una X abajo en el centro, con el mismo estilo.
 // Decide escritorio o móvil por el ancho de su contenedor (token layout.desktop), así funciona igual a pantalla completa o dentro de un hueco.
 // Componente propio (no viene de shadcn/ui): está en base/components, así que lo tienen todos los sistemas.
 import * as React from "react"
@@ -228,7 +229,9 @@ function AppTabBar({ moreLabel = "Más", moreIcon = <MoreHorizontal />, moreActi
   const floating = variant === "floating"
   const ref = React.useRef<HTMLDivElement>(null)
   const [inner, setInner] = React.useState(defaultCompact)
-  const small = floating && (compact ?? inner)
+  // Al aparecer (por ejemplo, al volver de una página de detalle) nace pequeña y crece con la misma animación que al hacer scroll
+  const [entering, setEntering] = React.useState(true)
+  const small = floating && (entering || (compact ?? inner))
   const change = React.useRef(onCompactChange)
   change.current = onCompactChange
   const shown = mobile && mobileNav === "tabbar"
@@ -253,6 +256,13 @@ function AppTabBar({ moreLabel = "Más", moreIcon = <MoreHorizontal />, moreActi
     el.addEventListener("scroll", onScroll, { passive: true })
     return () => el.removeEventListener("scroll", onScroll)
   }, [floating, shown])
+
+  React.useEffect(() => {
+    if (!shown || !floating) return
+    let b = 0
+    const a = requestAnimationFrame(() => { b = requestAnimationFrame(() => setEntering(false)) })
+    return () => { cancelAnimationFrame(a); cancelAnimationFrame(b) }
+  }, [shown, floating])
 
   if (!shown) return null
   const more = <TabBarButton icon={moreIcon} active={open || moreActive} aria-expanded={open} onClick={() => setOpen(true)}>{moreLabel}</TabBarButton>
@@ -343,18 +353,17 @@ function TabBarButton({ icon, active, badge, asChild, className, children, ...pr
 // Ponla al final de <AppMain> en lugar de <AppTabBar>. Si no ocupan todo el ancho, se centran.
 // Las acciones van con <AppDetailBarButton> (un Button de shadcn en forma de píldora; acepta variant, size…).
 // fill: la barra de acciones ocupa todo el ancho que queda (botones grandes, para una sola acción importante).
-function AppDetailBar({ onBack, backLabel = "Volver", fill, className, children, ...props }:
+function AppDetailBar({ onBack, backLabel = "Volver", fill, className, style, children, ...props }:
   React.ComponentProps<"div"> & { onBack?: () => void; backLabel?: string; fill?: boolean }) {
+  const entering = useEntering()
   return (
     <div data-slot="app-detail-bar-dock"
       className="pointer-events-none sticky bottom-0 z-sticky mt-auto flex shrink-0 justify-center px-inset-md pb-inset-md">
-      <div data-slot="app-detail-bar" className={cn("pointer-events-auto mb-[env(safe-area-inset-bottom)] flex max-w-full min-w-0 items-center gap-gap-sm animate-enter", fill && "w-full", className)} {...props}>
-        {onBack && (
-          <button type="button" data-slot="app-detail-bar-back" aria-label={backLabel} title={backLabel} onClick={onBack}
-            className="inline-flex size-tab-bar-expanded shrink-0 items-center justify-center rounded-pill border-thin bg-popover text-popover-foreground shadow-overlay transition-colors outline-none hover:bg-accent focus-visible:focus-ring [&_svg]:size-icon-lg">
-            <ArrowLeft />
-          </button>
-        )}
+      <div data-slot="app-detail-bar"
+        style={{ ...(entering ? { opacity: 0, transform: "scale(var(--motion-scale-enter))" } : null), ...style }}
+        className={cn("pointer-events-auto mb-[env(safe-area-inset-bottom)] flex max-w-full min-w-0 items-center gap-gap-sm",
+          "transition-[opacity,transform] duration-emphasis ease-emphasis motion-reduce:transition-none", fill && "w-full", className)} {...props}>
+        {onBack && <FloatingCircle data-slot="app-detail-bar-back" label={backLabel} onClick={onBack}><ArrowLeft /></FloatingCircle>}
         {React.Children.count(children) > 0 && (
           <div data-slot="app-detail-bar-actions"
             className={cn("flex h-tab-bar-expanded min-w-0 items-center gap-gap-2xs rounded-pill border-thin bg-popover p-inset-2xs text-popover-foreground shadow-overlay", fill && "flex-1")}>
@@ -372,6 +381,62 @@ function AppDetailBarButton({ grow, className, ...props }: React.ComponentProps<
   return <Button data-slot="app-detail-bar-button" className={cn("h-full min-w-0 rounded-pill px-inset-lg", grow && "flex-1", className)} {...props} />
 }
 
+// true solo en el primer fotograma: sirve para animar la entrada con transiciones (las mismas duraciones y curvas que la barra)
+function useEntering() {
+  const [entering, setEntering] = React.useState(true)
+  React.useEffect(() => {
+    let b = 0
+    const a = requestAnimationFrame(() => { b = requestAnimationFrame(() => setEntering(false)) })
+    return () => { cancelAnimationFrame(a); cancelAnimationFrame(b) }
+  }, [])
+  return entering
+}
+
+// Botón redondo con el estilo de la barra flotante (volver, cerrar)
+function FloatingCircle({ label, className, ...props }: React.ComponentProps<"button"> & { label: string }) {
+  return (
+    <button type="button" aria-label={label} title={label}
+      className={cn("pointer-events-auto inline-flex size-tab-bar-expanded shrink-0 items-center justify-center rounded-pill border-thin bg-popover text-popover-foreground shadow-overlay transition-colors outline-none hover:bg-accent focus-visible:focus-ring [&_svg]:size-icon-lg", className)}
+      {...props} />
+  )
+}
+
+// Tercer nivel de navegación: una ventana que sube desde abajo y tapa toda la app (por ejemplo, la guía de tallas
+// desde la ficha de un producto, o los filtros desde una categoría). Se cierra con una X abajo en el centro, con el
+// mismo estilo que la barra flotante: así toda la navegación queda en el mismo sitio. También se cierra con Esc.
+// Ponla dentro de <AppShell> (por ejemplo, al final de <AppMain>). open / onClose: la controlas tú.
+function AppModal({ open, onClose, title, closeLabel = "Cerrar", className, children, ...props }:
+  Omit<React.ComponentProps<"div">, "title"> & { open: boolean; onClose: () => void; title?: React.ReactNode; closeLabel?: string }) {
+  const [rendered, setRendered] = React.useState(open)
+  const closeRef = React.useRef<HTMLButtonElement>(null)
+  if (open && !rendered) setRendered(true)
+  const leaving = rendered && !open
+  React.useEffect(() => { if (open) closeRef.current?.focus({ preventScroll: true }) }, [open, rendered])
+  React.useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [open, onClose])
+  if (!rendered) return null
+  return (
+    <div role="dialog" aria-modal="true" aria-label={typeof title === "string" ? title : undefined}
+      data-slot="app-modal" data-state={leaving ? "closed" : "open"}
+      onAnimationEnd={(e) => { if (leaving && e.target === e.currentTarget) setRendered(false) }}
+      className={cn("absolute inset-0 z-overlay flex flex-col bg-background text-foreground shadow-modal motion-reduce:animate-none",
+        leaving ? "animate-slide-out-bottom" : "animate-slide-in-bottom", className)}
+      {...props}>
+      {title && <div data-slot="app-modal-header" className="flex h-header shrink-0 items-center justify-center border-b-thin px-inset-md text-ui font-strong">{title}</div>}
+      <div data-slot="app-modal-content" className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        {children}
+        <div data-slot="app-modal-dock" className="pointer-events-none sticky bottom-0 z-sticky mt-auto flex shrink-0 justify-center px-inset-md pb-inset-md">
+          <FloatingCircle ref={closeRef} label={closeLabel} onClick={onClose} className="mb-[env(safe-area-inset-bottom)]"><X /></FloatingCircle>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Zona de contenido, a la derecha de la barra.
 function AppMain({ className, ...props }: React.ComponentProps<"main">) {
   return <main data-slot="app-main" className={cn("flex min-w-0 flex-1 flex-col overflow-y-auto", className)} {...props} />
@@ -381,4 +446,4 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
   return <header data-slot="app-header" className={cn("sticky top-0 z-sticky flex h-header shrink-0 items-center gap-gap-sm border-b-thin bg-background px-inset-md", className)} {...props} />
 }
 
-export { AppShell, AppSidebar, AppSidebarHeader, AppSidebarContent, AppSidebarFooter, AppSidebarGroup, AppSidebarItem, AppSidebarTrigger, AppTabBar, AppTabBarItem, AppDetailBar, AppDetailBarButton, AppMain, AppHeader }
+export { AppShell, AppSidebar, AppSidebarHeader, AppSidebarContent, AppSidebarFooter, AppSidebarGroup, AppSidebarItem, AppSidebarTrigger, AppTabBar, AppTabBarItem, AppDetailBar, AppDetailBarButton, AppModal, AppMain, AppHeader }
