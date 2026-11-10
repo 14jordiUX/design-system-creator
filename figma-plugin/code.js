@@ -1281,6 +1281,13 @@ async function draw(data, options) {
 
   await figma.setCurrentPageAsync(flowPage)
   const frames = {}
+  // Catálogo: cada ficha va en la página de su componente («Button · Base»); al actualizar se busca allí
+  const isCatalog = data.prototype.slug.indexOf("catalogo") === 0
+  const group = data.prototype.label.replace(/^Catálogo · /, "")
+  const cardFrame = (s) => {
+    const p = figma.root.children.find((x) => x.name === s.label + " · " + data.system.name)
+    return p ? p.children.find((c) => c.type === "FRAME" && c.getPluginData("card") === s.id) : null
+  }
   let x = flowPage.children.reduce((m, n) => Math.max(m, n.x + n.width + 160), 0)
   const gap = 160
   let replaced = 0
@@ -1288,7 +1295,7 @@ async function draw(data, options) {
   for (const s of data.screens) {
     log((update ? "Actualizando «" : "Dibujando «") + s.label + "»…")
     // Al actualizar, la pantalla que ya existe se sustituye en el mismo sitio (los enlaces se rehacen después)
-    const old = update ? flowPage.children.find((c) => c.type === "FRAME" && c.name === s.label) : null
+    const old = update ? flowPage.children.find((c) => c.type === "FRAME" && c.name === s.label) || (isCatalog ? cardFrame(s) : null) : null
     // Se dibuja en un marco aparte; si algo falla a medias, se quita y la pantalla anterior se queda como estaba
     const holder = figma.createFrame()
     flowPage.appendChild(holder)
@@ -1306,7 +1313,8 @@ async function draw(data, options) {
     holder.remove()
     frame.name = s.label
     frame.clipsContent = true
-    if (old) { frame.x = old.x; frame.y = old.y; old.remove(); replaced++ }
+    if (isCatalog) { try { frame.setPluginData("card", s.id); frame.setPluginData("group", group) } catch (e) { /* */ } }
+    if (old) { if (old.parent !== flowPage) old.parent.appendChild(frame); frame.x = old.x; frame.y = old.y; old.remove(); replaced++ }
     else {
       // Muchas pantallas (el catálogo): en filas, para que no quede una tira infinita
       if (x > 0 && x + frame.width > 9000) { x = 0; rowY += rowH + gap; rowH = 0 }
@@ -1339,7 +1347,7 @@ async function draw(data, options) {
   const first = frames[data.screens[0].id]
   if (first) flowPage.flowStartingPoints = [{ nodeId: first.id, name: data.prototype.label }]
   // Todo en su sitio, sin pisarse: las pantallas del flujo en orden (en filas si son muchas) y lo demás detrás
-  layoutPage(flowPage, data.screens.map((s) => frames[s.id]).filter((f, i, a) => f && !f.removed && a.indexOf(f) === i), 9000)
+  layoutPage(flowPage, data.screens.map((s) => frames[s.id]).filter((f, i, a) => f && !f.removed && f.parent === flowPage && a.indexOf(f) === i), 9000)
   figma.viewport.scrollAndZoomIntoView(Object.keys(frames).map((k) => frames[k]))
   if (drawer.rebuilt.length) log("Han cambiado de forma y se han rehecho enteros: " + drawer.rebuilt.filter((x, i, a) => a.indexOf(x) === i).join(", ") + ". Si otros flujos de este archivo los usan, actualízalos también con su .json para que no pierdan sus textos.", "warn")
   if (update) log("Actualizado: " + drawer.refreshed + " variantes de componentes puestas al día, " + replaced + " pantallas sustituidas y " + (data.screens.length - replaced) + " nuevas. Lo que no venía en el archivo sigue igual.", "ok")
@@ -1528,6 +1536,18 @@ async function documentComponents(page, drawer, sheet) {
   y += rowH + 160
   const list = page.children.filter((c) => c.type === "COMPONENT_SET" || (c.type === "COMPONENT" && c.name.indexOf("icon/") !== 0)).sort((a, b) => (a.name < b.name ? -1 : 1))
   for (const s of list) {
+    const doc = await ficha(s, page, drawer, sheet)
+    doc.x = 0; doc.y = y
+    s.x = 480; s.y = y
+    y += Math.max(doc.height, s.height) + 160
+  }
+  // Lo demás que haya en la página (de versiones anteriores o tuyo), debajo, sin pisar nada
+  placeRest(page, icons.concat(list), y)
+}
+
+// Ficha de un componente: nombre, descripción, variantes y propiedades
+async function ficha(s, page, drawer, sheet) {
+  {
     const doc = sheet.card("Ficha · " + s.name, 400)
     page.appendChild(doc)
     try { doc.setPluginData("doc", "1") } catch (e) { /* */ }
@@ -1546,12 +1566,12 @@ async function documentComponents(page, drawer, sheet) {
         sheet.add(doc, await sheet.text(k.split("#")[0] + " — " + (PROP_TYPES[d.type] || d.type) + (values ? ": " + values : ""), ["texto/ui/normal", "texto/body/normal"], "color/text/default", 13), true)
       }
     }
-    doc.x = 0; doc.y = y
-    s.x = 480; s.y = y
-    y += Math.max(doc.height, s.height) + 160
+    return doc
   }
-  // Lo demás que haya en la página (de versiones anteriores o tuyo), debajo, sin pisar nada
-  const placed = icons.concat(list)
+}
+
+// Lo que no ha colocado el plugin (tuyo o de versiones anteriores), debajo de `y`, en filas
+function placeRest(page, placed, y) {
   let rx = 0, rowH2 = 0
   for (const n of page.children.slice()) {
     let d = ""; try { d = n.getPluginData("doc") } catch (e) { /* */ }
@@ -1572,8 +1592,74 @@ function layoutPage(page, first, maxW) {
   }
 }
 
-// Orden de las páginas: portada y fundamentos, componentes, catálogo y, al final, los flujos (con separadores)
-async function orderPages(sys) {
+// Una página por componente: a la izquierda su ficha y el componente (y sus piezas), a la derecha sus ejemplos del catálogo.
+// Cada grupo del catálogo (Acciones, Formularios…) empieza con una página de índice en mayúsculas.
+async function componentPages(sys, drawer, sheet) {
+  await figma.loadAllPagesAsync()
+  const suffix = " · " + sys
+  const groups = []
+  for (const p of figma.root.children.slice()) {
+    if (p.name.slice(-suffix.length) !== suffix) continue
+    for (const f of p.children) {
+      if (f.type !== "FRAME") continue
+      let id = "", g = ""
+      try { id = f.getPluginData("card"); g = f.getPluginData("group") } catch (e) { /* */ }
+      if (!id || !g) continue
+      let gr = groups.find((x) => x.name === g)
+      if (!gr) { gr = { name: g, cards: [] }; groups.push(gr) }
+      if (!gr.cards.some((c) => c.id === id)) gr.cards.push({ id: id, label: f.name, frame: f })
+    }
+  }
+  if (!groups.length) return []
+  const sets = figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] }).concat(drawer.page.children.filter((c) => c.type === "COMPONENT" && c.name.indexOf("icon/") !== 0))
+  const out = []
+  for (const g of groups) {
+    const head = await pageNamed(g.name.toUpperCase() + suffix, true)
+    const entry = { head: head, pages: [] }
+    out.push(entry)
+    for (const c of g.cards) {
+      const page = await pageNamed(c.label + suffix, true)
+      entry.pages.push(page)
+      for (const n of page.children.slice()) { let d = ""; try { d = n.getPluginData("doc") } catch (e) { /* */ } if (d === "1") n.remove() }
+      // Sus componentes: el suyo primero y luego sus piezas
+      const mine = sets.filter((s) => !s.removed && (drawer.sets[s.name] || {}).card === c.id)
+        .sort((a, b) => (a.name === c.id ? -1 : b.name === c.id ? 1 : a.name < b.name ? -1 : 1))
+      let y = 0, right = 0
+      for (const s of mine) {
+        if (s.parent !== page) page.appendChild(s)
+        const doc = await ficha(s, page, drawer, sheet)
+        doc.x = 0; doc.y = y
+        s.x = 480; s.y = y
+        right = Math.max(right, s.x + s.width)
+        y += Math.max(doc.height, s.height) + 160
+      }
+      if (c.frame.parent !== page) page.appendChild(c.frame)
+      c.frame.x = mine.length ? right + 240 : 0; c.frame.y = 0
+      placeRest(page, mine.concat([c.frame]), Math.max(y, c.frame.height + 160))
+    }
+    // Índice del grupo
+    for (const n of head.children.slice()) { let d = ""; try { d = n.getPluginData("doc") } catch (e) { /* */ } if (d === "1") n.remove() }
+    const idx = sheet.card(g.name, 480)
+    head.appendChild(idx)
+    try { idx.setPluginData("doc", "1") } catch (e) { /* */ }
+    sheet.add(idx, await sheet.text(g.name, ["texto/h2/strong", "texto/h3/strong", "texto/title/strong"], "color/text/default", 28), true)
+    sheet.add(idx, await sheet.text(g.cards.map((c) => c.label).join("\n"), ["texto/body/normal", "texto/ui/normal"], "color/text/muted", 14), true)
+    idx.x = 0; idx.y = 0
+  }
+  // Las páginas del catálogo de antes, si se han quedado vacías, sobran
+  for (const p of figma.root.children.slice()) {
+    if (p.name.indexOf("Catálogo · ") === 0 && p.name.slice(-suffix.length) === suffix && !p.children.length) {
+      try { if (figma.currentPage === p) await figma.setCurrentPageAsync(out[0].head); p.remove() } catch (e) { /* */ }
+    }
+  }
+  return out
+}
+
+// Orden de las páginas: portada y fundamentos, cada grupo con sus componentes, iconos y piezas sueltas y, al final, los flujos
+async function orderPages(sys, groups) {
+  groups = groups || []
+  const grouped = []
+  for (const g of groups) { grouped.push(g.head); for (const p of g.pages) if (grouped.indexOf(p) < 0) grouped.push(p) }
   await figma.loadAllPagesAsync()
   const pages = () => figma.root.children.slice()
   const find = (name) => pages().find((p) => p.name === name)
@@ -1583,8 +1669,10 @@ async function orderPages(sys) {
   while (seps.length < 3) { const p = figma.createPage(); p.name = "---"; seps.push(p) }
   const head = [find("Portada · " + sys), find("Fundamentos · " + sys), seps[0], find("Componentes · " + sys), seps[1]].filter(Boolean)
   const catalog = pages().filter((p) => p.name.indexOf("Catálogo · ") === 0 && p.name.slice(-(" · " + sys).length) === " · " + sys)
-  const flows = pages().filter((p) => head.indexOf(p) < 0 && catalog.indexOf(p) < 0 && seps.indexOf(p) < 0 && p.name.indexOf(" · " + sys) > 0 && p.name.indexOf("Catálogo") !== 0)
-  const order = head.concat(catalog, [seps[2]], flows)
+  const flows = pages().filter((p) => head.indexOf(p) < 0 && catalog.indexOf(p) < 0 && grouped.indexOf(p) < 0 && seps.indexOf(p) < 0 && p.name.indexOf(" · " + sys) > 0 && p.name.indexOf("Catálogo") !== 0)
+  const order = grouped.length
+    ? [find("Portada · " + sys), find("Fundamentos · " + sys), seps[0]].concat(grouped, [seps[1], find("Componentes · " + sys)], catalog, [seps[2]], flows).filter(Boolean)
+    : head.concat(catalog, [seps[2]], flows)
   for (let i = 0; i < order.length; i++) { try { figma.root.insertChild(i, order[i]) } catch (e) { /* */ } }
 }
 
@@ -1655,7 +1743,7 @@ async function finishFile(data, drawer) {
     await settle(drawer, drawer.toggled)
   } catch (e) { log("No he podido repasar las propiedades: " + e.message, "warn") }
   const sheet = new Sheet(drawer, valueTable(data.collections))
-  const steps = [["orden de variantes", async () => arrangeSets()], ["portada", () => makeCover(sys, sheet)], ["fundamentos", () => makeFoundations(sys, data, sheet)], ["fichas de componentes", () => documentComponents(drawer.page, drawer, sheet)], ["orden de páginas", () => orderPages(sys)], ["revisión", () => auditFile(sys)]]
+  const steps = [["orden de variantes", async () => arrangeSets()], ["portada", () => makeCover(sys, sheet)], ["fundamentos", () => makeFoundations(sys, data, sheet)], ["páginas de componentes", async () => { drawer.groups = await componentPages(sys, drawer, sheet) }], ["fichas de componentes", () => documentComponents(drawer.page, drawer, sheet)], ["orden de páginas", () => orderPages(sys, drawer.groups)], ["revisión", () => auditFile(sys)]]
   for (const [label, fn] of steps) {
     try { await fn() } catch (e) { log("No he podido hacer " + label + ": " + (e && e.message ? e.message : e), "warn"); console.error(e) }
   }

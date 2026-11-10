@@ -143,7 +143,7 @@ for (const m of ["dropdown-menu", "context-menu", "menubar"]) {
   MENU_KIND[`${m}-item`] = "normal"; MENU_KIND[`${m}-checkbox-item`] = "casilla"; MENU_KIND[`${m}-radio-item`] = "radio"; MENU_KIND[`${m}-sub-trigger`] = "submenú"
 }
 /** data-slot que se llama distinto en Figma (piezas compartidas o internas, con «_» delante: no salen en Assets) */
-const SET_ALIAS: Record<string, string> = { "table-cell": "_table-cell", "table-head": "_table-head", "select-separator": "menu-separator", "select-label": "menu-label" }
+const SET_ALIAS: Record<string, string> = { "form-item": "field", "form-label": "label", "table-cell": "_table-cell", "table-head": "_table-head", "select-separator": "menu-separator", "select-label": "menu-label" }
 for (const m of ["dropdown-menu", "context-menu", "menubar"]) { SET_ALIAS[`${m}-label`] = "menu-label"; SET_ALIAS[`${m}-separator`] = "menu-separator" }
 for (const k of Object.keys(MENU_KIND)) SET_ALIAS[k] = "menu-item"
 /** Partes fijas de una caja (cabecera, pie…): según el final de su data-slot. En Figma, un interruptor «con cabecera», «con pie»… */
@@ -258,6 +258,11 @@ function slotName(el: Element) {
   // (lo mismo con los de cerrar o confirmar de un diálogo: dialog-close, alert-dialog-action…)
   if (slot && !COMPONENT_SLOTS.has(slot) && el.hasAttribute("data-variant") && el.hasAttribute("data-size") && (el.tagName === "BUTTON" || el.tagName === "A")) slot = "button"
   if (slot && SET_ALIAS[slot]) slot = SET_ALIAS[slot]
+  // Formulario (react-hook-form): el control lleva data-slot="form-control"; su componente es el del elemento
+  if (slot === "form-control") {
+    const role = el.getAttribute("role")
+    slot = el.tagName === "INPUT" ? "input" : el.tagName === "TEXTAREA" ? "textarea" : role === "combobox" ? "select-trigger" : role === "switch" ? "switch" : role === "checkbox" ? "checkbox" : role === "radiogroup" ? null : el.tagName === "SELECT" ? "native-select" : null
+  }
   // Cada día del calendario es un botón: en Figma, su propia pieza (interna) con seleccionado y rango
   if (slot === "button" && el.hasAttribute("data-day")) slot = "_calendar-day"
   if (!slot || !COMPONENT_SLOTS.has(slot)) return null
@@ -981,14 +986,17 @@ function completeField(c: FNode, donors: Record<string, FNode>) {
   c.children = kids
 }
 
-export type SetInfo = { description?: string; optional: string[] }
+export type SetInfo = { description?: string; optional: string[]; card?: string }
 /** Para cada variante, la vez que sale más completa (con más textos e iconos): de ahí sale el componente maestro.
  *  Lo que no sale en todas sus apariciones es opcional (en Figma, un interruptor para mostrarlo). */
-function setsAndDefinitions(screens: { id: string; label: string; node: FNode; description?: string }[][]) {
+function setsAndDefinitions(screens: { id: string; label: string; node: FNode; description?: string }[][], catalog: boolean[] = []) {
   const defs: Record<string, FNode> = {}
   const seen: Record<string, string[][]> = {}
   const sets: Record<string, SetInfo> = {}
-  const walk = (n: FNode, card?: { id: string; label: string; description?: string }) => {
+  // En qué ficha del catálogo va cada componente (en Figma, en la página de ese componente): la suya,
+  // la que empieza igual (dialog-content → dialog) o la primera donde sale
+  const cardScore: Record<string, number> = {}
+  const walk = (n: FNode, card?: { id: string; label: string; description?: string }, inCatalog?: boolean) => {
     if (n.component) {
       const c = n.component, key = variantKey(c)
       const roles = rolesOf(n)
@@ -996,10 +1004,15 @@ function setsAndDefinitions(screens: { id: string; label: string; node: FNode; d
       if (!defs[key] || roles.length > rolesOf(defs[key]).length) defs[key] = n
       const info = (sets[c.set] = sets[c.set] ?? { optional: [] })
       if (card?.description && (!info.description || card.id === c.set)) info.description = card.id === c.set ? card.description : `Pieza de «${card.label}». ${card.description}`
+      if (card && inCatalog) {
+        const bare = c.set.replace(/^_/, "")
+        const score = card.id === bare ? 1000 : bare.startsWith(card.id + "-") ? card.id.length : 0
+        if (info.card === undefined || score > (cardScore[c.set] ?? 0)) { info.card = card.id; cardScore[c.set] = score }
+      }
     }
-    for (const k of n.children ?? []) walk(k, card)
+    for (const k of n.children ?? []) walk(k, card, inCatalog)
   }
-  for (const list of screens) for (const s of list) walk(s.node, s)
+  screens.forEach((list, i) => { for (const s of list) walk(s.node, s, !!catalog[i]) })
   for (const [key, occ] of Object.entries(seen)) {
     const set = key.split("|")[0], all = rolesOf(defs[key])
     for (const r of all) if (!r.startsWith("icono izquierda") && !r.startsWith("icono derecha") && occ.some((o) => !o.includes(r)) && !sets[set].optional.includes(r)) sets[set].optional.push(r)
@@ -1099,7 +1112,7 @@ export function buildFigmaExport(opts: {
   const { collections, effects } = tokensToFigma(opts.tokens)
   const screens = flowScreens(makeCtx(opts.tokens, opts.mode), opts)
   for (const s of screens) stripStates(s.node)
-  const { sets, definitions } = setsAndDefinitions([screens])
+  const { sets, definitions } = setsAndDefinitions([screens], [opts.prototype.slug.startsWith("catalogo")])
   return {
     format: FIGMA_FORMAT, system: opts.system,
     prototype: { slug: opts.prototype.slug, label: opts.prototype.label, description: opts.prototype.description },
@@ -1124,7 +1137,7 @@ export function buildFigmaBundle(opts: {
     for (const s of screens) stripStates(s.node)
     return { view: f.view, prototype: { slug: f.prototype.slug, label: f.prototype.label, description: f.prototype.description }, screens }
   })
-  const { sets, definitions } = setsAndDefinitions(flows.map((f) => f.screens))
+  const { sets, definitions } = setsAndDefinitions(flows.map((f) => f.screens), flows.map((f) => f.prototype.slug.startsWith("catalogo")))
   return {
     format: FIGMA_BUNDLE_FORMAT, system: opts.system,
     mode: opts.mode === "dark" ? "Oscuro" : "Claro", view: opts.view, createdAt: new Date().toISOString(),
