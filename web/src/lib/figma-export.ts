@@ -128,18 +128,39 @@ const COMPONENT_SLOTS = new Set(["button", "badge", "checkbox", "input", "input-
   "tabs-list", "toggle-group", "tab-list",
   // cajas que se llenan con lo que haga falta (slot sin preferido) y menús (slot con sus opciones)
   "card", "dialog-content", "alert-dialog-content", "sheet-content", "drawer-content", "popover-content", "hover-card-content",
-  "dropdown-menu-content", "context-menu-content", "menubar-content", "tooltip-content",
-  "dropdown-menu-item", "context-menu-item", "menubar-item", "select-item"])
+  "dropdown-menu-content", "context-menu-content", "menubar-content", "tooltip-content", "select-content",
+  // un solo componente para las opciones de los tres menús (desplegable, contextual y barra), con su tipo
+  "menu-item", "menu-label", "menu-separator", "select-item",
+  // estudio de componentes (2026-11-10): lo que se repite en el catálogo pasa a ser componente
+  "empty", "item-group", "avatar-group", "kbd-group", "button-group", "field-set", "field-separator",
+  "input-otp-group", "input-otp-separator", "input-group-addon", "questionnaire-choice",
+  "table-row", "_table-cell", "_table-head", "_calendar-day", "sidebar-group", "breadcrumb-page", "breadcrumb-separator", "breadcrumb-ellipsis",
+  "pagination-ellipsis", "command-group", "tabs-content", "accordion", "collapsible", "carousel-item", "resizable-handle",
+  "trace-line", "trace-collapsible", "code-block", "code-block-line", "message"])
+/** Opciones de menú: el data-slot de cada menú → su tipo en el componente único «menu-item» */
+const MENU_KIND: Record<string, string> = {}
+for (const m of ["dropdown-menu", "context-menu", "menubar"]) {
+  MENU_KIND[`${m}-item`] = "normal"; MENU_KIND[`${m}-checkbox-item`] = "casilla"; MENU_KIND[`${m}-radio-item`] = "radio"; MENU_KIND[`${m}-sub-trigger`] = "submenú"
+}
+/** data-slot que se llama distinto en Figma (piezas compartidas o internas, con «_» delante: no salen en Assets) */
+const SET_ALIAS: Record<string, string> = { "table-cell": "_table-cell", "table-head": "_table-head", "select-separator": "menu-separator", "select-label": "menu-label" }
+for (const m of ["dropdown-menu", "context-menu", "menubar"]) { SET_ALIAS[`${m}-label`] = "menu-label"; SET_ALIAS[`${m}-separator`] = "menu-separator" }
+for (const k of Object.keys(MENU_KIND)) SET_ALIAS[k] = "menu-item"
+/** Partes fijas de una caja (cabecera, pie…): según el final de su data-slot. En Figma, un interruptor «con cabecera», «con pie»… */
+const FRAME_ROLES: [RegExp, string][] = [[/-header$/, "cabecera"], [/-footer$/, "pie"], [/-actions$/, "acciones"], [/-action$/, "acción"], [/-(media|icon)$/, "media"], [/-avatar$/, "avatar"]]
 /** Componentes lista → el componente que se mete en su slot (preferido en Figma); "" = caja sin preferido. */
 const SLOT_LISTS: Record<string, string> = {
   "tabs-list": "tabs-trigger", "toggle-group": "toggle-group-item", "tab-list": "tab-trigger",
-  "dropdown-menu-content": "dropdown-menu-item", "context-menu-content": "context-menu-item", "menubar-content": "menubar-item",
+  "dropdown-menu-content": "menu-item", "context-menu-content": "menu-item", "menubar-content": "menu-item", "select-content": "select-item",
+  "item-group": "item", "avatar-group": "avatar", "kbd-group": "kbd", "button-group": "button", "input-otp-group": "input-otp-slot",
+  "table-row": "_table-cell", accordion: "accordion-item", "field-set": "field",
+  "sidebar-group": "", "command-group": "", "tabs-content": "", collapsible: "", "carousel-item": "", "trace-collapsible": "", "code-block": "", message: "",
   card: "", "dialog-content": "", "alert-dialog-content": "", "sheet-content": "", "drawer-content": "", "popover-content": "", "hover-card-content": "",
 }
 /** Piezas con estados (al pasar el ratón, al pulsar, con el foco, desactivadas, con error): en el catálogo salen todas como variantes. */
 const STATEFUL = new Set(["button", "toggle", "toggle-group-item", "tabs-trigger", "tab-trigger", "input", "textarea", "select-trigger", "native-select",
   "checkbox", "switch", "radio-group-item", "pagination-link", "breadcrumb-link", "back-button", "fab-button", "app-sidebar-item", "app-tab-bar-item",
-  "sidebar-menu-button", "command-item", "navigation-menu-link", "choice-card", "dropdown-menu-item", "context-menu-item", "menubar-item", "select-item"])
+  "sidebar-menu-button", "command-item", "navigation-menu-link", "choice-card", "menu-item", "select-item", "questionnaire-choice"])
 const STATE_PREFIX: [string, string][] = [["hover", "hover"], ["active", "pulsado"], ["focus-visible", "foco"], ["focus", "foco"], ["disabled", "deshabilitado"], ["aria-invalid", "error"]]
 type StatePatch = { fill?: Paint; text?: Paint; stroke?: Paint; opacity?: number; focusRing?: { color: Paint; width: number }; underline?: boolean }
 
@@ -212,7 +233,7 @@ function inherited(el: Element | null, stop: Element, prefix: RegExp, test: (t: 
 
 const num = (v: string) => parseFloat(v) || 0
 // Componentes que no escalan nunca: van con ancho y alto fijos en el auto layout (no «hug» ni «fill»)
-const FIXED_SIZE = new Set(["switch", "checkbox", "avatar", "input-otp-slot", "spinner", "icon-badge", "radio-group-item"])
+const FIXED_SIZE = new Set(["switch", "checkbox", "avatar", "input-otp-slot", "spinner", "icon-badge", "radio-group-item", "_calendar-day", "breadcrumb-ellipsis", "pagination-ellipsis", "breadcrumb-separator"])
 const fixedSize = (c: FNode) => !!c.component && (FIXED_SIZE.has(c.component.set) || (c.component.set === "button" && (c.component.props.tamaño ?? "").startsWith("icon")))
 // Desplazado en horizontal con transform (la barra de Progress, la bolita de Switch): en Figma va suelto en su sitio, si no el auto layout lo recoloca
 const moved = (cs: CSSStyleDeclaration) => {
@@ -236,6 +257,9 @@ function slotName(el: Element) {
   // Un botón que abre algo (menú, diálogo, popover…) lleva el data-slot del disparador, pero sigue siendo un Button
   // (lo mismo con los de cerrar o confirmar de un diálogo: dialog-close, alert-dialog-action…)
   if (slot && !COMPONENT_SLOTS.has(slot) && el.hasAttribute("data-variant") && el.hasAttribute("data-size") && (el.tagName === "BUTTON" || el.tagName === "A")) slot = "button"
+  if (slot && SET_ALIAS[slot]) slot = SET_ALIAS[slot]
+  // Cada día del calendario es un botón: en Figma, su propia pieza (interna) con seleccionado y rango
+  if (slot === "button" && el.hasAttribute("data-day")) slot = "_calendar-day"
   if (!slot || !COMPONENT_SLOTS.has(slot)) return null
   // Una etiqueta que envuelve un campo entero es una tarjeta de opción (con su casilla o interruptor), no una etiqueta
   if (slot === "field-label" && el.querySelector(":scope > [data-slot=field]")) return "choice-card"
@@ -622,6 +646,10 @@ function componentize(ctx: Ctx, node: FNode, el: Element, slot: string) {
   const pos = JOINABLE.has(slot) ? joinedSide(node) : undefined
   if (pos) props.posición = pos
   if (slot === "field") props.orientación = el.getAttribute("data-orientation") || "vertical"
+  if (slot === "menu-item") { props.tipo = MENU_KIND[el.getAttribute("data-slot") ?? ""] ?? "normal"; props.variante ??= "default" }
+  if (slot === "_calendar-day") props.rango = el.getAttribute("data-range-start") === "true" ? "inicio" : el.getAttribute("data-range-end") === "true" ? "fin" : el.getAttribute("data-range-middle") === "true" ? "medio" : "no"
+  if (slot === "trace-line") props.estado = TRACE_STATUS[el.getAttribute("data-status") ?? ""] ?? "hecho"
+  if (OPENABLE.has(slot)) props.abierto = el.getAttribute("data-state") === "open" ? "sí" : "no"
   node.component = { set: slot, props }
   // Campo completo (etiqueta + campo + descripción): la etiqueta y el campo de dentro son partes con nombre,
   // para encenderlas o apagarlas y para elegir el tipo de campo
@@ -629,12 +657,37 @@ function componentize(ctx: Ctx, node: FNode, el: Element, slot: string) {
     if (c.component!.set === "label") c.role = "etiqueta"
     else if (FIELD_CONTROLS.has(c.component!.set) && !nestedOf(node).some((x) => x !== c && x.role === "campo")) c.role = "campo"
   }
-  if (slot in SLOT_LISTS) node.component.slot = SLOT_LISTS[slot]
-  else assignRoles(node, slot)
+  frameRoles(node)
+  if (slot in SLOT_LISTS) {
+    node.component.slot = SLOT_LISTS[slot]
+    // Caja con slot: la cabecera, el pie y los textos sueltos van fijos (con su interruptor); el slot, solo en el medio
+    const fixed = (node.children ?? []).filter((c) => !c.absolute && (c.role || c.type === "TEXT"))
+    if (fixed.length) assignRoles({ ...node, children: fixed }, slot)
+  } else assignRoles(node, slot)
   if (STATEFUL.has(slot) && props.estado === "normal") { const sp = statePatches(ctx, el); for (const k of NO_STATE[slot] ?? []) delete sp[k]; if (Object.keys(sp).length) node.states = sp }
   node.name = slot
 }
 
+const TRACE_STATUS: Record<string, string> = { done: "hecho", complete: "hecho", running: "en marcha", pending: "pendiente", error: "error" }
+const OPENABLE = new Set(["accordion-item", "collapsible", "trace-collapsible"])
+/** Partes fijas (cabecera, pie, acciones…) del componente, sin entrar en otros componentes de dentro */
+function frameRoles(node: FNode) {
+  const used = new Set<string>()
+  const walk = (n: FNode) => {
+    for (const c of n.children ?? []) {
+      if (c.component || c.type !== "FRAME") continue
+      const hit = FRAME_ROLES.find(([re]) => re.test(c.name))
+      if (hit && !used.has(hit[1]) && !c.absolute) { used.add(hit[1]); c.role = hit[1]; c.name = hit[1] }
+      walk(c)
+    }
+  }
+  walk(node)
+}
+/** Partes fijas con nombre (cajas) */
+function roleFrames(n: FNode, out: FNode[] = []): FNode[] {
+  for (const c of n.children ?? []) { if (c.component) continue; if (c.type === "FRAME" && c.role) out.push(c); roleFrames(c, out) }
+  return out
+}
 /** Componentes de dentro (solo el primer nivel) */
 function nestedOf(n: FNode, out: FNode[] = []): FNode[] {
   for (const c of n.children ?? []) { if (c.component) out.push(c); else nestedOf(c, out) }
@@ -718,11 +771,11 @@ function nameByContent(n: FNode) {
 /** Campos y barras: su ancho no depende del texto de dentro (como FIXED_WIDTH del plugin) */
 const FIELDS = new Set(["input", "textarea", "select-trigger", "native-select", "input-group", "password-input", "code-input", "slider", "progress", "separator", "skeleton"])
 /** Componentes con iconos a los lados que se encienden y apagan (interruptores), con el icono intercambiable */
-const TOGGLE_ICONS = new Set(["button", "badge", "toggle", "toggle-group-item", "tabs-trigger", "tab-trigger", "dropdown-menu-item", "context-menu-item",
-  "menubar-item", "select-item", "command-item", "sidebar-menu-button", "app-sidebar-item", "navigation-menu-link", "pagination-link", "breadcrumb-link"])
+const TOGGLE_ICONS = new Set(["button", "badge", "toggle", "toggle-group-item", "tabs-trigger", "tab-trigger", "menu-item", "select-item", "command-item", "sidebar-menu-button", "app-sidebar-item", "navigation-menu-link", "pagination-link", "breadcrumb-link"])
 /** Piezas que se pueden marcar o activar: «seleccionado» (sí/no) va aparte del estado (hover, foco…) */
 const SELECTABLE = new Set(["checkbox", "switch", "radio-group-item", "toggle", "toggle-group-item", "tabs-trigger", "tab-trigger", "choice-card", "setting-row",
-  "app-sidebar-item", "app-tab-bar-item", "sidebar-menu-button", "pagination-link", "navigation-menu-link", "select-item", "command-item"])
+  "app-sidebar-item", "app-tab-bar-item", "sidebar-menu-button", "pagination-link", "navigation-menu-link", "select-item", "command-item",
+  "menu-item", "questionnaire-choice", "_calendar-day"])
 /** Solo los campos (y sus etiquetas) tienen estado de error; un botón, una pestaña o una tarjeta, no */
 const ERROR_OK = new Set(["field", "input", "textarea", "select-trigger", "native-select", "input-group", "password-input", "code-input", "input-otp-slot",
   "checkbox", "radio-group-item", "switch", "label", "choice-card", "slider"])
@@ -875,7 +928,8 @@ function stateOf(el: Element, slot: string) {
 function selectedOf(el: Element, slot: string) {
   const ds = el.getAttribute("data-state")
   return ds === "checked" || ds === "active" || ds === "on" || el.getAttribute("data-active") === "true" || el.getAttribute("aria-current") === "page" ||
-    el.getAttribute("aria-selected") === "true" || (CONTAINS_CONTROL.has(slot) && !!el.querySelector("[data-state=checked]"))
+    el.getAttribute("aria-selected") === "true" || (el.hasAttribute("data-checked") && el.getAttribute("data-checked") !== "false") ||
+    (slot === "_calendar-day" && (el.getAttribute("data-selected-single") === "true" || el.getAttribute("data-range-start") === "true" || el.getAttribute("data-range-end") === "true")) || (CONTAINS_CONTROL.has(slot) && !!el.querySelector("[data-state=checked]"))
 }
 
 function countText(n: FNode): number { return (n.type === "TEXT" ? 1 : 0) + (n.children ?? []).reduce((s, c) => s + countText(c), 0) }
@@ -911,7 +965,7 @@ type FlowInput = { view?: "mobile" | "desktop"; prototype: { slug: string; label
 
 /** Clave de una variante (igual que en el plugin): conjunto|propiedad=valor, … en orden alfabético */
 export const variantKey = (c: NonNullable<FNode["component"]>) => c.set + "|" + Object.keys(c.props).sort().map((k) => k + "=" + c.props[k]).join(", ")
-const rolesOf = (n: FNode) => ownParts(n).concat(nestedOf(n)).map((p) => p.role).filter(Boolean) as string[]
+const rolesOf = (n: FNode) => ownParts(n).concat(nestedOf(n), roleFrames(n)).map((p) => p.role).filter(Boolean) as string[]
 
 /** Campo vertical: [etiqueta] campo [descripción] [mensaje]. Lo que falte se añade de otro campo */
 function completeField(c: FNode, donors: Record<string, FNode>) {
@@ -985,6 +1039,9 @@ function setsAndDefinitions(screens: { id: string; label: string; node: FNode; d
     if (c.component?.set === "field") completeField(c, fieldDonors)
     definitions[k] = c
   }
+  // Partes fijas (cabecera, pie, acciones, media): siempre con su interruptor, aunque en la web salgan en todas
+  const walkFrames = (n: FNode) => { if (n.component && sets[n.component.set]) for (const f of roleFrames(n)) if (!sets[n.component.set].optional.includes(f.role!)) sets[n.component.set].optional.push(f.role!); for (const k of n.children ?? []) walkFrames(k) }
+  for (const d of Object.values(definitions)) walkFrames(d)
   // El campo: etiqueta y descripción siempre en el maestro (se apagan en cada pantalla con «con etiqueta», «con descripción»)
   if (sets.field) for (const r of ["etiqueta", "descripción"]) if (!sets.field.optional.includes(r)) sets.field.optional.push(r)
   return { sets, definitions }
