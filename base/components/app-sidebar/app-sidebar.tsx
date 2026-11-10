@@ -217,6 +217,7 @@ function SidebarButton({ label, className, children, ...props }: React.Component
 // variant="floating" (app-tab-bar/floating): barra flotante en forma de píldora. En reposo es grande (icono y texto,
 //   casi todo el ancho); al bajar por el contenido se encoge con una transición suave a solo iconos, y al subir
 //   (o al volver arriba del todo) recupera su tamaño. compact / defaultCompact / onCompactChange: para controlarlo tú.
+//   La pestaña activa tiene un solo fondo que se desliza de una pestaña a otra con la misma animación.
 //   La animación sale de tokens: motion.duration.emphasis, motion.easing.emphasis, motion.distance.scroll y size.tab-bar.*
 function AppTabBar({ moreLabel = "Más", moreIcon = <MoreHorizontal />, moreActive, variant = "default", compact, defaultCompact = false, onCompactChange, className, style, children, ...props }:
   React.ComponentProps<"nav"> & { moreLabel?: string; moreIcon?: React.ReactNode; moreActive?: boolean; variant?: "default" | "floating"
@@ -229,6 +230,7 @@ function AppTabBar({ moreLabel = "Más", moreIcon = <MoreHorizontal />, moreActi
   const change = React.useRef(onCompactChange)
   change.current = onCompactChange
   const shown = mobile && mobileNav === "tabbar"
+  const lastActive = React.useRef(0)
 
   // Al bajar se encoge, al subir (o arriba del todo) vuelve a ser grande. Escucha el scroll de <AppMain>.
   React.useEffect(() => {
@@ -259,19 +261,25 @@ function AppTabBar({ moreLabel = "Más", moreIcon = <MoreHorizontal />, moreActi
       {more}
     </nav>
   )
-  const count = React.Children.toArray(children).length + 1
+  // Un solo fondo para la pestaña activa, que se desliza hasta la que pulses (nunca desaparece: si no hay ninguna activa, se queda en la última)
+  const items = React.Children.toArray(children)
+  const count = items.length + 1
+  const found = open || moreActive ? count - 1 : items.findIndex((c) => React.isValidElement<{ active?: boolean }>(c) && c.props.active)
+  if (found >= 0) lastActive.current = found
   return (
     <TabBarCompact.Provider value={small}>
       <div ref={ref} data-slot="app-tab-bar-dock"
         className="pointer-events-none sticky bottom-0 z-sticky mt-auto flex shrink-0 justify-center px-inset-md pb-inset-md">
         <nav data-slot="app-tab-bar" data-variant="floating" data-compact={small || undefined} aria-label="Navegación principal"
-          style={{ "--tab-count": count, ...style } as React.CSSProperties}
+          style={{ "--tab-count": count, "--tab-index": lastActive.current, ...style } as React.CSSProperties}
           className={cn(
-            "pointer-events-auto mb-[env(safe-area-inset-bottom)] flex h-tab-bar-expanded w-full max-w-full rounded-pill border-thin bg-popover p-inset-2xs text-popover-foreground shadow-overlay",
+            "pointer-events-auto relative mb-[env(safe-area-inset-bottom)] flex h-tab-bar-expanded w-full max-w-full rounded-pill border-thin bg-popover p-inset-2xs text-popover-foreground shadow-overlay",
             "transition-[width,height] duration-emphasis ease-emphasis motion-reduce:transition-none",
             "data-compact:h-tab-bar-compact data-compact:w-[calc(var(--tab-count)*var(--size-tab-bar-item)+var(--space-inset-2xs)*2)]",
             className)}
           {...props}>
+          <span aria-hidden data-slot="app-tab-bar-indicator"
+            className="absolute inset-y-inset-2xs start-inset-2xs w-[calc((100%-var(--space-inset-2xs)*2)/var(--tab-count))] translate-x-[calc(var(--tab-index)*100%)] rounded-pill bg-primary-subtle transition-transform duration-emphasis ease-emphasis motion-reduce:transition-none" />
           {children}
           {more}
         </nav>
@@ -319,7 +327,7 @@ function TabBarButton({ icon, active, badge, asChild, className, children, ...pr
         "hover:text-foreground data-active:font-emphasis data-active:text-link",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-icon-md",
         floating
-          ? "rounded-pill px-inset-xs focus-visible:focus-ring data-active:bg-primary-subtle"
+          ? "relative rounded-pill px-inset-xs focus-visible:focus-ring"
           : "gap-gap-3xs px-inset-2xs py-inset-xs focus-visible:focus-ring-inset",
         className)}
       {...props}>
