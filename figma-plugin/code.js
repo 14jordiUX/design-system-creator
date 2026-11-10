@@ -79,7 +79,16 @@ function nestedOf(n, out) {
   for (const c of n.children || []) { if (c.component) out.push(c); else nestedOf(c, out) }
   return out
 }
-const rolesOfNode = (n) => ownParts(n).concat(nestedOf(n)).map((p) => p.role).filter(Boolean)
+// Partes fijas con nombre (cabecera, pie, acciones…): se encienden y apagan con «con …»
+function roleFrames(n, out) {
+  out = out || []
+  for (const c of n.children || []) { if (c.component) continue; if (c.type === "FRAME" && c.role) out.push(c); roleFrames(c, out) }
+  return out
+}
+// En una caja con slot, lo fijo (cabecera, pie, textos con nombre) va fuera del slot; lo demás, dentro
+const fixedKid = (c) => !c.absolute && !!c.role
+const fixedOnly = (n) => (hasSlot(n) ? Object.assign({}, n, { children: (n.children || []).filter(fixedKid) }) : n)
+const rolesOfNode = (n) => { const m = fixedOnly(n); return ownParts(m).concat(nestedOf(m), roleFrames(m)).map((p) => p.role).filter(Boolean) }
 // Lo que se puede elegir como campo dentro de un Field («campo · cuál»)
 const FIELD_CONTROLS = ["input", "textarea", "select-trigger", "native-select", "input-group", "password-input", "code-input", "checkbox", "switch", "slider", "radio-group-item"]
 const isIconLayer = (x) => x.type === "INSTANCE" && (x.name.indexOf("icon/") === 0 || x.name.indexOf("icono") === 0)
@@ -597,6 +606,7 @@ class Drawer {
       await this.box(def, comp)
       for (const c of n.children || []) await this.node(c, comp, n, false)
       if (n.component.toggles) await this.ensureRoles(comp, n)
+      if (hasSlot(n)) this.makeSlot(comp, n)
       this.rebuilt.push(n.component.set)
     }
     comp.name = name
@@ -615,6 +625,7 @@ class Drawer {
       // Lo que va suelto encima (la X de cerrar de un diálogo) se queda en el componente, fuera del slot
       const kids = comp.children.slice()
       const flow = (n.children || []).map((c) => !c.absolute)
+      const fixed = (n.children || []).map(fixedKid)
       const slot = comp.createSlot()
       slot.name = "opciones"
       slot.fills = []
@@ -623,11 +634,21 @@ class Drawer {
       slot.primaryAxisAlignItems = comp.primaryAxisAlignItems
       slot.counterAxisAlignItems = comp.counterAxisAlignItems
       bindIf(slot, "itemSpacing", this.vars, (n.bind && n.bind.itemSpacing) || (slot.itemSpacing > 0 ? this.spaceFor("itemSpacing", slot.itemSpacing) : undefined))
-      for (let i = 0; i < kids.length; i++) { if (flow[i] === false) continue; slot.appendChild(kids[i]); if (n.children && n.children[i]) this.fit(kids[i], n.children[i], n) }
-      // Lo que queda suelto, delante del slot
+      // La cabecera y el pie (y los textos con nombre) se quedan fijos, el slot va en medio, donde estaba lo demás
+      const at = kids.findIndex((k, i) => flow[i] !== false && !fixed[i])
+      for (let i = 0; i < kids.length; i++) { if (flow[i] === false || fixed[i]) continue; slot.appendChild(kids[i]); if (n.children && n.children[i]) this.fit(kids[i], n.children[i], n) }
+      // Lo que queda suelto, encima
       for (let i = 0; i < kids.length; i++) if (flow[i] === false) comp.appendChild(kids[i])
-      try { comp.setBoundVariable("itemSpacing", null) } catch (e) { /* */ }
-      comp.itemSpacing = 0
+      if (fixed.some(Boolean)) {
+        // Con partes fijas, el hueco entre ellas y el slot es el de la caja
+        // (sin nada en medio: antes del pie)
+        const roles = (n.children || []).filter(fixedKid).map((c) => c.role)
+        const foot = roles.findIndex((r) => r === "pie" || r === "acciones")
+        comp.insertChild(at >= 0 ? kids.slice(0, at).filter((k, i) => fixed[i]).length : foot >= 0 ? foot : roles.length, slot)
+      } else {
+        try { comp.setBoundVariable("itemSpacing", null) } catch (e) { /* */ }
+        comp.itemSpacing = 0
+      }
       this.slotted.push({ comp: comp, slot: slot, prefer: n.component.slot })
     } catch (e) { log("No he podido crear el slot de «" + n.component.set + "»: " + e.message, "warn") }
   }
@@ -649,7 +670,7 @@ class Drawer {
   // Lo que va en el slot de una instancia (o del componente al ponerlo al día): las opciones que trae el .json
   async fillSlot(slot, n) {
     for (const c of slot.children.slice()) c.remove()
-    for (const c of n.children || []) if (!c.absolute) await this.node(c, slot, n, false)
+    for (const c of n.children || []) if (!c.absolute && !fixedKid(c)) await this.node(c, slot, n, false)
   }
 
   kindOf(n, top) {
@@ -662,7 +683,10 @@ class Drawer {
   sameShape(node, n, top) {
     const k = this.kindOf(n, top)
     // Con slot: lo de dentro cambia en cada pantalla, cuenta solo que tenga su slot
-    if (top && hasSlot(n) && this.slotOf(node)) return true
+    if (top && hasSlot(n) && this.slotOf(node)) {
+      const names = node.children.filter((x) => x.type !== "SLOT").map((x) => x.name)
+      return (n.children || []).filter(fixedKid).every((c) => names.indexOf(c.role) >= 0)
+    }
     if (k === "SVG") return true
     if (k === "TEXT") return node.type === k
     if (node.type === "INSTANCE") return k === "INSTANCE"
@@ -691,15 +715,23 @@ class Drawer {
       if (comp) {
         const cur = await node.getMainComponentAsync(); if (cur !== comp) node.swapComponent(comp)
         this.mark(node, n)
-        if (this.viaProps(n)) this.toggled.push({ inst: node, n: n }); else await this.overrides(node, n)
+        if (this.viaProps(n)) this.toggled.push({ inst: node, n: n })
+        else { await this.overrides(node, n); if (hasSlot(n) && rolesOfNode(n).length) this.toggled.push({ inst: node, n: n }) }
       }
       return
     }
     await this.box(n, node)
     const slot = top && hasSlot(n) ? this.slotOf(node) : null
     if (slot) {
-      try { node.setBoundVariable("itemSpacing", null) } catch (e) { /* */ }
-      node.itemSpacing = 0
+      const fixed = (n.children || []).filter(fixedKid)
+      for (const c of fixed) {
+        const l = node.children.find((x) => x.type !== "SLOT" && x.name === c.role)
+        if (l) { await this.patch(l, c, false); this.fit(l, c, n) }
+      }
+      if (!fixed.length) {
+        try { node.setBoundVariable("itemSpacing", null) } catch (e) { /* */ }
+        node.itemSpacing = 0
+      }
       slot.itemSpacing = n.layout ? n.layout.gap : 0
       if (n.bind) bindIf(slot, "itemSpacing", this.vars, n.bind.itemSpacing)
       await this.fillSlot(slot, n)
@@ -771,10 +803,12 @@ class Drawer {
   // partes opcionales lleva. Lo mismo, por dentro, en los componentes que lleva dentro (un botón dentro de una tarjeta).
   async setProps(inst, n, depth) {
     if (inst.removed) return
+    const boxed = hasSlot(n)
+    n = fixedOnly(n)
     let defs
     try { defs = inst.componentProperties } catch (e) { return }
     const byRole = {}
-    for (const p of ownParts(n).concat(nestedOf(n))) if (p.role && !byRole[p.role]) byRole[p.role] = p
+    for (const p of ownParts(n).concat(nestedOf(n), roleFrames(n))) if (p.role && !byRole[p.role]) byRole[p.role] = p
     const want = {}
     for (const k of Object.keys(defs)) {
       const name = k.split("#")[0], d = defs[k]
@@ -797,13 +831,14 @@ class Drawer {
     for (const l of mine) {
       const refs = l.componentPropertyReferences
       const key = refs.characters || refs.mainComponent || refs.visible
+      if (!key) continue
       const role = key.split("#")[0].replace(/ · cuál$/, "").replace(/^con /, "")
       const p = byRole[role]
       if (!p) continue
       if (p.type === "TEXT" && l.type === "TEXT") l.fills = [solid(p.text.color.color, tokenVar(this.vars, p.text.color.token))]
       else if (p.type === "SVG" && p.fill) paintIcon(l, solid(p.fill.color, tokenVar(this.vars, p.fill.token)))
     }
-    if (!Object.keys(defs).some((k) => defs[k].type !== "VARIANT")) await this.overrides(inst, n, true)
+    if (!boxed && !Object.keys(defs).some((k) => defs[k].type !== "VARIANT")) await this.overrides(inst, n, true)
     // Lo que lleva dentro: la variante que toca y sus textos
     if ((depth || 0) > 6) return
     const kidsN = nestedOf(n), kidsI = firstInstances(inst)
@@ -835,6 +870,8 @@ class Drawer {
     const inst = comp.createInstance()
     if (viaProps) this.toggled.push({ inst: inst, n: n })
     else await this.overrides(inst, n)
+    // Caja con slot y partes fijas (cabecera, pie): sus textos e interruptores, al final
+    if (hasSlot(n) && rolesOfNode(n).length) this.toggled.push({ inst: inst, n: n })
     inst.name = n.component.set
     return inst
   }
@@ -969,7 +1006,10 @@ function roleLayers(comp) {
       try { role = k.getPluginData("role") } catch (e) { /* */ }
       if (!role && LEGACY_ROLES[k.name]) role = k.name
       if (role && (k.type === "TEXT" || k.type === "INSTANCE")) out.push({ role: role, layer: k, nested: k.type === "INSTANCE" && role.indexOf("icono") !== 0 })
-      else if (k.type !== "INSTANCE" && k.type !== "TEXT" && k.type !== "SLOT" && "children" in k) walk(k)
+      else if (k.type !== "INSTANCE" && k.type !== "TEXT" && k.type !== "SLOT" && "children" in k) {
+        if (role && !LEGACY_ROLES[role]) out.push({ role: role, layer: k, frame: true })
+        walk(k)
+      }
     }
   }
   walk(comp)
@@ -991,7 +1031,7 @@ async function bindProperties(drawer) {
     const variants = set.children.filter((c) => c.type === "COMPONENT")
     const layers = variants.map((c) => ({ c: c, parts: roleLayers(c) }))
     const roles = []
-    layers.forEach((v) => v.parts.forEach((p) => { if (!roles.some((r) => r.role === p.role)) roles.push({ role: p.role, type: p.layer.type, sample: p.layer, nested: p.nested }) }))
+    layers.forEach((v) => v.parts.forEach((p) => { if (!roles.some((r) => r.role === p.role)) roles.push({ role: p.role, type: p.layer.type, sample: p.layer, nested: p.nested, frame: p.frame }) }))
     for (const v of variants) for (const x of firstInstances(v)) { try { x.isExposedInstance = true } catch (e) { /* */ } }
     if (!roles.length) continue
     const failed = []
@@ -1004,6 +1044,9 @@ async function bindProperties(drawer) {
         const k = (keys[r.role] = {})
         if (r.type === "TEXT") {
           k.text = ensure(r.role, "TEXT", r.sample.characters)
+          if (optional.indexOf(r.role) >= 0) k.show = ensure("con " + r.role, "BOOLEAN", true)
+        } else if (r.frame) {
+          // Parte fija (cabecera, pie, acciones): solo se enciende y apaga
           if (optional.indexOf(r.role) >= 0) k.show = ensure("con " + r.role, "BOOLEAN", true)
         } else if (r.nested) {
           // Pieza de dentro (la etiqueta o el campo de un Field): se enciende y apaga; el campo, además, se elige
@@ -1032,6 +1075,9 @@ async function bindProperties(drawer) {
             await figma.loadFontAsync(p.layer.fontName === figma.mixed ? { family: "Inter", style: "Regular" } : p.layer.fontName)
             refs.characters = k.text
             if (k.show) refs.visible = k.show
+          } else if (p.frame) {
+            if (k.show) refs.visible = k.show
+            else continue
           } else if (p.nested) {
             if (k.show) refs.visible = k.show
             if (k.swap) refs.mainComponent = k.swap

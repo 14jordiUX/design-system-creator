@@ -24,7 +24,7 @@ import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Toggle } from "@/components/ui/toggle"
@@ -59,7 +59,7 @@ export const DEMOS: Record<string, Demo> = {
     examples: [{ title: "Menú de cuenta", render: (
       <DropdownMenu>
         <DropdownMenuTrigger asChild><Button variant="outline">Mi cuenta<ChevronDown /></Button></DropdownMenuTrigger>
-        <DropdownMenuContent><DropdownMenuLabel>Laura Pérez</DropdownMenuLabel><DropdownMenuSeparator /><DropdownMenuItem><User />Perfil</DropdownMenuItem><DropdownMenuItem><Settings />Ajustes</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem variant="destructive"><LogOut />Cerrar sesión</DropdownMenuItem></DropdownMenuContent>
+        <DropdownMenuContent><DropdownMenuLabel>Laura Pérez</DropdownMenuLabel><DropdownMenuSeparator /><DropdownMenuItem><User />Perfil</DropdownMenuItem><DropdownMenuItem><Settings />Ajustes</DropdownMenuItem><DropdownMenuCheckboxItem checked>Avisos por email</DropdownMenuCheckboxItem><DropdownMenuSub><DropdownMenuSubTrigger>Idioma</DropdownMenuSubTrigger><DropdownMenuSubContent><DropdownMenuItem>Español</DropdownMenuItem><DropdownMenuItem>English</DropdownMenuItem></DropdownMenuSubContent></DropdownMenuSub><DropdownMenuSeparator /><DropdownMenuLabel>Tema</DropdownMenuLabel><DropdownMenuRadioGroup value="claro"><DropdownMenuRadioItem value="claro">Claro</DropdownMenuRadioItem><DropdownMenuRadioItem value="oscuro">Oscuro</DropdownMenuRadioItem></DropdownMenuRadioGroup><DropdownMenuSeparator /><DropdownMenuItem variant="destructive"><LogOut />Cerrar sesión</DropdownMenuItem></DropdownMenuContent>
       </DropdownMenu>),
       code: `<DropdownMenu>\n  <DropdownMenuTrigger asChild><Button variant="outline">Mi cuenta</Button></DropdownMenuTrigger>\n  <DropdownMenuContent>\n    <DropdownMenuItem>Perfil</DropdownMenuItem>\n    <DropdownMenuItem variant="destructive">Cerrar sesión</DropdownMenuItem>\n  </DropdownMenuContent>\n</DropdownMenu>` }],
   },
