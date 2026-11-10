@@ -65768,7 +65768,7 @@ figma.ui.onmessage = async (msg) => {
     if (msg.type === "draw") {
       const d = msg.data
       if (d && d.format === "dsc-figma-bundle@1") {
-        const opts = Object.assign({}, msg.options || {}, { done: {}, sets: d.sets || {}, defs: d.definitions || {} })
+        const opts = Object.assign({}, msg.options || {}, { done: {}, queue: [], sets: d.sets || {}, defs: d.definitions || {} })
         // Todo el sistema: cada flujo se dibuja (o actualiza) en su página, con los mismos tokens y componentes
         let last = null
         for (let i = 0; i < d.flows.length; i++) {
@@ -66718,6 +66718,7 @@ async function bindProperties(drawer) {
     layers.forEach((v) => v.parts.forEach((p) => { if (!roles.some((r) => r.role === p.role)) roles.push({ role: p.role, type: p.layer.type, sample: p.layer }) }))
     for (const v of variants) for (const x of firstInstances(v)) { try { x.isExposedInstance = true } catch (e) { /* */ } }
     if (!roles.length) continue
+    const failed = []
     try {
       const keyOf = (name, type) => Object.keys(set.componentPropertyDefinitions).find((k) => k.split("#")[0] === name && set.componentPropertyDefinitions[k].type === type)
       const ensure = (name, type, def) => keyOf(name, type) || set.addComponentProperty(name, type, def)
@@ -66752,10 +66753,19 @@ async function bindProperties(drawer) {
             // El icono del botón va del color del texto (en la web es currentColor): al cambiar el icono, Figma puede perderlo
             if ((p.role === "icono izquierda" || p.role === "icono derecha") && firstText && firstText.fills !== figma.mixed && firstText.fills.length) paintIcon(p.layer, firstText.fills[0])
           }
-          p.layer.componentPropertyReferences = refs
+          // Capa a capa: si Figma no deja enlazar una, las demás sí se enlazan (y se intenta propiedad a propiedad)
+          try { p.layer.componentPropertyReferences = refs }
+          catch (e) {
+            const ok = {}
+            for (const r of Object.keys(refs)) {
+              try { const one = Object.assign({}, ok); one[r] = refs[r]; p.layer.componentPropertyReferences = one; ok[r] = refs[r] }
+              catch (e2) { failed.push("«" + v.c.name + "» › " + p.role + " (" + r + "): " + e2.message) }
+            }
+          }
         }
       }
     } catch (e) { log("No he podido crear las propiedades de «" + set.name + "»: " + e.message, "warn") }
+    if (failed.length && drawer.final) log("«" + set.name + "»: " + failed.length + " capas sin enlazar a su propiedad. Ej.: " + failed.slice(0, 3).join(" | "), "warn")
   }
 }
 
@@ -66916,6 +66926,8 @@ async function draw(data, options) {
   const flowPage = await pageNamed(pageName, update)
   const drawer = new Drawer(vars, effects, compPage, update)
   if (options.done) drawer.done = options.done
+  if (options.queue) drawer.toggled = options.queue    // todas las instancias del archivo: al final se repasan otra vez
+  const queueStart = drawer.toggled.length
   drawer.defs = options.defs || {}
   drawer.values = valueTable(data.collections)
   drawer.sets = options.sets || {}
@@ -66967,7 +66979,7 @@ async function draw(data, options) {
   preferInSlots(drawer)
   await bindProperties(drawer)
   arrangeSets()
-  for (const t of drawer.toggled) await drawer.setProps(t.inst, t.n)
+  for (const t of drawer.toggled.slice(queueStart)) await drawer.setProps(t.inst, t.n)
 
   // Prototipo: cada botón lleva a su pantalla
   for (const l of drawer.links) {
@@ -67287,6 +67299,13 @@ async function auditFile(sys) {
 async function finishFile(data, drawer) {
   if (!drawer) return
   const sys = data.system.name
+  // Al final, con todos los componentes ya hechos: propiedades otra vez (por si alguna no se pudo en un flujo) y
+  // los textos e iconos de todas las instancias, también las de los primeros flujos
+  drawer.final = true
+  try {
+    await bindProperties(drawer)
+    for (const t of drawer.toggled) await drawer.setProps(t.inst, t.n)
+  } catch (e) { log("No he podido repasar las propiedades: " + e.message, "warn") }
   const sheet = new Sheet(drawer, valueTable(data.collections))
   const steps = [["orden de variantes", async () => arrangeSets()], ["portada", () => makeCover(sys, sheet)], ["fundamentos", () => makeFoundations(sys, data, sheet)], ["fichas de componentes", () => documentComponents(drawer.page, drawer, sheet)], ["orden de páginas", () => orderPages(sys)], ["revisión", () => auditFile(sys)]]
   for (const [label, fn] of steps) {
