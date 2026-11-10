@@ -3,12 +3,14 @@
 // Móvil: la barra se esconde y queda un único botón (☰) que la abre por encima del contenido,
 //        o bien (mobileNav="tabbar") una barra inferior con 4 accesos + «Más», que abre la barra lateral completa.
 //        Esa barra puede ser flotante (variant="floating"): grande en reposo y pequeña, solo iconos, al bajar.
+//        En una página de detalle, <AppDetailBar> la sustituye: círculo para volver + barra con las acciones (comprar, filtrar…).
 // Decide escritorio o móvil por el ancho de su contenedor (token layout.desktop), así funciona igual a pantalla completa o dentro de un hueco.
 // Componente propio (no viene de shadcn/ui): está en base/components, así que lo tienen todos los sistemas.
 import * as React from "react"
 import { Slot } from "radix-ui"
-import { Menu, MoreHorizontal, PanelLeft, PanelLeftClose, PanelLeftOpen, X } from "lucide-react"
+import { ArrowLeft, Menu, MoreHorizontal, PanelLeft, PanelLeftClose, PanelLeftOpen, X } from "lucide-react"
 import { cn, tokenPx } from "../../lib/utils"
+import { Button } from "../ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 
 export type AppSidebarState = "expanded" | "icons" | "hidden"
@@ -336,6 +338,40 @@ function TabBarButton({ icon, active, badge, asChild, className, children, ...pr
   )
 }
 
+// Barra flotante de una página de detalle (por ejemplo, un producto): el mismo estilo que la barra de pestañas
+// flotante, pero con un círculo para volver atrás y, a su lado, una barra con las acciones de esa página.
+// Ponla al final de <AppMain> en lugar de <AppTabBar>. Si no ocupan todo el ancho, se centran.
+// Las acciones van con <AppDetailBarButton> (un Button de shadcn en forma de píldora; acepta variant, size…).
+// fill: la barra de acciones ocupa todo el ancho que queda (botones grandes, para una sola acción importante).
+function AppDetailBar({ onBack, backLabel = "Volver", fill, className, children, ...props }:
+  React.ComponentProps<"div"> & { onBack?: () => void; backLabel?: string; fill?: boolean }) {
+  return (
+    <div data-slot="app-detail-bar-dock"
+      className="pointer-events-none sticky bottom-0 z-sticky mt-auto flex shrink-0 justify-center px-inset-md pb-inset-md">
+      <div data-slot="app-detail-bar" className={cn("pointer-events-auto mb-[env(safe-area-inset-bottom)] flex max-w-full min-w-0 items-center gap-gap-sm animate-enter", fill && "w-full", className)} {...props}>
+        {onBack && (
+          <button type="button" data-slot="app-detail-bar-back" aria-label={backLabel} title={backLabel} onClick={onBack}
+            className="inline-flex size-tab-bar-expanded shrink-0 items-center justify-center rounded-pill border-thin bg-popover text-popover-foreground shadow-overlay transition-colors outline-none hover:bg-accent focus-visible:focus-ring [&_svg]:size-icon-lg">
+            <ArrowLeft />
+          </button>
+        )}
+        {React.Children.count(children) > 0 && (
+          <div data-slot="app-detail-bar-actions"
+            className={cn("flex h-tab-bar-expanded min-w-0 items-center gap-gap-2xs rounded-pill border-thin bg-popover p-inset-2xs text-popover-foreground shadow-overlay", fill && "flex-1")}>
+            {children}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Una acción de la barra de detalle: ocupa el alto de la barra y tiene forma de píldora.
+// En una barra con fill, la que lleve grow se estira (normalmente la principal: «Comprar»).
+function AppDetailBarButton({ grow, className, ...props }: React.ComponentProps<typeof Button> & { grow?: boolean }) {
+  return <Button data-slot="app-detail-bar-button" className={cn("h-full min-w-0 rounded-pill px-inset-lg", grow && "flex-1", className)} {...props} />
+}
+
 // Zona de contenido, a la derecha de la barra.
 function AppMain({ className, ...props }: React.ComponentProps<"main">) {
   return <main data-slot="app-main" className={cn("flex min-w-0 flex-1 flex-col overflow-y-auto", className)} {...props} />
@@ -345,4 +381,4 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
   return <header data-slot="app-header" className={cn("sticky top-0 z-sticky flex h-header shrink-0 items-center gap-gap-sm border-b-thin bg-background px-inset-md", className)} {...props} />
 }
 
-export { AppShell, AppSidebar, AppSidebarHeader, AppSidebarContent, AppSidebarFooter, AppSidebarGroup, AppSidebarItem, AppSidebarTrigger, AppTabBar, AppTabBarItem, AppMain, AppHeader }
+export { AppShell, AppSidebar, AppSidebarHeader, AppSidebarContent, AppSidebarFooter, AppSidebarGroup, AppSidebarItem, AppSidebarTrigger, AppTabBar, AppTabBarItem, AppDetailBar, AppDetailBarButton, AppMain, AppHeader }
