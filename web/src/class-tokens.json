@@ -9911,6 +9911,456 @@
   "scroll-my-fab-sm": [
     "size.fab.sm"
   ],
+  "p-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "px-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "py-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "pt-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "pr-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "pb-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "pl-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "ps-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "pe-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "m-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "mx-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "my-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "mt-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "mr-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "mb-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "ml-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "-mx-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "-my-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "-mt-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "-ml-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "gap-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "gap-x-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "gap-y-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "space-x-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "space-y-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "-space-x-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "-space-y-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "size-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "w-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "h-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "min-w-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "min-h-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "max-w-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "max-h-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "top-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "left-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "right-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "bottom-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "inset-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "inset-x-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "inset-y-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "-top-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "-left-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "-right-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "-bottom-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "translate-x-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "translate-y-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "-translate-x-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "-translate-y-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "scroll-my-tab-bar-expanded": [
+    "size.tab-bar.expanded"
+  ],
+  "p-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "px-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "py-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "pt-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "pr-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "pb-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "pl-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "ps-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "pe-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "m-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "mx-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "my-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "mt-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "mr-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "mb-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "ml-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "-mx-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "-my-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "-mt-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "-ml-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "gap-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "gap-x-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "gap-y-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "space-x-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "space-y-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "-space-x-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "-space-y-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "size-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "w-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "h-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "min-w-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "min-h-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "max-w-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "max-h-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "top-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "left-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "right-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "bottom-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "inset-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "inset-x-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "inset-y-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "-top-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "-left-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "-right-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "-bottom-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "translate-x-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "translate-y-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "-translate-x-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "-translate-y-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "scroll-my-tab-bar-compact": [
+    "size.tab-bar.compact"
+  ],
+  "p-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "px-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "py-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "pt-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "pr-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "pb-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "pl-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "ps-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "pe-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "m-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "mx-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "my-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "mt-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "mr-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "mb-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "ml-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "-mx-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "-my-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "-mt-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "-ml-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "gap-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "gap-x-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "gap-y-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "space-x-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "space-y-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "-space-x-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "-space-y-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "size-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "w-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "h-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "min-w-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "min-h-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "max-w-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "max-h-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "top-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "left-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "right-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "bottom-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "inset-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "inset-x-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "inset-y-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "-top-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "-left-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "-right-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "-bottom-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "translate-x-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "translate-y-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "-translate-x-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "-translate-y-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
+  "scroll-my-tab-bar-item": [
+    "size.tab-bar.item"
+  ],
   "p-header": [
     "layout.header"
   ],
@@ -11629,6 +12079,12 @@
   ],
   "shadow-modal": [
     "elevation.modal"
+  ],
+  "ease-default": [
+    "motion.easing.default"
+  ],
+  "ease-emphasis": [
+    "motion.easing.emphasis"
   ],
   "font-base": [
     "text.family.base"

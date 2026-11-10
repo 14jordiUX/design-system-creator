@@ -178,8 +178,10 @@ Familias: sans = Quicksand, ui-sans-serif, system-ui, sans-serif; mono = JetBrai
 | `--motion-duration-emphasis` | 330ms | Modales, paneles |
 | `--motion-duration-loop` | 1600ms |  |
 | `--motion-easing-default` | cubic-bezier(0.2, 0, 0, 1) |  |
+| `--motion-easing-emphasis` | cubic-bezier(0.32, 0.72, 0, 1) | Cambios de forma grandes (la barra de pestañas flotante que se encoge) |
 | `--motion-scale-enter` | 0.95 | Escala inicial al aparecer (menús, diálogos) |
 | `--motion-distance-enter` | 8px | Desplazamiento al aparecer |
+| `--motion-distance-scroll` | 24px | Cuánto hay que bajar o subir para que algo reaccione al scroll (barra de pestañas flotante) |
 | `--motion-rotate-tilt` | 45deg | Giro de un octavo (un + que se convierte en ×) |
 | `--motion-rotate-turn` | 90deg | Giro de un cuarto (flechas de submenú, iconos que cambian) |
 | `--motion-rotate-flip` | 180deg | Media vuelta (flecha de un acordeón o un select abiertos) |
@@ -214,6 +216,9 @@ Familias: sans = Quicksand, ui-sans-serif, system-ui, sans-serif; mono = JetBrai
 | `--size-area-min` | 104px | Alto mínimo de zonas de demo, de soltar archivos o de clic |
 | `--size-fab-md` | 56px | Botón flotante (fab) |
 | `--size-fab-sm` | 44px | Botón flotante pequeño y acciones de su lista |
+| `--size-tab-bar-expanded` | 68px | Alto de la barra de pestañas flotante en grande (icono y texto) |
+| `--size-tab-bar-compact` | 52px | Alto de la barra de pestañas flotante en pequeño (solo icono) |
+| `--size-tab-bar-item` | 52px | Ancho de cada pestaña cuando la barra flotante está en pequeño |
 | `--layout-header` | 56px | Alto de la cabecera de una aplicación |
 | `--layout-sidebar` | 256px | Ancho de la barra lateral |
 | `--layout-prose` | 672px | Ancho máximo de un bloque de texto |

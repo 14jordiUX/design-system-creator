@@ -121,7 +121,7 @@ def build(primitives, semantic, light):
     add("\n  /* Sombras (elevación semántica) */")
     L += [f"  --shadow-{k}: var(--elevation-{k});" for k in _keys(semantic["elevation"])]
     add("\n  /* Movimiento */")
-    add("  --ease-default: var(--motion-easing-default);")
+    L += [f"  --ease-{k}: var(--motion-easing-{k});" for k in _keys(semantic["motion"]["easing"])]
     add("  --default-transition-duration: var(--motion-duration-micro);")
     add("  --default-transition-timing-function: var(--motion-easing-default);")
     add("  --default-font-family: var(--text-family-base);")
@@ -279,6 +279,8 @@ def class_map(primitives, semantic, light):
         for name, var in _re.findall(rf"--{ns}-([\w-]+): var\((--[\w-]+)\);", css):
             if ns == "text" and (name.startswith("color-") or name.startswith("decoration-")): continue
             put(f"{util}-{name}", paths.get(var))
+    for name, var in _re.findall(r"--ease-([\w-]+): var\((--[\w-]+)\);", css):
+        put(f"ease-{name}", paths.get(var))
     for name, var in _re.findall(r"--font-(base|code): var\((--[\w-]+)\);", css):
         put(f"font-{name}", paths.get(var))
     for name, var in _re.findall(r"--radius-([\w-]+): var\((--[\w-]+)\);", css):
