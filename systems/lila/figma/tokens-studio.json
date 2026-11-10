@@ -499,6 +499,15 @@
           1,
           1
         ]
+      },
+      "emphasized": {
+        "$value": [
+          0.32,
+          0.72,
+          0,
+          1
+        ],
+        "$description": "Arranca rápido y frena muy suave (cambios de forma grandes)"
       }
     },
     "opacity": {
@@ -902,6 +911,10 @@
         "$type": "cubicBezier",
         "default": {
           "$value": "{easing.standard}"
+        },
+        "emphasis": {
+          "$value": "{easing.emphasized}",
+          "$description": "Cambios de forma grandes (la barra de pestañas flotante que se encoge)"
         }
       },
       "scale": {
@@ -916,6 +929,10 @@
         "enter": {
           "$value": "{space.2}",
           "$description": "Desplazamiento al aparecer"
+        },
+        "scroll": {
+          "$value": "{space.6}",
+          "$description": "Cuánto hay que bajar o subir para que algo reaccione al scroll (barra de pestañas flotante)"
         }
       },
       "rotate": {
@@ -1061,6 +1078,20 @@
         "sm": {
           "$value": "{space.10}",
           "$description": "Botón flotante pequeño y acciones de su lista"
+        }
+      },
+      "tab-bar": {
+        "expanded": {
+          "$value": "{space.16}",
+          "$description": "Alto de la barra de pestañas flotante en grande (icono y texto)"
+        },
+        "compact": {
+          "$value": "{space.12}",
+          "$description": "Alto de la barra de pestañas flotante en pequeño (solo icono)"
+        },
+        "item": {
+          "$value": "{space.12}",
+          "$description": "Ancho de cada pestaña cuando la barra flotante está en pequeño"
         }
       }
     },

@@ -2,6 +2,7 @@
 // Escritorio: tres estados — desplegada (iconos y textos), plegada a iconos, u oculta del todo.
 // Móvil: la barra se esconde y queda un único botón (☰) que la abre por encima del contenido,
 //        o bien (mobileNav="tabbar") una barra inferior con 4 accesos + «Más», que abre la barra lateral completa.
+//        Esa barra puede ser flotante (variant="floating"): grande en reposo y pequeña, solo iconos, al bajar.
 // Decide escritorio o móvil por el ancho de su contenedor (token layout.desktop), así funciona igual a pantalla completa o dentro de un hueco.
 // Componente propio (no viene de shadcn/ui): está en base/components, así que lo tienen todos los sistemas.
 import * as React from "react"
@@ -213,18 +214,74 @@ function SidebarButton({ label, className, children, ...props }: React.Component
 // Barra inferior para móvil (con mobileNav="tabbar"): ponla al final de <AppMain>. Lleva hasta 4 <AppTabBarItem>
 // y añade sola un quinto, «Más», que abre la barra lateral con todo. En escritorio no se muestra.
 // moreActive: marca «Más» como activo cuando la página actual no es uno de los 4 accesos.
-function AppTabBar({ moreLabel = "Más", moreIcon = <MoreHorizontal />, moreActive, className, children, ...props }:
-  React.ComponentProps<"nav"> & { moreLabel?: string; moreIcon?: React.ReactNode; moreActive?: boolean }) {
+// variant="floating" (app-tab-bar/floating): barra flotante en forma de píldora. En reposo es grande (icono y texto,
+//   casi todo el ancho); al bajar por el contenido se encoge con una transición suave a solo iconos, y al subir
+//   (o al volver arriba del todo) recupera su tamaño. compact / defaultCompact / onCompactChange: para controlarlo tú.
+//   La animación sale de tokens: motion.duration.emphasis, motion.easing.emphasis, motion.distance.scroll y size.tab-bar.*
+function AppTabBar({ moreLabel = "Más", moreIcon = <MoreHorizontal />, moreActive, variant = "default", compact, defaultCompact = false, onCompactChange, className, style, children, ...props }:
+  React.ComponentProps<"nav"> & { moreLabel?: string; moreIcon?: React.ReactNode; moreActive?: boolean; variant?: "default" | "floating"
+    compact?: boolean; defaultCompact?: boolean; onCompactChange?: (compact: boolean) => void }) {
   const { mobile, mobileNav, open, setOpen } = useAppSidebar()
-  if (!mobile || mobileNav !== "tabbar") return null
-  return (
+  const floating = variant === "floating"
+  const ref = React.useRef<HTMLDivElement>(null)
+  const [inner, setInner] = React.useState(defaultCompact)
+  const small = floating && (compact ?? inner)
+  const change = React.useRef(onCompactChange)
+  change.current = onCompactChange
+  const shown = mobile && mobileNav === "tabbar"
+
+  // Al bajar se encoge, al subir (o arriba del todo) vuelve a ser grande. Escucha el scroll de <AppMain>.
+  React.useEffect(() => {
+    if (!floating || !shown) return
+    const el = ref.current?.closest<HTMLElement>("main")   // <AppMain>
+    if (!el) return
+    const step = parseFloat(getComputedStyle(el).getPropertyValue("--motion-distance-scroll")) || 0
+    let last = el.scrollTop, run = 0, now = false
+    const set = (v: boolean) => { if (v !== now) { now = v; setInner(v); change.current?.(v) } }
+    const onScroll = () => {
+      const y = Math.max(0, el.scrollTop), d = y - last
+      last = y
+      if (y <= step) { run = 0; set(false); return }
+      run = Math.sign(d) === Math.sign(run) ? run + d : d
+      if (run > step) set(true)
+      else if (run < -step) set(false)
+    }
+    el.addEventListener("scroll", onScroll, { passive: true })
+    return () => el.removeEventListener("scroll", onScroll)
+  }, [floating, shown])
+
+  if (!shown) return null
+  const more = <TabBarButton icon={moreIcon} active={open || moreActive} aria-expanded={open} onClick={() => setOpen(true)}>{moreLabel}</TabBarButton>
+  if (!floating) return (
     <nav data-slot="app-tab-bar" aria-label="Navegación principal"
-      className={cn("sticky bottom-0 z-sticky mt-auto flex shrink-0 border-t-thin bg-background pb-[env(safe-area-inset-bottom)]", className)} {...props}>
+      className={cn("sticky bottom-0 z-sticky mt-auto flex shrink-0 border-t-thin bg-background pb-[env(safe-area-inset-bottom)]", className)} style={style} {...props}>
       {children}
-      <TabBarButton icon={moreIcon} active={open || moreActive} aria-expanded={open} onClick={() => setOpen(true)}>{moreLabel}</TabBarButton>
+      {more}
     </nav>
   )
+  const count = React.Children.toArray(children).length + 1
+  return (
+    <TabBarCompact.Provider value={small}>
+      <div ref={ref} data-slot="app-tab-bar-dock"
+        className="pointer-events-none sticky bottom-0 z-sticky mt-auto flex shrink-0 justify-center px-inset-md pb-inset-md">
+        <nav data-slot="app-tab-bar" data-variant="floating" data-compact={small || undefined} aria-label="Navegación principal"
+          style={{ "--tab-count": count, ...style } as React.CSSProperties}
+          className={cn(
+            "pointer-events-auto mb-[env(safe-area-inset-bottom)] flex h-tab-bar-expanded w-full max-w-full rounded-pill border-thin bg-popover p-inset-2xs text-popover-foreground shadow-overlay",
+            "transition-[width,height] duration-emphasis ease-emphasis motion-reduce:transition-none",
+            "data-compact:h-tab-bar-compact data-compact:w-[calc(var(--tab-count)*var(--size-tab-bar-item)+var(--space-inset-2xs)*2)]",
+            className)}
+          {...props}>
+          {children}
+          {more}
+        </nav>
+      </div>
+    </TabBarCompact.Provider>
+  )
 }
+
+// ¿La barra flotante está en pequeño? (null = barra normal, no flotante)
+const TabBarCompact = React.createContext<boolean | null>(null)
 
 function AppTabBarItem({ asChild, ...props }: React.ComponentProps<"button"> & { icon: React.ReactNode; active?: boolean; badge?: React.ReactNode; asChild?: boolean }) {
   return <TabBarButton asChild={asChild} {...props} />
@@ -232,7 +289,17 @@ function AppTabBarItem({ asChild, ...props }: React.ComponentProps<"button"> & {
 
 function TabBarButton({ icon, active, badge, asChild, className, children, ...props }:
   React.ComponentProps<"button"> & { icon: React.ReactNode; active?: boolean; badge?: React.ReactNode; asChild?: boolean }) {
+  const small = React.useContext(TabBarCompact)
+  const floating = small !== null
   const Comp = asChild ? Slot.Root : "button"
+  const label = floating
+    ? ( // el texto se pliega (alto a 0 y transparente) con la misma animación que la barra
+      <span aria-hidden={small || undefined}
+        className={cn("grid w-full grid-cols-[minmax(0,1fr)] text-center transition-[grid-template-rows,opacity] duration-emphasis ease-emphasis motion-reduce:transition-none",
+          small ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100")}>
+        <span className="min-h-0 overflow-hidden"><span className="block truncate pt-inset-3xs">{children}</span></span>
+      </span>)
+    : <span className="max-w-full truncate">{children}</span>
   const inner = (
     <>
       <span className="relative flex">
@@ -241,15 +308,19 @@ function TabBarButton({ icon, active, badge, asChild, className, children, ...pr
           <span className="absolute -end-inset-sm -top-inset-2xs flex min-w-icon-md items-center justify-center rounded-pill bg-primary px-inset-2xs text-caption leading-compact text-primary-foreground">{badge}</span>
         )}
       </span>
-      <span className="max-w-full truncate">{children}</span>
+      {label}
     </>
   )
   return (
     <Comp data-slot="app-tab-bar-item" data-active={active || undefined} aria-current={active ? "page" : undefined}
+      aria-label={floating && small && typeof children === "string" ? children : undefined}
       className={cn(
-        "flex min-w-0 flex-1 flex-col items-center justify-center gap-gap-3xs px-inset-2xs py-inset-xs text-caption text-muted-foreground transition-colors outline-none",
-        "hover:text-foreground focus-visible:focus-ring-inset data-active:font-emphasis data-active:text-link",
+        "flex min-w-0 flex-1 flex-col items-center justify-center text-caption text-muted-foreground transition-colors outline-none",
+        "hover:text-foreground data-active:font-emphasis data-active:text-link",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-icon-md",
+        floating
+          ? "rounded-pill px-inset-xs focus-visible:focus-ring data-active:bg-primary-subtle"
+          : "gap-gap-3xs px-inset-2xs py-inset-xs focus-visible:focus-ring-inset",
         className)}
       {...props}>
       {asChild ? children : inner}

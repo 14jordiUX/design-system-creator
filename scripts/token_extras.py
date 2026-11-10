@@ -35,6 +35,7 @@ def extend(primitives, semantic, light, dark):
                                       **{k: t("{space.%s}" % v) for k, v in SCALE.items()}}
     _merge(primitives, {
         "duration": {"loop": t("1600ms", desc="Animaciones que se repiten (carga)")},
+        "easing": {"emphasized": t([0.32, 0.72, 0, 1], desc="Arranca rápido y frena muy suave (cambios de forma grandes)")},
         "breakpoint": {"$type": "dimension",
                        "sm": t("640px"), "md": t("768px"), "lg": t("1024px"), "xl": t("1280px")},
         # v0.6: medidas fijas que antes estaban escritas a mano en los semánticos (no cambian con la densidad)
@@ -73,6 +74,9 @@ def extend(primitives, semantic, light, dark):
             "field": {"xs": t("{space.20}", desc="Campos cortos (códigos, números)"), "sm": t("{space.24}", desc="Campos y etiquetas cortas")},
             "area-min": t("{space.24}", desc="Alto mínimo de zonas de demo, de soltar archivos o de clic"),
             "fab": {"md": t("{dimension.56}", desc="Botón flotante (fab)"), "sm": t("{space.10}", desc="Botón flotante pequeño y acciones de su lista")},
+            "tab-bar": {"expanded": t("{space.16}", desc="Alto de la barra de pestañas flotante en grande (icono y texto)"),
+                        "compact": t("{space.12}", desc="Alto de la barra de pestañas flotante en pequeño (solo icono)"),
+                        "item": t("{space.12}", desc="Ancho de cada pestaña cuando la barra flotante está en pequeño")},
         },
         "layout": {"$type": "dimension",
             "header": t("56px", desc="Alto de la cabecera de una aplicación"),
@@ -108,8 +112,10 @@ def extend(primitives, semantic, light, dark):
                               "overlay": t("{opacity.overlay}")}},
         "motion": {
             "duration": {"loop": t("{duration.loop}")},
+            "easing": {"emphasis": t("{easing.emphasized}", desc="Cambios de forma grandes (la barra de pestañas flotante que se encoge)")},
             "scale": {"$type": "number", "enter": t(0.95, desc="Escala inicial al aparecer (menús, diálogos)")},
-            "distance": {"$type": "dimension", "enter": t("{space.2}", desc="Desplazamiento al aparecer")},
+            "distance": {"$type": "dimension", "enter": t("{space.2}", desc="Desplazamiento al aparecer"),
+                         "scroll": t("{space.6}", desc="Cuánto hay que bajar o subir para que algo reaccione al scroll (barra de pestañas flotante)")},
             "rotate": {"$type": "other", "tilt": t("{angle.45}", desc="Giro de un octavo (un + que se convierte en ×)"),
                        "turn": t("{angle.90}", desc="Giro de un cuarto (flechas de submenú, iconos que cambian)"),
                        "flip": t("{angle.180}", desc="Media vuelta (flecha de un acordeón o un select abiertos)")},

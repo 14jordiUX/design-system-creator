@@ -498,6 +498,15 @@
         1,
         1
       ]
+    },
+    "emphasized": {
+      "$value": [
+        0.32,
+        0.72,
+        0,
+        1
+      ],
+      "$description": "Arranca rápido y frena muy suave (cambios de forma grandes)"
     }
   },
   "opacity": {

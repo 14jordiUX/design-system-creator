@@ -181,6 +181,9 @@
   --spacing-area-min: var(--size-area-min);
   --spacing-fab-md: var(--size-fab-md);
   --spacing-fab-sm: var(--size-fab-sm);
+  --spacing-tab-bar-expanded: var(--size-tab-bar-expanded);
+  --spacing-tab-bar-compact: var(--size-tab-bar-compact);
+  --spacing-tab-bar-item: var(--size-tab-bar-item);
   --spacing-header: var(--layout-header);
   --spacing-sidebar: var(--layout-sidebar);
   --spacing-prose: var(--layout-prose);
@@ -242,6 +245,9 @@
   --container-area-min: var(--size-area-min);
   --container-fab-md: var(--size-fab-md);
   --container-fab-sm: var(--size-fab-sm);
+  --container-tab-bar-expanded: var(--size-tab-bar-expanded);
+  --container-tab-bar-compact: var(--size-tab-bar-compact);
+  --container-tab-bar-item: var(--size-tab-bar-item);
   --container-header: var(--layout-header);
   --container-sidebar: var(--layout-sidebar);
   --container-prose: var(--layout-prose);
@@ -293,6 +299,7 @@
 
   /* Movimiento */
   --ease-default: var(--motion-easing-default);
+  --ease-emphasis: var(--motion-easing-emphasis);
   --default-transition-duration: var(--motion-duration-micro);
   --default-transition-timing-function: var(--motion-easing-default);
   --default-font-family: var(--text-family-base);
