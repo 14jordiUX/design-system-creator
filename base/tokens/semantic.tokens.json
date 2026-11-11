@@ -58,7 +58,7 @@
     },
     "lead": {
       "$value": {
-        "fontFamily": "{text.family.texto}",
+        "fontFamily": "{text.family.base}",
         "fontSize": "{text.size.lead}",
         "fontWeight": "{text.weight.normal}",
         "lineHeight": "{text.leading.prose}",
