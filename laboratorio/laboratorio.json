@@ -1,0 +1,645 @@
+{
+  "$comment": "Laboratorio: pruebas que todavía no están en ningún sistema. Cada prueba tiene opciones; los valores de cada opción ('vars') son tokens experimentales que solo usa esta página. Si Jordi incluye una opción, pasa a ser un token de verdad del generador. Las decisiones se guardan en decisiones.json.",
+  "groups": {
+    "movimiento": "Movimiento y material",
+    "estructura": "Estructura del sistema"
+  },
+  "experiments": [
+    {
+      "id": "movimiento",
+      "group": "movimiento",
+      "title": "Personalidad del movimiento",
+      "source": "Material 3 Expressive",
+      "text": "Cuánto duran los hovers y cómo se mueven las cosas. Lo que cambia de sitio o de tamaño puede rebotar; los cambios de color nunca rebotan.",
+      "try": "Pasa el ratón por los botones y la tarjeta, y pulsa el interruptor.",
+      "options": [
+        {
+          "id": "sutil",
+          "label": "Sutil",
+          "vars": {
+            "--lab-hover": "260ms",
+            "--lab-ease-effects": "cubic-bezier(0.4, 0, 0.2, 1)",
+            "--lab-spatial": "420ms",
+            "--lab-ease-spatial": "cubic-bezier(0.4, 0, 0.2, 1)",
+            "--lab-lift": "-2px"
+          }
+        },
+        {
+          "id": "estandar",
+          "label": "Estándar",
+          "vars": {
+            "--lab-hover": "140ms",
+            "--lab-ease-effects": "cubic-bezier(0.2, 0, 0, 1)",
+            "--lab-spatial": "240ms",
+            "--lab-ease-spatial": "cubic-bezier(0.2, 0, 0, 1)",
+            "--lab-lift": "-3px"
+          }
+        },
+        {
+          "id": "agil",
+          "label": "Ágil",
+          "vars": {
+            "--lab-hover": "70ms",
+            "--lab-ease-effects": "cubic-bezier(0.3, 0, 0, 1)",
+            "--lab-spatial": "140ms",
+            "--lab-ease-spatial": "cubic-bezier(0.3, 0, 0, 1)",
+            "--lab-lift": "-2px"
+          }
+        },
+        {
+          "id": "elastico",
+          "label": "Elástico",
+          "vars": {
+            "--lab-hover": "120ms",
+            "--lab-ease-effects": "cubic-bezier(0.2, 0, 0, 1)",
+            "--lab-spatial": "620ms",
+            "--lab-ease-spatial": "linear(0, 0.068, 0.233, 0.442, 0.654, 0.841, 0.987, 1.087, 1.143, 1.163, 1.155, 1.13, 1.097, 1.062, 1.031, 1.006, 0.988, 0.978, 0.974, 0.974, 0.978, 0.983, 0.989, 0.994, 1)",
+            "--lab-lift": "-6px"
+          }
+        }
+      ]
+    },
+    {
+      "id": "fondo-sigue",
+      "group": "movimiento",
+      "title": "Fondo que sigue o fondo que cambia",
+      "source": "Barra de pestañas flotante",
+      "text": "Al pasar por un menú, el fondo de la opción puede deslizarse de una a otra (como la barra de pestañas) o aparecer de golpe en cada una.",
+      "try": "Pasa el ratón por el menú y por las pestañas.",
+      "options": [
+        {
+          "id": "cambia",
+          "label": "Cambia",
+          "vars": {
+            "--lab-move": "0ms",
+            "--lab-ease": "cubic-bezier(0.2, 0, 0, 1)"
+          }
+        },
+        {
+          "id": "sigue",
+          "label": "Sigue suave",
+          "vars": {
+            "--lab-move": "260ms",
+            "--lab-ease": "cubic-bezier(0.2, 0, 0, 1)"
+          }
+        },
+        {
+          "id": "sigue-elastico",
+          "label": "Sigue elástico",
+          "vars": {
+            "--lab-move": "520ms",
+            "--lab-ease": "linear(0, 0.053, 0.177, 0.331, 0.489, 0.633, 0.756, 0.853, 0.926, 0.977, 1.009, 1.028, 1.037, 1.038, 1.036, 1.03, 1.024, 1.018, 1.013, 1.008, 1.005, 1.002, 1.001, 0.999, 1)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "indicador-estira",
+      "group": "movimiento",
+      "title": "Indicador que se estira",
+      "source": "Liquid Glass (Apple)",
+      "text": "Al cambiar de pestaña, el indicador se estira como una gota: primero sale el borde de delante y luego le sigue el de detrás.",
+      "try": "Cambia de pestaña varias veces, cerca y lejos.",
+      "options": [
+        {
+          "id": "rigido",
+          "label": "Rígido",
+          "vars": {
+            "--lab-lead": "280ms",
+            "--lab-trail": "280ms",
+            "--lab-ease": "cubic-bezier(0.2, 0, 0, 1)"
+          }
+        },
+        {
+          "id": "estira",
+          "label": "Se estira",
+          "vars": {
+            "--lab-lead": "240ms",
+            "--lab-trail": "520ms",
+            "--lab-ease": "cubic-bezier(0.2, 0, 0, 1)"
+          }
+        },
+        {
+          "id": "gota",
+          "label": "Gota elástica",
+          "vars": {
+            "--lab-lead": "380ms",
+            "--lab-trail": "700ms",
+            "--lab-ease": "linear(0, 0.053, 0.177, 0.331, 0.489, 0.633, 0.756, 0.853, 0.926, 0.977, 1.009, 1.028, 1.037, 1.038, 1.036, 1.03, 1.024, 1.018, 1.013, 1.008, 1.005, 1.002, 1.001, 0.999, 1)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "forma-al-pulsar",
+      "group": "movimiento",
+      "title": "Cambio de forma al pulsar",
+      "source": "Material 3 Expressive",
+      "text": "Mientras mantienes pulsado, el botón cambia un poco de forma o de tamaño. Da sensación de material blando.",
+      "try": "Mantén pulsado cada botón.",
+      "options": [
+        {
+          "id": "nada",
+          "label": "Nada",
+          "vars": {
+            "--lab-press-radius": "var(--radius-pill)",
+            "--lab-press-scale": "1",
+            "--lab-ease": "cubic-bezier(0.2, 0, 0, 1)",
+            "--lab-time": "120ms"
+          }
+        },
+        {
+          "id": "aplana",
+          "label": "Se aplana",
+          "vars": {
+            "--lab-press-radius": "var(--radius-control)",
+            "--lab-press-scale": "1",
+            "--lab-ease": "linear(0, 0.068, 0.233, 0.442, 0.654, 0.841, 0.987, 1.087, 1.143, 1.163, 1.155, 1.13, 1.097, 1.062, 1.031, 1.006, 0.988, 0.978, 0.974, 0.974, 0.978, 0.983, 0.989, 0.994, 1)",
+            "--lab-time": "420ms"
+          }
+        },
+        {
+          "id": "encoge",
+          "label": "Se encoge",
+          "vars": {
+            "--lab-press-radius": "var(--radius-pill)",
+            "--lab-press-scale": "0.94",
+            "--lab-ease": "linear(0, 0.068, 0.233, 0.442, 0.654, 0.841, 0.987, 1.087, 1.143, 1.163, 1.155, 1.13, 1.097, 1.062, 1.031, 1.006, 0.988, 0.978, 0.974, 0.974, 0.978, 0.983, 0.989, 0.994, 1)",
+            "--lab-time": "420ms"
+          }
+        },
+        {
+          "id": "ambas",
+          "label": "Las dos",
+          "vars": {
+            "--lab-press-radius": "var(--radius-control)",
+            "--lab-press-scale": "0.94",
+            "--lab-ease": "linear(0, 0.068, 0.233, 0.442, 0.654, 0.841, 0.987, 1.087, 1.143, 1.163, 1.155, 1.13, 1.097, 1.062, 1.031, 1.006, 0.988, 0.978, 0.974, 0.974, 0.978, 0.983, 0.989, 0.994, 1)",
+            "--lab-time": "420ms"
+          }
+        }
+      ]
+    },
+    {
+      "id": "material",
+      "group": "movimiento",
+      "title": "Material de lo que flota",
+      "source": "Liquid Glass (Apple)",
+      "text": "Solo para lo que flota sobre el contenido: barra de pestañas, menús y ventanas. Puede ser sólido, translúcido o de cristal.",
+      "try": "Mueve el contenido de detrás con la barra de desplazamiento.",
+      "options": [
+        {
+          "id": "solido",
+          "label": "Sólido",
+          "vars": {
+            "--lab-fill": "var(--color-bg-default)",
+            "--lab-blur": "0px",
+            "--lab-edge": "0 0 0 1px var(--color-border-default)",
+            "--lab-glow": "var(--elevation-overlay)"
+          }
+        },
+        {
+          "id": "translucido",
+          "label": "Translúcido",
+          "vars": {
+            "--lab-fill": "color-mix(in oklch, var(--color-bg-default) 72%, transparent)",
+            "--lab-blur": "16px",
+            "--lab-edge": "0 0 0 1px color-mix(in oklch, var(--color-border-default) 60%, transparent)",
+            "--lab-glow": "var(--elevation-overlay)"
+          }
+        },
+        {
+          "id": "cristal",
+          "label": "Cristal",
+          "vars": {
+            "--lab-fill": "color-mix(in oklch, var(--color-bg-action-primary-subtle) 30%, transparent)",
+            "--lab-blur": "10px",
+            "--lab-edge": "inset 0 1px 0 color-mix(in oklch, var(--color-bg-default) 85%, transparent), inset 0 -1px 0 color-mix(in oklch, var(--color-text-default) 8%, transparent), 0 0 0 1px color-mix(in oklch, var(--color-bg-default) 45%, transparent)",
+            "--lab-glow": "0 8px 32px -8px color-mix(in oklch, var(--color-text-default) 30%, transparent)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "fusion-liquida",
+      "group": "movimiento",
+      "title": "Fusión líquida",
+      "source": "Liquid Glass (Apple)",
+      "text": "Las piezas se separan y se unen como si fueran líquido. Es la prueba más vistosa y la más cara para el navegador; Figma no puede dibujarla.",
+      "try": "Pulsa el botón flotante para abrirlo y cerrarlo.",
+      "options": [
+        {
+          "id": "normal",
+          "label": "Sin fusión",
+          "vars": {
+            "--lab-time": "360ms",
+            "--lab-ease": "cubic-bezier(0.2, 0, 0, 1)"
+          },
+          "params": {
+            "goo": false
+          }
+        },
+        {
+          "id": "liquido",
+          "label": "Líquido",
+          "vars": {
+            "--lab-time": "700ms",
+            "--lab-ease": "linear(0, 0.053, 0.177, 0.331, 0.489, 0.633, 0.756, 0.853, 0.926, 0.977, 1.009, 1.028, 1.037, 1.038, 1.036, 1.03, 1.024, 1.018, 1.013, 1.008, 1.005, 1.002, 1.001, 0.999, 1)"
+          },
+          "params": {
+            "goo": true,
+            "blur": "9",
+            "matrix": "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"
+          }
+        }
+      ]
+    },
+    {
+      "id": "reparto-color",
+      "group": "estructura",
+      "title": "Dónde aparece la marca",
+      "source": "Análisis, palanca 1",
+      "text": "Hoy el color de marca solo sale en botones y enlaces. Puede ir también en la barra lateral, la cabecera o los fondos.",
+      "try": "Compara las tres opciones con distintos sistemas.",
+      "options": [
+        {
+          "id": "poco",
+          "label": "Poco"
+        },
+        {
+          "id": "bastante",
+          "label": "Bastante"
+        },
+        {
+          "id": "mucho",
+          "label": "Mucho"
+        }
+      ]
+    },
+    {
+      "id": "fondo",
+      "group": "estructura",
+      "title": "Fondo de página y tarjetas",
+      "source": "Análisis, palanca 2",
+      "text": "Hoy todo es blanco. El fondo puede ser crema, gris con tarjetas blancas o teñido de marca.",
+      "try": "Fíjate en cómo cambia el carácter sin tocar ningún componente.",
+      "options": [
+        {
+          "id": "blanco",
+          "label": "Blanco",
+          "vars": {
+            "--lab-page": "var(--color-bg-default)",
+            "--lab-card": "var(--color-surface-card)"
+          }
+        },
+        {
+          "id": "crema",
+          "label": "Crema",
+          "vars": {
+            "--lab-page": "color-mix(in oklch, var(--color-bg-default) 90%, var(--color-bg-feedback-warning-default))",
+            "--lab-card": "color-mix(in oklch, var(--color-bg-default) 96%, var(--color-bg-feedback-warning-default))"
+          }
+        },
+        {
+          "id": "gris",
+          "label": "Gris y blanco",
+          "vars": {
+            "--lab-page": "var(--color-bg-muted)",
+            "--lab-card": "var(--color-surface-card)"
+          }
+        },
+        {
+          "id": "tenido",
+          "label": "Teñido de marca",
+          "vars": {
+            "--lab-page": "var(--color-bg-action-primary-subtle)",
+            "--lab-card": "var(--color-surface-card)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "acento",
+      "group": "estructura",
+      "title": "Segundo color (acento)",
+      "source": "Análisis, palanca 3",
+      "text": "Un color de apoyo para destacados, novedades y gráficos. Se calcula a partir de la marca.",
+      "try": "Prueba cada opción con varios sistemas: el acento cambia con la marca.",
+      "options": [
+        {
+          "id": "sin",
+          "label": "Sin acento",
+          "vars": {
+            "--lab-accent": "var(--color-bg-action-primary-default)"
+          }
+        },
+        {
+          "id": "complementario",
+          "label": "Complementario",
+          "vars": {
+            "--lab-accent": "oklch(from var(--color-bg-action-primary-default) l c calc(h + 180))"
+          }
+        },
+        {
+          "id": "triada",
+          "label": "Contraste suave",
+          "vars": {
+            "--lab-accent": "oklch(from var(--color-bg-action-primary-default) calc(l + 0.08) c calc(h + 120))"
+          }
+        },
+        {
+          "id": "vecino",
+          "label": "Vecino",
+          "vars": {
+            "--lab-accent": "oklch(from var(--color-bg-action-primary-default) calc(l + 0.1) c calc(h - 40))"
+          }
+        }
+      ]
+    },
+    {
+      "id": "fuente-titulares",
+      "group": "estructura",
+      "title": "Fuente de titulares distinta",
+      "source": "Análisis, palanca 4",
+      "text": "Una fuente para titulares y otra para el texto. Es de lo que más cambia la personalidad.",
+      "try": "Compara con el texto del sistema debajo.",
+      "options": [
+        {
+          "id": "misma",
+          "label": "La misma",
+          "vars": {
+            "--lab-heading": "var(--text-family-base)"
+          }
+        },
+        {
+          "id": "editorial",
+          "label": "Editorial (Fraunces)",
+          "vars": {
+            "--lab-heading": "\"Fraunces\", ui-serif, serif"
+          },
+          "params": {
+            "font": "Fraunces"
+          }
+        },
+        {
+          "id": "elegante",
+          "label": "Elegante (Playfair)",
+          "vars": {
+            "--lab-heading": "\"Playfair Display\", ui-serif, serif"
+          },
+          "params": {
+            "font": "Playfair Display"
+          }
+        },
+        {
+          "id": "tecnica",
+          "label": "Técnica (Space Grotesk)",
+          "vars": {
+            "--lab-heading": "\"Space Grotesk\", ui-sans-serif, sans-serif"
+          },
+          "params": {
+            "font": "Space Grotesk"
+          }
+        },
+        {
+          "id": "caracter",
+          "label": "Con carácter (Bricolage)",
+          "vars": {
+            "--lab-heading": "\"Bricolage Grotesque\", ui-sans-serif, sans-serif"
+          },
+          "params": {
+            "font": "Bricolage Grotesque"
+          }
+        }
+      ]
+    },
+    {
+      "id": "escala-tipografica",
+      "group": "estructura",
+      "title": "Escala y peso de los titulares",
+      "source": "Análisis, palanca 5",
+      "text": "Cuánto más grandes son los titulares que el texto, y lo gruesos que son.",
+      "try": "Mira la diferencia entre titular y texto.",
+      "options": [
+        {
+          "id": "suave",
+          "label": "Suave y fina",
+          "vars": {
+            "--lab-r1": "1.125",
+            "--lab-r2": "1.266",
+            "--lab-r3": "1.602",
+            "--lab-weight": "var(--text-weight-emphasis)",
+            "--lab-track": "0em"
+          }
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "vars": {
+            "--lab-r1": "1.25",
+            "--lab-r2": "1.563",
+            "--lab-r3": "2.441",
+            "--lab-weight": "var(--text-weight-strong)",
+            "--lab-track": "-0.01em"
+          }
+        },
+        {
+          "id": "dramatica",
+          "label": "Dramática y gruesa",
+          "vars": {
+            "--lab-r1": "1.333",
+            "--lab-r2": "1.777",
+            "--lab-r3": "3.157",
+            "--lab-weight": "var(--text-weight-heavy)",
+            "--lab-track": "-0.03em"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mayusculas",
+      "group": "estructura",
+      "title": "Mayúsculas en botones y etiquetas",
+      "source": "Análisis, palanca 6",
+      "text": "Botones, pestañas y etiquetas en mayúsculas con algo más de espacio entre letras.",
+      "try": "Fíjate en los botones y las etiquetas.",
+      "options": [
+        {
+          "id": "no",
+          "label": "Normal",
+          "vars": {
+            "--lab-case": "none",
+            "--lab-caps-track": "0em"
+          }
+        },
+        {
+          "id": "si",
+          "label": "Mayúsculas",
+          "vars": {
+            "--lab-case": "uppercase",
+            "--lab-caps-track": "0.06em"
+          }
+        }
+      ]
+    },
+    {
+      "id": "forma-controles",
+      "group": "estructura",
+      "title": "Forma de botones y campos",
+      "source": "Análisis, palanca 7",
+      "text": "La forma de botones y campos, aparte del radio de las tarjetas.",
+      "try": "La tarjeta mantiene su radio; solo cambian los controles.",
+      "options": [
+        {
+          "id": "cuadrado",
+          "label": "Cuadrados",
+          "vars": {
+            "--lab-control-radius": "var(--radius-square)"
+          }
+        },
+        {
+          "id": "sistema",
+          "label": "Del sistema",
+          "vars": {
+            "--lab-control-radius": "var(--radius-control)"
+          }
+        },
+        {
+          "id": "pildora",
+          "label": "Píldora",
+          "vars": {
+            "--lab-control-radius": "var(--radius-pill)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "superficie",
+      "group": "estructura",
+      "title": "Estilo de las tarjetas",
+      "source": "Análisis, palanca 8",
+      "text": "Las tarjetas pueden separarse del fondo con un borde, con una sombra o con un bloque de color.",
+      "try": "Compara la misma tarjeta en los tres estilos.",
+      "options": [
+        {
+          "id": "bordes",
+          "label": "Con borde"
+        },
+        {
+          "id": "sombras",
+          "label": "Con sombra"
+        },
+        {
+          "id": "tonal",
+          "label": "Bloque de color"
+        }
+      ]
+    },
+    {
+      "id": "densidad",
+      "group": "estructura",
+      "title": "Densidad real",
+      "source": "Análisis, palanca 9",
+      "text": "Hoy la altura de botones y campos es la misma en todos los sistemas. Aquí cambia junto con el espaciado.",
+      "try": "Mira la altura de los campos y de las filas.",
+      "options": [
+        {
+          "id": "densa",
+          "label": "Densa",
+          "vars": {
+            "--lab-h": "calc(var(--control-height-md) * 0.8)",
+            "--lab-pad": "var(--space-inset-xs)",
+            "--lab-gap": "var(--space-gap-xs)"
+          }
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "vars": {
+            "--lab-h": "var(--control-height-md)",
+            "--lab-pad": "var(--space-inset-sm)",
+            "--lab-gap": "var(--space-gap-sm)"
+          }
+        },
+        {
+          "id": "espaciosa",
+          "label": "Espaciosa",
+          "vars": {
+            "--lab-h": "calc(var(--control-height-md) * 1.25)",
+            "--lab-pad": "var(--space-inset-md)",
+            "--lab-gap": "var(--space-gap-md)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "forma-sombra",
+      "group": "estructura",
+      "title": "Forma de la sombra",
+      "source": "Análisis, impacto medio",
+      "text": "Hoy solo cambia lo oscura que es. También puede cambiar su forma: difusa, nítida, dura o del color de la marca.",
+      "try": "Pasa el ratón por la tarjeta.",
+      "options": [
+        {
+          "id": "difusa",
+          "label": "Difusa",
+          "vars": {
+            "--lab-shadow": "0 12px 32px -8px color-mix(in oklch, var(--color-text-default) 18%, transparent)"
+          }
+        },
+        {
+          "id": "nitida",
+          "label": "Corta y nítida",
+          "vars": {
+            "--lab-shadow": "0 1px 2px color-mix(in oklch, var(--color-text-default) 22%, transparent), 0 2px 6px -2px color-mix(in oklch, var(--color-text-default) 14%, transparent)"
+          }
+        },
+        {
+          "id": "dura",
+          "label": "Dura (brutalista)",
+          "vars": {
+            "--lab-shadow": "4px 4px 0 var(--color-text-default)"
+          }
+        },
+        {
+          "id": "tenida",
+          "label": "Teñida de marca",
+          "vars": {
+            "--lab-shadow": "0 12px 28px -10px color-mix(in oklch, var(--color-bg-action-primary-default) 55%, transparent)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "iconos",
+      "group": "estructura",
+      "title": "Grosor de los iconos",
+      "source": "Análisis, impacto medio",
+      "text": "Iconos de trazo fino, normal o grueso. Acompaña mucho a la fuente.",
+      "try": "Compara con el grosor de la letra.",
+      "options": [
+        {
+          "id": "fino",
+          "label": "Fino",
+          "vars": {
+            "--lab-stroke": "1.25"
+          }
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "vars": {
+            "--lab-stroke": "2"
+          }
+        },
+        {
+          "id": "grueso",
+          "label": "Grueso",
+          "vars": {
+            "--lab-stroke": "2.75"
+          }
+        }
+      ]
+    }
+  ]
+}
