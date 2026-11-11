@@ -12,9 +12,11 @@ const num = (el: Element | null, name: string, fallback: number) => {
 
 type Shape = { x: number; y: number; w: number; h: number }
 
-export function LiquidGlass({ trackers, id, refraction, dispersion, edge, merge }: {
+export function LiquidGlass({ trackers, id, opacity, blur, refraction, dispersion, edge, merge }: {
   trackers: RefObject<HTMLElement | null>[]
   id: string
+  opacity: number      // opacidad del tinte (%)
+  blur: number         // desenfoque de lo de detrás (px)
   refraction: number   // cuánto dobla el borde (px)
   dispersion: number   // separación de colores en el borde (0 = nada)
   edge: number         // ancho del canto que hace de lente (px)
@@ -129,9 +131,9 @@ export function LiquidGlass({ trackers, id, refraction, dispersion, edge, merge 
       </div>
       {/* el cristal: tinte + brillo del canto, y detrás lo que haya doblado por la lente */}
       <div ref={glassEl} className="absolute" style={{
-        ...layer, backgroundColor: "var(--lab-glass-fill)", backgroundSize: "100% 100%",
-        backdropFilter: `url(#${id}) blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate))`,
-        WebkitBackdropFilter: "blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate))",
+        ...layer, backgroundColor: `color-mix(in oklch, var(--color-bg-default) ${opacity}%, transparent)`, backgroundSize: "100% 100%",
+        backdropFilter: `url(#${id}) blur(${blur}px) saturate(var(--lab-glass-saturate))`,
+        WebkitBackdropFilter: `blur(${blur}px) saturate(var(--lab-glass-saturate))`,
       }} />
     </div>
   )
