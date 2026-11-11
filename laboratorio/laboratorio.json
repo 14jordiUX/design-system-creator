@@ -190,7 +190,7 @@
         },
         {
           "id": "cristal",
-          "label": "Todo + cristal",
+          "label": "Cristal, sin hover",
           "vars": {
             "--lab-lead": "360ms",
             "--lab-trail": "680ms",
@@ -206,17 +206,25 @@
             "--lab-press": "5px",
             "--lab-max-tilt": "14deg",
             "--lab-press-ease": "linear(0, 0.068, 0.233, 0.442, 0.654, 0.841, 0.987, 1.087, 1.143, 1.163, 1.155, 1.13, 1.097, 1.062, 1.031, 1.006, 0.988, 0.978, 0.974, 0.974, 0.978, 0.983, 0.989, 0.994, 1)",
-            "--lab-glass-fill": "color-mix(in oklch, var(--color-bg-default) 28%, transparent)",
-            "--lab-glass-blur": "2px",
-            "--lab-glass-saturate": "1.6",
-            "--lab-glass-edge": "inset 0 1px 0 color-mix(in oklch, var(--color-bg-default) 85%, transparent), inset 0 -1px 0 color-mix(in oklch, var(--color-text-default) 10%, transparent), 0 0 0 1px color-mix(in oklch, var(--color-bg-default) 40%, transparent), 0 8px 24px -6px color-mix(in oklch, var(--color-text-default) 25%, transparent)"
+            "--lab-glass-fill": "color-mix(in oklch, var(--color-bg-default) var(--lab-glass-opacity), transparent)",
+            "--lab-glass-blur": "3px",
+            "--lab-glass-saturate": "1.5",
+            "--lab-glass-opacity": "45%",
+            "--lab-glass-shadow": "color-mix(in oklch, var(--color-text-default) 22%, transparent)",
+            "--lab-glass-shadow-blur": "10px",
+            "--lab-glass-shadow-y": "6px"
           },
           "params": {
             "drop": true,
             "push": true,
+            "noHover": true,
             "glass": true,
-            "refraction": "40",
-            "edge": "16"
+            "refraction": "70",
+            "dispersion": "0.08",
+            "edge": "18",
+            "merge": "10",
+            "opacity": "45",
+            "glassBlur": "3"
           }
         }
       ]

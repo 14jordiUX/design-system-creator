@@ -5,11 +5,13 @@
 //   · fusión: al pasar de nivel, el fondo de la barra se separa o se junta como un líquido; después aparecen iconos y botones
 //   · empuje: al pulsar, la barra se hunde desde el punto que tocas, como si empujaras una pieza sólida
 // Todos los valores (tiempos, curvas, ángulos) llegan como variables --lab-* desde laboratorio.json.
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent, type ReactElement } from "react"
+import { useEffect, useId, useMemo, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent, type ReactElement } from "react"
 import { ArrowLeft, Calendar, Heart, Home, Inbox, MessageSquare, MoreHorizontal, Share2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { Slider } from "@/components/ui/slider"
+import { LiquidGlass } from "./liquid-glass"
 import type { Option } from "./previews"
 
 type Level = "home" | "detail" | "modal"
@@ -21,32 +23,6 @@ const TABS = [
   { icon: MessageSquare, label: "Chat" }, { icon: MoreHorizontal, label: "Más" },
 ]
 const SIZES = ["35 · 22,5 cm", "36 · 23 cm", "37 · 23,5 cm", "38 · 24,5 cm", "39 · 25 cm", "40 · 25,5 cm", "41 · 26,5 cm", "42 · 27 cm", "43 · 27,5 cm", "44 · 28 cm", "45 · 29 cm", "46 · 29,5 cm"]
-// Mapa de refracción para el cristal: rojo = desplazamiento horizontal, verde = vertical, gris = nada.
-// El centro queda gris (no se mueve) y los bordes doblan lo de detrás, como el canto de un cristal grueso.
-// Son valores del filtro, no colores de la interfaz.
-const maps = new Map<string, string>()
-const refractionMap = (w: number, h: number, edge: number) => {
-  const key = `${Math.round(w)}x${Math.round(h)}x${edge}`
-  const hit = maps.get(key)
-  if (hit || !w || !h) return hit ?? ""
-  const c = document.createElement("canvas")
-  c.width = Math.round(w); c.height = Math.round(h)
-  const g = c.getContext("2d")
-  if (!g) return ""
-  const r = h / 2, e = Math.min(edge, r)
-  const pill = (x: number, y: number, pw: number, ph: number, pr: number) => { g.beginPath(); g.roundRect(x, y, pw, ph, pr); g.fill() }
-  g.fillStyle = "black"; g.fillRect(0, 0, w, h)
-  const gx = g.createLinearGradient(0, 0, w, 0); gx.addColorStop(0, "black"); gx.addColorStop(1, "red")
-  g.fillStyle = gx; pill(0, 0, w, h, r)
-  const gy = g.createLinearGradient(0, 0, 0, h); gy.addColorStop(0, "black"); gy.addColorStop(1, "lime")
-  g.save(); g.globalCompositeOperation = "screen"; g.fillStyle = gy; pill(0, 0, w, h, r); g.restore()
-  g.filter = `blur(${e / 2}px)`; g.fillStyle = "gray"
-  pill(e, e, Math.max(0, w - e * 2), Math.max(0, h - e * 2), Math.max(0, r - e))
-  const url = c.toDataURL()
-  maps.set(key, url)
-  return url
-}
-
 const PRODUCTS = ["Zapatillas", "Mochilas", "Gorras", "Botellas", "Chaquetas", "Calcetines", "Camisetas", "Gafas", "Relojes", "Bolsas"]
 
 const px = (el: Element | null, name: string) => (el ? parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0 : 0)
@@ -72,6 +48,11 @@ export function FloatingBarPreview({ option }: { option: Option }) {
   const glass = !!p.glass   // cristal: fondo translúcido que desenfoca y dobla lo que hay detrás (refracción)
   const goo = !!p.goo && !glass, drop = !!p.drop, push = !!p.push, tips = !!p.tooltip, noHover = !!p.noHover
   const gooId = useId().replace(/:/g, "")
+  // Con cristal, las dos piezas de fondo son invisibles y solo marcan dónde está el cristal (que es una sola pieza)
+  const trackA = useRef<HTMLSpanElement>(null), trackB = useRef<HTMLSpanElement>(null)
+  const trackers = useMemo(() => [trackA, trackB], [])
+  const [opacity, setOpacity] = useState(Number(p.opacity ?? 45))
+  const [blur, setBlur] = useState(Number(p.glassBlur ?? 3))
   const frame = useRef<HTMLDivElement>(null)
   const scroller = useRef<HTMLDivElement>(null)
   const sheet = useRef<HTMLDivElement>(null)
@@ -220,13 +201,6 @@ export function FloatingBarPreview({ option }: { option: Option }) {
     setPress({ blob, x: Math.min(1, Math.max(0, (e.clientX - box.left) / box.width)) })
   }
   const release = () => setPress(null)
-  // Cristal: tinte translúcido + refracción en los bordes + desenfoque. Safari y Firefox no aplican la refracción
-  // (filtro SVG en backdrop-filter) y se quedan con el desenfoque.
-  const glassStyle = (k: "a" | "b"): CSSProperties => ({
-    background: "var(--lab-glass-fill)", boxShadow: "var(--lab-glass-edge)",
-    backdropFilter: `url(#${gooId}-${k}) blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate))`,
-    WebkitBackdropFilter: "blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate))",
-  })
 
   // ---------- pestaña activa: fondo que sigue (y gota) ----------
   const target = hover ?? tab
@@ -258,8 +232,10 @@ export function FloatingBarPreview({ option }: { option: Option }) {
   }
   const fade = (l: Level) => cn("absolute inset-0 flex", shown === l && visible ? "opacity-100" : "pointer-events-none opacity-0")
 
+  const glassVars = { "--lab-glass-opacity": `${opacity}%`, "--lab-glass-blur": `${blur}px` } as CSSProperties
   return (
-    <div ref={frame} className="relative mx-auto h-dialog w-full max-w-sheet overflow-hidden rounded-overlay border-thin bg-background">
+    <div className="grid gap-gap-lg">
+    <div ref={frame} style={glass ? glassVars : undefined} className="relative mx-auto h-dialog w-full max-w-sheet overflow-hidden rounded-overlay border-thin bg-background">
       {/* Páginas */}
       <span ref={ctaProbe} aria-hidden className="pointer-events-none invisible absolute">
         <Button size="sm" tabIndex={-1} className="rounded-pill">Añadir a la cesta</Button>
@@ -306,20 +282,12 @@ export function FloatingBarPreview({ option }: { option: Option }) {
             </filter>
           </svg>
         )}
-        {glass && (
-          <svg aria-hidden className="absolute size-0">
-            {([["a", a], ["b", b]] as const).map(([k, r]) => (
-              <filter key={k} id={`${gooId}-${k}`} x="0" y="0" width={r.w} height={r.h} filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                <feImage href={refractionMap(r.w, r.h, Number(p.edge ?? 16))} x="0" y="0" width={r.w} height={r.h} preserveAspectRatio="none" result="map" />
-                <feDisplacementMap in="SourceGraphic" in2="map" scale={p.refraction ?? "40"} xChannelSelector="R" yChannelSelector="G" />
-              </filter>
-            ))}
-          </svg>
-        )}
+        {glass && <LiquidGlass trackers={trackers} id={`${gooId}-glass`} refraction={Number(p.refraction ?? 70)}
+          dispersion={Number(p.dispersion ?? 0.08)} edge={Number(p.edge ?? 18)} merge={Number(p.merge ?? 10)} />}
         <div aria-hidden className="absolute inset-0" style={{ filter: glass ? "none" : goo && merging ? `url(#${gooId}) var(--lab-bar-shadow)` : "var(--lab-bar-shadow)" }}>
           {(["a", "b"] as const).map((k) => (
-            <span key={k} className={cn("absolute rounded-pill motion-reduce:transition-none", !glass && "bg-popover")}
-              style={{ ...place(k === "a" ? a : b, k), ...(glass ? glassStyle(k) : {}) }} />
+            <span key={k} ref={k === "a" ? trackA : trackB} className={cn("absolute rounded-pill motion-reduce:transition-none", !glass && "bg-popover")}
+              style={place(k === "a" ? a : b, k)} />
           ))}
         </div>
 
@@ -373,6 +341,16 @@ export function FloatingBarPreview({ option }: { option: Option }) {
         </div>
       </div>
     </div>
+    {glass && (
+      <div className="mx-auto grid w-full max-w-sheet gap-gap-md text-ui">
+        {([["Opacidad del cristal", opacity, setOpacity, 0, 100, "%"], ["Desenfoque", blur, setBlur, 0, 24, "px"]] as const).map(([label, v, set, min, max, unit]) => (
+          <label key={label} className="grid gap-gap-xs">
+            <span className="flex justify-between"><span>{label}</span><span className="text-muted-foreground tabular-nums">{v} {unit}</span></span>
+            <Slider aria-label={label} min={min} max={max} step={1} value={[v]} onValueChange={([n]) => set(n)} />
+          </label>
+        ))}
+      </div>
+    )}
+    </div>
   )
 }
-
