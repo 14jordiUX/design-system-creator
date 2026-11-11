@@ -6,7 +6,7 @@
 //   · empuje: al pulsar, la barra se hunde desde el punto que tocas, como si empujaras una pieza sólida
 // Todos los valores (tiempos, curvas, ángulos) llegan como variables --lab-* desde laboratorio.json.
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent, type ReactElement } from "react"
-import { ArrowLeft, Calendar, Heart, Home, Inbox, MessageSquare, MoreHorizontal, Share2, ShoppingBag, X } from "lucide-react"
+import { ArrowLeft, Calendar, Heart, Home, Inbox, MessageSquare, MoreHorizontal, Share2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
@@ -61,6 +61,8 @@ export function FloatingBarPreview({ option }: { option: Option }) {
   const [product, setProduct] = useState(PRODUCTS[0])
   const [press, setPress] = useState<Press>(null)
   const [width, setWidth] = useState(0)
+  const [ctaW, setCtaW] = useState(0)   // ancho del CTA en tamaño pequeño (sm del botón), medido de una copia invisible
+  const ctaProbe = useRef<HTMLSpanElement>(null)
   const [merging, setMerging] = useState(false)   // la fusión líquida solo actúa mientras la barra cambia de forma
 
   useLayoutEffect(() => {
@@ -69,7 +71,11 @@ export function FloatingBarPreview({ option }: { option: Option }) {
     const ro = new ResizeObserver(() => setWidth(el.clientWidth))
     ro.observe(el)
     setWidth(el.clientWidth)
-    return () => ro.disconnect()
+    const probe = ctaProbe.current
+    if (probe) setCtaW(probe.offsetWidth)
+    const ro2 = new ResizeObserver(() => probe && setCtaW(probe.offsetWidth))
+    if (probe) ro2.observe(probe)
+    return () => { ro.disconnect(); ro2.disconnect() }
   }, [])
 
   // Al cambiar de nivel: primero se van iconos y botones, luego se mueve el fondo y al final aparecen los del nuevo nivel
@@ -130,8 +136,8 @@ export function FloatingBarPreview({ option }: { option: Option }) {
     const w = small ? n * item + pad * 2 : W
     a = b = { x: (W - w) / 2, w, h: small ? Hc : H }
   } else if (level === "detail") {
-    if (small) {   // volver + tres acciones solo con icono, centradas
-      const bw = dot * 3 + g2 * 2 + pad * 2, x0 = (W - Hc - gap - bw) / 2
+    if (small) {   // volver + favorito y compartir en círculo + el CTA con texto en tamaño pequeño, centrados
+      const bw = dot * 2 + ctaW + g2 * 2 + pad * 2, x0 = (W - Hc - gap - bw) / 2
       a = { x: x0, w: Hc, h: Hc }
       b = { x: x0 + Hc + gap, w: bw, h: Hc }
     } else {
@@ -205,6 +211,9 @@ export function FloatingBarPreview({ option }: { option: Option }) {
   return (
     <div ref={frame} className="relative mx-auto h-dialog w-full max-w-sheet overflow-hidden rounded-overlay border-thin bg-background">
       {/* Páginas */}
+      <span ref={ctaProbe} aria-hidden className="pointer-events-none invisible absolute">
+        <Button size="sm" tabIndex={-1} className="rounded-pill">Añadir a la cesta</Button>
+      </span>
       <div ref={scroller} className="absolute inset-0 overflow-y-auto">
         <header className="sticky top-0 z-raised flex h-header items-center gap-gap-sm border-b-thin bg-background px-inset-lg">
           <span className="font-strong">{level === "home" ? TABS[tab].label === "Inicio" ? "Tienda" : TABS[tab].label : product}</span>
@@ -285,11 +294,8 @@ export function FloatingBarPreview({ option }: { option: Option }) {
           <div className="absolute flex items-center gap-gap-2xs p-inset-2xs motion-reduce:transition-none" style={place(b, "b")} onPointerDown={onDown("b")}>
             <Tip show={tips} label="Favorito"><Button variant="ghost" size="icon" className={cn("aspect-square h-full w-auto shrink-0 rounded-pill", noHover ? "hover:bg-transparent" : "hover:bg-primary-subtle hover:text-link")} aria-label="Favorito"><Heart /></Button></Tip>
             <Tip show={tips} label="Compartir"><Button variant="ghost" size="icon" className={cn("aspect-square h-full w-auto shrink-0 rounded-pill", noHover ? "hover:bg-transparent" : "hover:bg-primary-subtle hover:text-link")} aria-label="Compartir"><Share2 /></Button></Tip>
-            <Tip show={tips && small} label="Añadir a la cesta">
-              <Button aria-label={small ? "Añadir a la cesta" : undefined} className={cn("h-full rounded-pill", small ? "aspect-square w-auto shrink-0 px-0" : "min-w-0 flex-1")}>
-                {small ? <ShoppingBag /> : "Añadir a la cesta"}
-              </Button>
-            </Tip>
+            {/* El CTA principal nunca pasa a icono: en pequeño usa el tamaño sm del botón (mismo texto, menos relleno) */}
+            <Button size={small ? "sm" : "default"} className={cn("h-full rounded-pill", small ? "shrink-0" : "min-w-0 flex-1")}>Añadir a la cesta</Button>
           </div>
         </div>
 
