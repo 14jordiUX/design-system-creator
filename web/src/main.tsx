@@ -6,6 +6,7 @@ import "./index.css"
 import Library from "./pages/Library"
 import NewSystem from "./pages/NewSystem"
 import References from "./pages/References"
+import Lab from "./pages/Lab"
 import SystemLayout from "./pages/system/SystemLayout"
 import SystemHome from "./pages/system/SystemHome"
 import Foundation from "./pages/system/Foundation"
@@ -39,6 +40,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/" element={<Library />} />
           <Route path="/nuevo" element={<NewSystem />} />
           <Route path="/referencias" element={<References />} />
+          <Route path="/laboratorio" element={<Lab />} />
           <Route path="/s/:id" element={<SystemLayout />}>
             {systemPages}
             <Route path="editar">{systemPages}</Route>
