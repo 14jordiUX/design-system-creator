@@ -134,7 +134,7 @@ export function FloatingBarPreview({ option }: { option: Option }) {
   }
   const pressTiming = (pressed: boolean): CSSProperties => pressed
     ? { transitionDuration: "var(--lab-shape-time), var(--lab-shape-time), var(--lab-shape-time), var(--lab-shape-time), var(--lab-press-time)",
-        transitionTimingFunction: "var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-shape-ease)" }
+        transitionTimingFunction: "var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-press-ease)" }
     : { transitionDuration: "var(--lab-shape-time), var(--lab-shape-time), var(--lab-shape-time), var(--lab-shape-time), var(--lab-release-time)",
         transitionTimingFunction: "var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-release-ease)" }
   const place = (r: Rect, blob: "a" | "b"): CSSProperties => ({
