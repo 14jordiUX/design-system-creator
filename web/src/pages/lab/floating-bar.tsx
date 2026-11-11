@@ -85,6 +85,16 @@ export function FloatingBarPreview({ option }: { option: Option }) {
     const t = window.setTimeout(() => { setShown(level); setVisible(true) }, ms(frame.current, "--lab-shape-time") * 0.6)
     return () => window.clearTimeout(t)
   }, [level, shown])
+  // Mientras la barra se encoge o crece, el fondo activo se mueve con ella: los dos bordes a la vez y con el mismo
+  // muelle que la barra (si no, un borde va antes que el otro y el fondo se aplasta por un lado un instante)
+  const [resizing, setResizing] = useState(false)
+  const [sizedAs, setSizedAs] = useState(compact)
+  if (sizedAs !== compact) { setSizedAs(compact); setResizing(true) }   // en el mismo render del cambio, antes de pintar
+  useEffect(() => {
+    if (!resizing) return
+    const r = window.setTimeout(() => setResizing(false), ms(frame.current, "--lab-shape-time"))
+    return () => window.clearTimeout(r)
+  }, [resizing, compact])
   const first = useRef(true)
   useEffect(() => {
     if (first.current) { first.current = false; return }
@@ -189,6 +199,7 @@ export function FloatingBarPreview({ option }: { option: Option }) {
   const itemW = (a.w - pad * 2) / n
   const indLeft = pad + target * itemW, indRight = a.w - indLeft - itemW
   const lead = "var(--lab-lead) var(--lab-ease)", trail = "var(--lab-trail) var(--lab-ease)"
+  const shape = "var(--lab-shape-time) var(--lab-shape-ease)"
   // La dirección siempre se calcula desde donde está el fondo ahora mismo, también al salir (vuelve a la pestaña activa):
   // así el borde de delante es siempre el que va primero y el fondo nunca se queda sin ancho ni desaparece.
   const follow = (i: number | null) => {
@@ -266,7 +277,7 @@ export function FloatingBarPreview({ option }: { option: Option }) {
           <nav aria-label="Navegación de prueba" className="absolute flex p-inset-2xs motion-reduce:transition-none" style={place(a, "a")}
             onPointerDown={onDown("a")} onPointerMove={(e) => (e.buttons || e.pointerType === "mouse") && follow(itemAt(e))} onPointerLeave={() => follow(null)}>
             <span aria-hidden className="absolute inset-y-inset-2xs rounded-pill bg-primary-subtle motion-reduce:transition-none"
-              style={{ left: indLeft, right: indRight, transition: dir > 0 ? `right ${lead}, left ${trail}` : `left ${lead}, right ${trail}` }} />
+              style={{ left: indLeft, right: indRight, transition: resizing ? `left ${shape}, right ${shape}` : dir > 0 ? `right ${lead}, left ${trail}` : `left ${lead}, right ${trail}` }} />
             {TABS.map(({ icon: Icon, label }, i) => (
               <Tip key={label} show={tips && small} label={label}>
               <button type="button" onClick={() => pick(i)} aria-current={tab === i ? "page" : undefined} aria-label={small ? label : undefined}
