@@ -101,8 +101,8 @@ def extend(primitives, semantic, light, dark):
                        "normal": t("{font.weight.regular}"), "emphasis": t("{font.weight.medium}", desc="Etiquetas, botones"),
                        "strong": t("{font.weight.semibold}", desc="Títulos"), "heavy": t("{font.weight.bold}")},
             "family": {"$type": "fontFamily", "base": t("{font.family.sans}"), "code": t("{font.family.mono}")},
-            "leading": {"$type": "number", "compact": t("{font.line-height.tight}"), "body": t("{font.line-height.normal}"),
-                        "prose": t("{font.line-height.relaxed}")},
+            "leading": {"$type": "number", "compact": t("{font.line-height.tight}"), "title": t("{font.line-height.snug}", desc="Títulos pequeños"),
+                        "body": t("{font.line-height.normal}"), "prose": t("{font.line-height.relaxed}")},
             "tracking": {"$type": "dimension", "heading": t("{font.letter-spacing.tight}"), "body": t("{font.letter-spacing.normal}"),
                          "caps": t("{font.letter-spacing.wide}", desc="Textos en mayúsculas")},
         },
@@ -131,6 +131,7 @@ def extend(primitives, semantic, light, dark):
                   "overlay": t("{z-index.50}", desc="Menús, popovers, diálogos y paneles")},
     })
     _to_primitives(primitives, semantic, light, dark)
+    text_styles(semantic)
     for colors, dark_mode in ((light, False), (dark, True)):
         _merge(colors["color"], {
             "bg": {"feedback": {"danger": {"hover": t("{color.red.700}", desc="Fondo de peligro al pasar el ratón")}}},
@@ -140,6 +141,36 @@ def extend(primitives, semantic, light, dark):
                     ["brand.400", "green.400", "amber.400", "blue.400", "red.400"] if dark_mode else
                     ["brand.600", "green.600", "amber.500", "blue.600", "red.500"])}},
         })
+
+
+# ---------- v0.8: un estilo de texto por cada tamaño con nombre ----------
+# Cada estilo (typography.h1, typography.body…) dice su familia, tamaño, peso, interlineado y espaciado.
+# Apunta a los tokens semánticos text.* (el tamaño es text.size.<estilo>), así la clase text-h1 de los
+# componentes y el estilo de texto texto/h1/… de Figma salen del mismo sitio.
+TEXT_STYLES = [  # estilo, peso, interlineado, espaciado, descripción
+    ("display", "heavy", "compact", "heading", "Cifras y titulares muy grandes"),
+    ("h1", "heavy", "compact", "heading", "Título de página"),
+    ("h2", "strong", "compact", "heading", "Título de sección"),
+    ("h3", "strong", "title", "body", "Subtítulo"),
+    ("title", "strong", "title", "body", "Títulos de tarjetas y bloques pequeños"),
+    ("lead", "normal", "prose", "body", "Entradilla y texto destacado"),
+    ("body", "normal", "body", "body", "Texto de lectura"),
+    ("ui", "normal", "body", "body", "Botones, menús y formularios"),
+    ("caption", "normal", "body", "body", "Notas, metadatos y ayudas"),
+]
+
+
+def text_styles(semantic):
+    """Pasa typography.heading.h1, body.md, label.*… a un estilo por tamaño (una sola vez)."""
+    typo = semantic.get("typography") or {}
+    if typo and "heading" not in typo: return
+    semantic["typography"] = {
+        "$description": "Estilos de texto completos. Cada uno manda en su clase (text-h1, text-body…): los componentes solo añaden font-*, leading-* o tracking-* cuando necesitan otra cosa",
+        **{role: {"$value": {"fontFamily": "{text.family.base}", "fontSize": "{text.size.%s}" % role,
+                             "fontWeight": "{text.weight.%s}" % w, "lineHeight": "{text.leading.%s}" % lh,
+                             "letterSpacing": "{text.tracking.%s}" % ls},
+                  "$type": "typography", "$description": d}
+           for role, w, lh, ls, d in TEXT_STYLES}}
 
 
 def _to_primitives(primitives, semantic, light, dark):

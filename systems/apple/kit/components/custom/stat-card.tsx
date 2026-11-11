@@ -22,7 +22,7 @@ function StatCard({ label, value, change, trend = "flat", hint, icon, className,
         <span data-slot="stat-card-label">{label}</span>
         {icon && <span className="[&_svg:not([class*='size-'])]:size-icon-md">{icon}</span>}
       </div>
-      <div data-slot="stat-card-value" className="text-h2 font-strong tracking-heading">{value}</div>
+      <div data-slot="stat-card-value" className="text-h2">{value}</div>
       {(change || hint) && (
         <div className="flex items-center gap-gap-xs text-caption text-muted-foreground">
           {change && (

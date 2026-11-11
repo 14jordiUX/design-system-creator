@@ -113,6 +113,9 @@ def build(primitives, semantic, light):
     tx = semantic["text"]
     L += [f"  --font-{k}: var(--text-family-{k});" for k in _keys(tx["family"])]
     L += [f"  --text-{k}: var(--text-size-{k});" for k in _keys(tx["size"])]
+    # text-h1, text-body… aplican su estilo completo; font-*, leading-* y tracking-* siguen mandando si se ponen
+    L += [f"  --text-{k}--{prop}: var(--typography-{k}-{css});" for k in _keys(tx["size"]) if k in semantic.get("typography", {})
+          for prop, css in (("line-height", "line-height"), ("letter-spacing", "letter-spacing"), ("font-weight", "font-weight"))]
     L += [f"  --font-weight-{k}: var(--text-weight-{k});" for k in _keys(tx["weight"])]
     L += [f"  --leading-{k}: var(--text-leading-{k});" for k in _keys(tx["leading"])]
     L += [f"  --tracking-{k}: var(--text-tracking-{k});" for k in _keys(tx["tracking"])]
@@ -161,7 +164,13 @@ def build(primitives, semantic, light):
     L += [f"@utility duration-{k} {{ --tw-duration: var(--motion-duration-{k}); transition-duration: var(--motion-duration-{k}); }}"
           for k in _keys(semantic["motion"]["duration"])]
     add("")
-    add("/* Estilos tipográficos completos: typo-heading-h1, typo-body-md, typo-label-sm… */")
+    add("/* Familia de cada estilo de texto: text-h1 usa la suya; font-base o font-code puestos a mano ganan */")
+    add("@property --ds-font { syntax: \"*\"; inherits: false; }")
+    L += [f"@utility font-{k} {{ --ds-font: var(--text-family-{k}); }}" for k in _keys(tx["family"])]
+    L += [f"@utility text-{k} {{ font-family: var(--ds-font, var(--typography-{k}-font-family)); }}"
+          for k in _keys(tx["size"]) if k in semantic.get("typography", {})]
+    add("")
+    add("/* Estilos de texto forzados (ignoran font-*, leading-*…): typo-h1, typo-body, typo-caption… */")
     for p, v in _typography(semantic):
         name = p.replace("typography.", "").replace(".", "-")
         props = "; ".join(f"{css}: var(--{ref})" for css, ref in [
@@ -281,7 +290,7 @@ def class_map(primitives, semantic, light):
             put(f"{util}-{name}", paths.get(var))
     for name, var in _re.findall(r"--ease-([\w-]+): var\((--[\w-]+)\);", css):
         put(f"ease-{name}", paths.get(var))
-    for name, var in _re.findall(r"--font-(base|code): var\((--[\w-]+)\);", css):
+    for name, var in _re.findall(r"  --font-([\w-]+): var\((--text-family-[\w-]+)\);", css):
         put(f"font-{name}", paths.get(var))
     for name, var in _re.findall(r"--radius-([\w-]+): var\((--[\w-]+)\);", css):
         for side in ["", "-t", "-b", "-l", "-r", "-tl", "-tr", "-bl", "-br"]:
@@ -289,7 +298,11 @@ def class_map(primitives, semantic, light):
     for cls, body in _re.findall(r"@utility ([\w-]+) \{([^}]*)\}", css):
         if cls.startswith("typo-"):   # estilo tipográfico completo = un token semántico typography.*
             put(cls, "typography." + cls[5:].replace("-", ".")); continue
+        if cls.startswith(("text-", "font-")) and "--ds-font" in body:   # familia del estilo: se apunta abajo
+            continue
         put(cls, *[paths.get(v) for v in _re.findall(r"var\((--[\w-]+)\)", body)])
+    for role in _keys(semantic.get("typography", {})):   # text-h1 = tamaño + estilo completo typography.h1
+        if f"text-{role}" in out: out[f"text-{role}"].append(f"typography.{role}")
     for cls in ["animate-enter", "animate-exit"]:
         out[cls] = out.get(cls, []) + ["motion.scale.enter"]
     for t in ["transition", "transition-colors", "transition-all", "transition-opacity", "transition-transform", "transition-shadow"]:

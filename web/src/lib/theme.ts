@@ -1,10 +1,11 @@
 import { useEffect } from "react"
 import { cssVars, type Mode, type TokenFiles } from "./tokens"
+import { googleFontUrl } from "./fonts"
 
 const SYSTEM_FONTS = ["ui-sans-serif", "system-ui", "sans-serif", "serif", "monospace", "ui-serif", "ui-monospace", "Georgia", "Arial", "Helvetica"]
 const loaded = new Set<string>()
 
-/** Carga de Google Fonts la primera familia de cada lista, si no es del sistema. */
+/** Carga de Google Fonts la primera familia de cada lista, si no es del sistema (con todos los pesos que tiene). */
 export function loadFonts(families: string[]) {
   for (const f of families) {
     if (!f || SYSTEM_FONTS.includes(f) || loaded.has(f)) continue
@@ -12,7 +13,7 @@ export function loadFonts(families: string[]) {
     const link = document.createElement("link")
     link.rel = "stylesheet"
     link.crossOrigin = "anonymous" // para poder leer las fuentes al descargar pantallas en PNG
-    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(f)}:wght@400;500;600;700&display=swap`
+    link.href = googleFontUrl(f)
     document.head.appendChild(link)
   }
 }

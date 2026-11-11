@@ -93,13 +93,13 @@ code { font-family: var(--font-family-mono); font-size: 12px; }
 <h3 class="sub">Alertas</h3><div id="alerts"></div>
 <h3 class="sub">Formulario en tarjeta</h3>
 <div class="grid" style="grid-template-columns:1fr 1fr"><div class="card">
-<div class="text-heading-h4" style="margin-bottom:var(--space-1)">Crear cuenta</div>
-<div class="text-body-sm" style="color:var(--color-text-muted);margin-bottom:var(--space-4)">Introduce tus datos para empezar.</div>
-<label class="text-label-md">Email</label><input class="input" placeholder="tu@email.com" style="margin:var(--space-1-5) 0 var(--space-4)">
-<label class="text-label-md">Contraseña</label><input class="input" type="password" placeholder="••••••••" style="margin:var(--space-1-5) 0 var(--space-5)">
+<div class="ty-title" style="margin-bottom:var(--space-1)">Crear cuenta</div>
+<div class="ty-ui" style="color:var(--color-text-muted);margin-bottom:var(--space-4)">Introduce tus datos para empezar.</div>
+<label class="ty-ui" style="font-weight:var(--text-weight-emphasis)">Email</label><input class="input" placeholder="tu@email.com" style="margin:var(--space-1-5) 0 var(--space-4)">
+<label class="ty-ui" style="font-weight:var(--text-weight-emphasis)">Contraseña</label><input class="input" type="password" placeholder="••••••••" style="margin:var(--space-1-5) 0 var(--space-5)">
 <button class="btn btn-primary" style="width:100%">Continuar</button></div>
-<div class="dialog"><div class="text-heading-h4">¿Eliminar proyecto?</div>
-<p class="text-body-sm" style="color:var(--color-text-muted)">Esta acción no se puede deshacer.</p>
+<div class="dialog"><div class="ty-title">¿Eliminar proyecto?</div>
+<p class="ty-ui" style="color:var(--color-text-muted)">Esta acción no se puede deshacer.</p>
 <div class="row" style="justify-content:flex-end"><button class="btn btn-ghost">Cancelar</button><button class="btn btn-danger">Eliminar</button></div></div></div>
 </section>
 </main></div>
@@ -116,8 +116,14 @@ for (const k of Object.keys(D.light)) {
   <td><span class="chip" style="background:${D.light[k]}"></span> <code>${ref(D.lightRefs[k])}</code></td>
   <td><span class="chip" style="background:${D.dark[k]}"></span> <code>${ref(D.darkRefs[k])}</code></td></tr>`);
 }
+for (const href of D.fonts) document.head.insertAdjacentHTML('beforeend', `<link rel="stylesheet" href="${href}">`);
+// Un estilo por cada typography.* (sus propiedades son variables de tokens.css: --typography-h1-font-size…)
+document.head.insertAdjacentHTML('beforeend', '<style>' + D.typography.map(p => {
+  const v = '--' + p.replaceAll('.', '-');
+  return `.ty-${p.split('.').pop()} { font-family: var(${v}-font-family); font-size: var(${v}-font-size); font-weight: var(${v}-font-weight); line-height: var(${v}-line-height); letter-spacing: var(${v}-letter-spacing); }`;
+}).join('\n') + '</style>');
 for (const p of D.typography) {
-  const cls = 'text-' + p.replace('typography.','').replaceAll('.','-');
+  const cls = 'ty-' + p.split('.').pop();
   $('typo').insertAdjacentHTML('beforeend', `<div class="typo-row"><code>${p.replace('typography.','')}</code><span class="${cls}">El veloz murciélago hindú</span></div>`);
 }
 for (const [p, v] of D.space) {

@@ -130,7 +130,7 @@ const SEMANTIC_EXAMPLES: Example[] = [
   { path: "space.inset.md", labels: ["categoría", "uso", "tamaño"], note: "Relleno interior mediano (padding). «gap» es la separación entre elementos." },
   { path: "radius.card", labels: ["categoría", "elemento"], note: "Redondeo de las tarjetas." },
   { path: "text.size.body", labels: ["categoría", "propiedad", "rol"], note: "Tamaño de letra del texto normal." },
-  { path: "typography.heading.h2", labels: ["categoría", "grupo", "nivel"], note: "Estilo completo de un título: familia, tamaño, peso, interlineado." },
+  { path: "typography.h2", labels: ["categoría", "estilo"], note: "Estilo de texto completo (familia, tamaño, peso, interlineado y espaciado). Es lo que aplica la clase text-h2." },
 ]
 
 function RuleLine({ pieces }: { pieces: string[] }) {

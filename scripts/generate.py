@@ -153,6 +153,20 @@ def resolve(val, table, depth=0):
     if isinstance(val, list): return [resolve(v, table, depth + 1) for v in val]
     return val
 
+SYSTEM_FONTS = {"ui-sans-serif", "system-ui", "sans-serif", "serif", "monospace", "ui-serif", "ui-monospace", "Georgia", "Arial", "Helvetica"}
+
+
+_GF = None
+def google_font_url(family):
+    """Enlace de Google Fonts con los pesos que tiene de verdad esa familia (None si no es de Google Fonts)."""
+    global _GF
+    if _GF is None:
+        try: _GF = {r[0]: r[2] for r in load(os.path.join(ROOT, "web", "src", "lib", "google-fonts.json"))}
+        except OSError: _GF = {}
+    if family in SYSTEM_FONTS or family not in _GF: return None
+    return f"https://fonts.googleapis.com/css2?family={family.replace(' ', '+')}:wght@{_GF[family]}&display=swap"
+
+
 def css_name(path): return "--" + path.replace(".", "-")
 
 def css_value(val, typ):
@@ -199,13 +213,12 @@ def generate(sysdir):
     # ---- css/tokens.css ----
     def block(flat):
         return "\n".join(f"  {css_name(p)}: {css_value(v, t)};" for p, (v, t, _) in flat.items() if t != "typography")
-    typo_css = []
+    # Estilos de texto: cada propiedad del estilo como variable (--typography-h1-font-size…). Las lee el tema
+    # de Tailwind para que text-h1 aplique el estilo completo.
     props = {"fontFamily": "font-family", "fontSize": "font-size", "fontWeight": "font-weight",
              "lineHeight": "line-height", "letterSpacing": "letter-spacing"}
-    for p, (v, t, _) in sem.items():
-        if t != "typography": continue
-        body = "".join(f"  {props[k]}: {css_value(r, None)};\n" for k, r in v.items())
-        typo_css.append(f".text-{p.replace('typography.', '').replace('.', '-')} {{\n{body}}}")
+    typo_vars = "\n".join(f"  {css_name(p)}-{props[k]}: {css_value(r, None)};"
+                           for p, (v, t, _) in sem.items() if t == "typography" for k, r in v.items())
     shadcn = "\n".join(f"  --{k}: var({css_name(v)});" for k, v in SHADCN.items())
     tokens_css = f"""/* {meta['name']}: generado desde tokens/*.tokens.json con scripts/generate.py. No editar a mano. */
 
@@ -215,6 +228,9 @@ def generate(sysdir):
 
   /* Semánticos */
 {block(sem)}
+
+  /* Estilos de texto (typography.*) */
+{typo_vars}
 
   /* Color: modo claro */
 {block(lf)}
@@ -226,9 +242,6 @@ def generate(sysdir):
 .dark {{
 {block(df)}
 }}
-
-/* Estilos tipográficos */
-{chr(10).join(typo_css)}
 """
     write(os.path.join(sysdir, "css", "tokens.css"), tokens_css)
 
@@ -268,6 +281,7 @@ def generate(sysdir):
         "lightRefs": {p: v for p, (v, _, _) in lf.items()},
         "darkRefs": {p: v for p, (v, _, _) in df.items()},
         "typography": [p for p, (_, t, _) in sem.items() if t == "typography"],
+        "fonts": [google_font_url(v[0]) for p, (v, t, _) in prim.items() if t == "fontFamily" and isinstance(v, list) and google_font_url(v[0])],
         "space": [[p, v] for p, (v, _, _) in prim.items() if p.startswith("space.")],
         "radius": [[p, resolve(v, table_light)] for p, (v, _, _) in sem.items() if p.startswith("radius.")],
         "elevation": [p for p in sem if p.startswith("elevation.")],
@@ -331,9 +345,11 @@ def skill_md(meta, primitives, sem, lf, df, tl, td, comps):
     color_rows = "\n".join(
         f"| `{p}` | `{css_name(p)}` | {resolve(v, tl)} | {resolve(df[p][0], td) if p in df else ''} | {d or ''} |"
         for p, (v, _, d) in lf.items())
-    typo_rows = "\n".join(
-        f"| `.text-{p.replace('typography.', '').replace('.', '-')}` | {resolve(v, tl)['fontSize']} / {resolve(v, tl)['fontWeight']} |"
-        for p, (v, t, _) in sem.items() if t == "typography")
+    def typo_row(p, v):
+        r = resolve(v, tl)
+        fam = r["fontFamily"][0] if isinstance(r["fontFamily"], list) else r["fontFamily"]
+        return f"| `text-{p.split('.', 1)[1]}` | {fam} | {r['fontSize']} | {r['fontWeight']} | {r['lineHeight']} | {r['letterSpacing']} |"
+    typo_rows = "\n".join(typo_row(p, v) for p, (v, t, _) in sem.items() if t == "typography")
     other_rows = "\n".join(f"| `{css_name(p)}` | {css_value(resolve(v, tl), t)} | {d or ''} |"
                            for p, (v, t, d) in sem.items() if t != "typography")
     return f"""---
@@ -365,7 +381,7 @@ Tipo de producto: {meta.get('productType', '—')}.
    - Relleno y distancias a bordes: `p-inset-*`, `px-inset-*`, `top-inset-*`… con la escala `3xs, 2xs, xs, sm, md, lg, xl, 2xl, 3xl, 4xl`.
    - Separación: `gap-gap-*`, `space-y-gap-*`, `mt-gap-*`… (misma escala) y `section`. `0` significa «nada» y se escribe tal cual (`p-0`).
    - Tamaños: `control-sm|md|lg` (alturas), `icon-sm|md|lg`, `avatar-sm…2xl`, `indicator`, `line`, `field-xs|sm`, `area-min`, `menu-min`, `popover`, `tooltip`, `dialog`, `sheet`, `header`, `sidebar`, `prose`, `content`, `page`.
-   - Tipografía: `text-caption|ui|body|lead|title|h3|h2|h1|display`, `font-normal|emphasis|strong|heavy`, `font-base|code`, `leading-compact|body|prose`, `tracking-heading|body|caps`, o el estilo completo `typo-heading-h1`, `typo-body-md`, `typo-label-md`…
+   - Tipografía: `text-caption|ui|body|lead|title|h3|h2|h1|display`, `font-normal|emphasis|strong|heavy`, `font-base|code`, `leading-compact|body|prose`, `tracking-heading|body|caps`. Cada `text-*` ya aplica su estilo de texto completo (familia, peso, interlineado y espaciado de `typography.*`): añade `font-*`, `leading-*` o `tracking-*` solo si ese texto necesita otra cosa. `typo-h1`, `typo-body`… fuerzan el estilo entero.
    - Forma: `rounded-control|card|overlay|pill|inner|fine|square`, `border-thin`, `border-t-thin`…, `border-thick`.
    - Profundidad y foco: `shadow-flat|raised|overlay|modal`, `focus-visible:focus-ring`, `opacity-disabled`.
    - Movimiento: `transition-*` (ya usa la duración y curva del sistema), `duration-micro|default|emphasis`, `animate-enter|exit|fade-in|slide-in-right|collapse-down`…
@@ -392,10 +408,13 @@ Tipo de producto: {meta.get('productType', '—')}.
 
 ## Tipografía
 
-Familias: sans = {", ".join(fam['sans']['$value'])}; mono = {", ".join(fam['mono']['$value'])}.
+Familias: {"; ".join(f"`font-{p.split('.')[-1]}` = {', '.join(resolve(v, tl))}" for p, (v, t, _) in sem.items() if p.startswith("text.family."))}.
 
-| Clase | Tamaño / peso |
-|---|---|
+Cárgalas de Google Fonts (por ejemplo con un `<link>` en el `<head>`):
+{chr(10).join(f"- {u}" for u in dict.fromkeys(google_font_url(resolve(v, tl)[0]) for p, (v, t, _) in sem.items() if p.startswith("text.family.")) if u) or "- (Ninguna: son fuentes del sistema.)"}
+
+| Clase | Familia | Tamaño | Peso | Interlineado | Espaciado |
+|---|---|---|---|---|---|
 {typo_rows}
 
 ## Espaciado, radios, elevación y movimiento

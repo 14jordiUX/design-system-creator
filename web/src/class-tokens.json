@@ -12012,31 +12012,40 @@
     "layout.desktop"
   ],
   "text-caption": [
-    "text.size.caption"
+    "text.size.caption",
+    "typography.caption"
   ],
   "text-ui": [
-    "text.size.ui"
+    "text.size.ui",
+    "typography.ui"
   ],
   "text-body": [
-    "text.size.body"
+    "text.size.body",
+    "typography.body"
   ],
   "text-lead": [
-    "text.size.lead"
+    "text.size.lead",
+    "typography.lead"
   ],
   "text-title": [
-    "text.size.title"
+    "text.size.title",
+    "typography.title"
   ],
   "text-h3": [
-    "text.size.h3"
+    "text.size.h3",
+    "typography.h3"
   ],
   "text-h2": [
-    "text.size.h2"
+    "text.size.h2",
+    "typography.h2"
   ],
   "text-h1": [
-    "text.size.h1"
+    "text.size.h1",
+    "typography.h1"
   ],
   "text-display": [
-    "text.size.display"
+    "text.size.display",
+    "typography.display"
   ],
   "font-normal": [
     "text.weight.normal"
@@ -12058,6 +12067,9 @@
   ],
   "leading-prose": [
     "text.leading.prose"
+  ],
+  "leading-title": [
+    "text.leading.title"
   ],
   "tracking-heading": [
     "text.tracking.heading"
@@ -12365,38 +12377,29 @@
   "typo-display": [
     "typography.display"
   ],
-  "typo-heading-h1": [
-    "typography.heading.h1"
+  "typo-h1": [
+    "typography.h1"
   ],
-  "typo-heading-h2": [
-    "typography.heading.h2"
+  "typo-h2": [
+    "typography.h2"
   ],
-  "typo-heading-h3": [
-    "typography.heading.h3"
+  "typo-h3": [
+    "typography.h3"
   ],
-  "typo-heading-h4": [
-    "typography.heading.h4"
+  "typo-title": [
+    "typography.title"
   ],
-  "typo-body-lg": [
-    "typography.body.lg"
+  "typo-lead": [
+    "typography.lead"
   ],
-  "typo-body-md": [
-    "typography.body.md"
+  "typo-body": [
+    "typography.body"
   ],
-  "typo-body-sm": [
-    "typography.body.sm"
-  ],
-  "typo-label-md": [
-    "typography.label.md"
-  ],
-  "typo-label-sm": [
-    "typography.label.sm"
+  "typo-ui": [
+    "typography.ui"
   ],
   "typo-caption": [
     "typography.caption"
-  ],
-  "typo-code": [
-    "typography.code"
   ],
   "animate-enter": [
     "motion.duration.default",

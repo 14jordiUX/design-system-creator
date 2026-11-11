@@ -1,3 +1,4 @@
+import ALL from "./google-fonts.json"
 // Fuentes de Google Fonts para el cuestionario: una selección amplia de las más usadas en interfaces.
 // (La lista completa de Google Fonts necesita una clave de su API; esta cubre los casos habituales.)
 export type FontCategory = "Sans" | "Serif" | "Display" | "Mono"
@@ -57,3 +58,29 @@ export const GOOGLE_FONTS: { family: string; category: FontCategory; note?: stri
   { family: "IBM Plex Mono", category: "Mono" },
   { family: "Space Mono", category: "Mono" },
 ]
+
+// ---------- Lista completa de Google Fonts (editor de tipografía) ----------
+// Sale de scripts/update_google_fonts.py: [familia, categoría, "pesos separados por ;"]
+export type GoogleCategory = "sans" | "serif" | "display" | "handwriting" | "mono"
+export type GoogleFont = { family: string; category: GoogleCategory; weights: number[] }
+export const ALL_GOOGLE_FONTS: GoogleFont[] = (ALL as [string, GoogleCategory, string][]).map(([family, category, w]) => ({
+  family, category, weights: w.split(";").map(Number),
+}))
+const BY_NAME = new Map(ALL_GOOGLE_FONTS.map((f) => [f.family, f]))
+export const googleFont = (family: string) => BY_NAME.get(family)
+export const CATEGORY_LABEL: Record<GoogleCategory, string> = {
+  sans: "Sin serifa", serif: "Con serifa", display: "Para titulares", handwriting: "Manuscrita", mono: "Monoespaciada",
+}
+/** Fuentes de reserva según el tipo (por si la de Google tarda o no carga). */
+export function fallbackStack(category: GoogleCategory = "sans") {
+  if (category === "serif") return ["ui-serif", "Georgia", "serif"]
+  if (category === "mono") return ["ui-monospace", "monospace"]
+  return ["ui-sans-serif", "system-ui", "sans-serif"]
+}
+/** Lista de fuentes de un token fontFamily para una familia de Google Fonts. */
+export const familyStack = (family: string) => [family, ...fallbackStack(googleFont(family)?.category)]
+export function googleFontUrl(family: string) {
+  const f = googleFont(family)
+  const w = f ? f.weights.join(";") : "400;500;600;700"
+  return `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${w}&display=swap`
+}

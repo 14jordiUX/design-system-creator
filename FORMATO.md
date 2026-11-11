@@ -145,7 +145,7 @@ escala y se editan en un solo sitio. **Nunca se usan en el código.** Los compon
 | Relleno y distancias a bordes | `space.inset.3xs … 4xl` |
 | Separación entre elementos | `space.gap.3xs … 4xl`, `space.section` |
 | Tamaños | `size.*` (iconos, avatares, campos…), `control.height.*`, `layout.*` |
-| Texto | `typography.*` (estilos completos) y `text.size/weight/family/leading/tracking.*` |
+| Texto | `typography.<estilo>` (display, h1, h2, h3, title, lead, body, ui, caption: familia, tamaño, peso, interlineado y espaciado; los aplica la clase `text-<estilo>`) y `text.size/weight/family/leading/tracking.*`, a los que apuntan |
 | Forma | `radius.control/card/overlay/pill/inner/fine/square`, `control.border-width` |
 | Profundidad | `elevation.*` |
 | Estados | `state.opacity.*` |
