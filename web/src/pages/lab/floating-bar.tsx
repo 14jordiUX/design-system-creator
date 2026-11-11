@@ -294,8 +294,9 @@ export function FloatingBarPreview({ option }: { option: Option }) {
           <div className="absolute flex items-center gap-gap-2xs p-inset-2xs motion-reduce:transition-none" style={place(b, "b")} onPointerDown={onDown("b")}>
             <Tip show={tips} label="Favorito"><Button variant="ghost" size="icon" className={cn("aspect-square h-full w-auto shrink-0 rounded-pill", noHover ? "hover:bg-transparent" : "hover:bg-primary-subtle hover:text-link")} aria-label="Favorito"><Heart /></Button></Tip>
             <Tip show={tips} label="Compartir"><Button variant="ghost" size="icon" className={cn("aspect-square h-full w-auto shrink-0 rounded-pill", noHover ? "hover:bg-transparent" : "hover:bg-primary-subtle hover:text-link")} aria-label="Compartir"><Share2 /></Button></Tip>
-            {/* El CTA principal nunca pasa a icono: en pequeño usa el tamaño sm del botón (mismo texto, menos relleno) */}
-            <Button size={small ? "sm" : "default"} className={cn("h-full rounded-pill", small ? "shrink-0" : "min-w-0 flex-1")}>Añadir a la cesta</Button>
+            {/* El CTA principal nunca pasa a icono: en pequeño usa el tamaño sm del botón (mismo texto, menos relleno).
+                Siempre ocupa el hueco que queda y nunca es más estrecho que su texto, así crece y encoge sin saltos */}
+            <Button size={small ? "sm" : "default"} className="h-full min-w-max flex-1 rounded-pill">Añadir a la cesta</Button>
           </div>
         </div>
 
