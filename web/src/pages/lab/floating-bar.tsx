@@ -116,11 +116,19 @@ export function FloatingBarPreview({ option }: { option: Option }) {
     transitionProperty: "left, width, height, top, transform",
     transitionDuration: "var(--lab-shape-time)", transitionTimingFunction: "var(--lab-shape-ease)",
   }
-  const pressStyle = (blob: "a" | "b"): CSSProperties => {
-    if (!push || !press || press.blob !== blob) return { transform: "none", transformOrigin: "50% 50%" }
+  // Empuje: se hunde la parte que tocas y el otro extremo queda quieto. La inclinación y el hundimiento se miden en px
+  // (--lab-depth, --lab-press), así una pieza ancha se inclina poco y un círculo pequeño se nota igual.
+  // Si las dos piezas están juntas (inicio y ventana), se empujan las dos a la vez.
+  const merged = level !== "detail"
+  const hit = (blob: "a" | "b") => !!press && (press.blob === blob || merged)
+  const depth = px(root, "--lab-depth"), sink = px(root, "--lab-press"), maxTilt = px(root, "--lab-max-tilt")
+  const pressStyle = (r: Rect, blob: "a" | "b"): CSSProperties => {
+    if (!push || !press || !hit(blob) || !r.w) return { transform: "none", transformOrigin: "50% 50%" }
     const k = (press.x - 0.5) * 2
+    const angle = Math.min(maxTilt, (Math.asin(Math.min(1, depth / r.w)) * 180) / Math.PI) * k
+    const scale = 1 - (sink * 2) / Math.max(r.w, r.h)
     return {
-      transform: `perspective(var(--lab-persp)) rotateY(calc(var(--lab-tilt) * ${k.toFixed(3)})) scale(var(--lab-push))`,
+      transform: `perspective(var(--lab-persp)) rotateY(${angle.toFixed(2)}deg) scale(${scale.toFixed(4)})`,
       transformOrigin: `${((1 - press.x) * 100).toFixed(1)}% 50%`,
     }
   }
@@ -130,7 +138,7 @@ export function FloatingBarPreview({ option }: { option: Option }) {
     : { transitionDuration: "var(--lab-shape-time), var(--lab-shape-time), var(--lab-shape-time), var(--lab-shape-time), var(--lab-release-time)",
         transitionTimingFunction: "var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-release-ease)" }
   const place = (r: Rect, blob: "a" | "b"): CSSProperties => ({
-    ...shapeMove, ...pressTiming(press?.blob === blob), ...pressStyle(blob),
+    ...shapeMove, ...pressTiming(hit(blob)), ...pressStyle(r, blob),
     left: r.x, width: r.w, height: r.h, top: H - r.h,
   })
   const onDown = (blob: "a" | "b") => (e: RPointerEvent<HTMLElement>) => {
