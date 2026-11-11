@@ -120,11 +120,12 @@ Tipo de producto: Plantilla.
 
 ## Tipografía
 
-Familias: `font-base` = Inter, ui-sans-serif, system-ui, sans-serif; `font-code` = JetBrains Mono, ui-monospace, monospace.
+Familias: `font-base` = Inter, ui-sans-serif, system-ui, sans-serif; `font-code` = JetBrains Mono, ui-monospace, monospace; `font-texto` = EB Garamond, ui-serif, Georgia, serif.
 
 Cárgalas de Google Fonts (por ejemplo con un `<link>` en el `<head>`):
 - https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap
 - https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap
+- https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700;800&display=swap
 
 | Clase | Familia | Tamaño | Peso | Interlineado | Espaciado |
 |---|---|---|---|---|---|
@@ -133,8 +134,8 @@ Cárgalas de Google Fonts (por ejemplo con un `<link>` en el `<head>`):
 | `text-h2` | Inter | 30px | 600 | 1.15 | -0.02em |
 | `text-h3` | Inter | 24px | 600 | 1.3 | 0em |
 | `text-title` | Inter | 20px | 600 | 1.3 | 0em |
-| `text-lead` | Inter | 18px | 400 | 1.7 | 0em |
-| `text-body` | Inter | 16px | 400 | 1.5 | 0em |
+| `text-lead` | EB Garamond | 18px | 400 | 1.7 | 0em |
+| `text-body` | EB Garamond | 16px | 400 | 1.5 | 0em |
 | `text-ui` | Inter | 14px | 400 | 1.5 | 0em |
 | `text-caption` | Inter | 12px | 400 | 1.5 | 0em |
 
@@ -246,6 +247,7 @@ Cárgalas de Google Fonts (por ejemplo con un `<link>` en el `<head>`):
 | `--text-weight-heavy` | 700 |  |
 | `--text-family-base` | Inter, ui-sans-serif, system-ui, sans-serif |  |
 | `--text-family-code` | "JetBrains Mono", ui-monospace, monospace |  |
+| `--text-family-texto` | "EB Garamond", ui-serif, Georgia, serif |  |
 | `--text-leading-compact` | 1.15 |  |
 | `--text-leading-body` | 1.5 |  |
 | `--text-leading-prose` | 1.7 |  |
