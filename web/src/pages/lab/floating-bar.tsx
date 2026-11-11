@@ -5,9 +5,10 @@
 //   · fusión: al pasar de nivel, el fondo de la barra se separa o se junta como un líquido; después aparecen iconos y botones
 //   · empuje: al pulsar, la barra se hunde desde el punto que tocas, como si empujaras una pieza sólida
 // Todos los valores (tiempos, curvas, ángulos) llegan como variables --lab-* desde laboratorio.json.
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react"
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent, type ReactElement } from "react"
 import { ArrowLeft, Calendar, Heart, Home, Inbox, MessageSquare, MoreHorizontal, Share2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import type { Option } from "./previews"
 
@@ -27,9 +28,21 @@ const ms = (el: Element | null, name: string) => {
   return v.endsWith("ms") ? parseFloat(v) : v.endsWith("s") ? parseFloat(v) * 1000 : 0
 }
 
+// Opción «tooltip»: los botones que solo enseñan icono (pestañas en pequeño, volver, favorito, compartir, cerrar)
+// muestran su nombre al pasar el ratón o al enfocarlos con el teclado
+function Tip({ show, label, children }: { show: boolean; label: string; children: ReactElement }) {
+  if (!show) return children
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="top">{label}</TooltipContent>
+    </Tooltip>
+  )
+}
+
 export function FloatingBarPreview({ option }: { option: Option }) {
   const p = option.params ?? {}
-  const goo = !!p.goo, drop = !!p.drop, push = !!p.push
+  const goo = !!p.goo, drop = !!p.drop, push = !!p.push, tips = !!p.tooltip
   const gooId = useId().replace(/:/g, "")
   const frame = useRef<HTMLDivElement>(null)
   const scroller = useRef<HTMLDivElement>(null)
@@ -227,7 +240,8 @@ export function FloatingBarPreview({ option }: { option: Option }) {
             <span aria-hidden className="absolute inset-y-inset-2xs rounded-pill bg-primary-subtle motion-reduce:transition-none"
               style={{ left: indLeft, right: indRight, transition: dir > 0 ? `right ${lead}, left ${trail}` : `left ${lead}, right ${trail}` }} />
             {TABS.map(({ icon: Icon, label }, i) => (
-              <button key={label} type="button" onClick={() => pick(i)} aria-current={tab === i ? "page" : undefined} aria-label={small ? label : undefined}
+              <Tip key={label} show={tips && small} label={label}>
+              <button type="button" onClick={() => pick(i)} aria-current={tab === i ? "page" : undefined} aria-label={small ? label : undefined}
                 className={cn("relative flex min-w-0 flex-1 flex-col items-center justify-center rounded-pill text-caption transition-colors",
                   tab === i ? "font-emphasis text-link" : "text-muted-foreground")}>
                 <Icon className="size-icon-md" />
@@ -236,29 +250,34 @@ export function FloatingBarPreview({ option }: { option: Option }) {
                   <span className="min-h-0 overflow-hidden"><span className="block truncate pt-inset-3xs">{label}</span></span>
                 </span>
               </button>
+              </Tip>
             ))}
           </nav>
         </div>
 
         {/* Detalle: volver + acciones */}
         <div className={fade("detail")} style={content}>
-          <button type="button" aria-label="Volver" onClick={() => go("home")} onPointerDown={onDown("a")}
-            className="absolute flex items-center justify-center rounded-pill motion-reduce:transition-none [&_svg]:size-icon-lg" style={place(a, "a")}>
-            <ArrowLeft />
-          </button>
+          <Tip show={tips} label="Volver">
+            <button type="button" aria-label="Volver" onClick={() => go("home")} onPointerDown={onDown("a")}
+              className="absolute flex items-center justify-center rounded-pill motion-reduce:transition-none [&_svg]:size-icon-lg" style={place(a, "a")}>
+              <ArrowLeft />
+            </button>
+          </Tip>
           <div className="absolute flex items-center gap-gap-2xs p-inset-2xs motion-reduce:transition-none" style={place(b, "b")} onPointerDown={onDown("b")}>
-            <Button variant="ghost" size="icon" className="aspect-square h-full w-auto shrink-0 rounded-pill hover:bg-primary-subtle hover:text-link" aria-label="Favorito"><Heart /></Button>
-            <Button variant="ghost" size="icon" className="aspect-square h-full w-auto shrink-0 rounded-pill hover:bg-primary-subtle hover:text-link" aria-label="Compartir"><Share2 /></Button>
+            <Tip show={tips} label="Favorito"><Button variant="ghost" size="icon" className="aspect-square h-full w-auto shrink-0 rounded-pill hover:bg-primary-subtle hover:text-link" aria-label="Favorito"><Heart /></Button></Tip>
+            <Tip show={tips} label="Compartir"><Button variant="ghost" size="icon" className="aspect-square h-full w-auto shrink-0 rounded-pill hover:bg-primary-subtle hover:text-link" aria-label="Compartir"><Share2 /></Button></Tip>
             <Button className="h-full flex-1 rounded-pill">Añadir a la cesta</Button>
           </div>
         </div>
 
         {/* Ventana: una sola X para cerrar */}
         <div className={fade("modal")} style={content}>
-          <button type="button" aria-label="Cerrar" onClick={() => go("detail")} onPointerDown={onDown("a")}
-            className="absolute flex items-center justify-center rounded-pill motion-reduce:transition-none [&_svg]:size-icon-lg" style={place(a, "a")}>
-            <X />
-          </button>
+          <Tip show={tips} label="Cerrar">
+            <button type="button" aria-label="Cerrar" onClick={() => go("detail")} onPointerDown={onDown("a")}
+              className="absolute flex items-center justify-center rounded-pill motion-reduce:transition-none [&_svg]:size-icon-lg" style={place(a, "a")}>
+              <X />
+            </button>
+          </Tip>
         </div>
       </div>
     </div>
