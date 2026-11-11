@@ -21,6 +21,32 @@ const TABS = [
   { icon: MessageSquare, label: "Chat" }, { icon: MoreHorizontal, label: "Más" },
 ]
 const SIZES = ["35 · 22,5 cm", "36 · 23 cm", "37 · 23,5 cm", "38 · 24,5 cm", "39 · 25 cm", "40 · 25,5 cm", "41 · 26,5 cm", "42 · 27 cm", "43 · 27,5 cm", "44 · 28 cm", "45 · 29 cm", "46 · 29,5 cm"]
+// Mapa de refracción para el cristal: rojo = desplazamiento horizontal, verde = vertical, gris = nada.
+// El centro queda gris (no se mueve) y los bordes doblan lo de detrás, como el canto de un cristal grueso.
+// Son valores del filtro, no colores de la interfaz.
+const maps = new Map<string, string>()
+const refractionMap = (w: number, h: number, edge: number) => {
+  const key = `${Math.round(w)}x${Math.round(h)}x${edge}`
+  const hit = maps.get(key)
+  if (hit || !w || !h) return hit ?? ""
+  const c = document.createElement("canvas")
+  c.width = Math.round(w); c.height = Math.round(h)
+  const g = c.getContext("2d")
+  if (!g) return ""
+  const r = h / 2, e = Math.min(edge, r)
+  const pill = (x: number, y: number, pw: number, ph: number, pr: number) => { g.beginPath(); g.roundRect(x, y, pw, ph, pr); g.fill() }
+  g.fillStyle = "black"; g.fillRect(0, 0, w, h)
+  const gx = g.createLinearGradient(0, 0, w, 0); gx.addColorStop(0, "black"); gx.addColorStop(1, "red")
+  g.fillStyle = gx; pill(0, 0, w, h, r)
+  const gy = g.createLinearGradient(0, 0, 0, h); gy.addColorStop(0, "black"); gy.addColorStop(1, "lime")
+  g.save(); g.globalCompositeOperation = "screen"; g.fillStyle = gy; pill(0, 0, w, h, r); g.restore()
+  g.filter = `blur(${e / 2}px)`; g.fillStyle = "gray"
+  pill(e, e, Math.max(0, w - e * 2), Math.max(0, h - e * 2), Math.max(0, r - e))
+  const url = c.toDataURL()
+  maps.set(key, url)
+  return url
+}
+
 const PRODUCTS = ["Zapatillas", "Mochilas", "Gorras", "Botellas", "Chaquetas", "Calcetines", "Camisetas", "Gafas", "Relojes", "Bolsas"]
 
 const px = (el: Element | null, name: string) => (el ? parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0 : 0)
@@ -43,7 +69,8 @@ function Tip({ show, label, children }: { show: boolean; label: string; children
 
 export function FloatingBarPreview({ option }: { option: Option }) {
   const p = option.params ?? {}
-  const goo = !!p.goo, drop = !!p.drop, push = !!p.push, tips = !!p.tooltip, noHover = !!p.noHover
+  const glass = !!p.glass   // cristal: fondo translúcido que desenfoca y dobla lo que hay detrás (refracción)
+  const goo = !!p.goo && !glass, drop = !!p.drop, push = !!p.push, tips = !!p.tooltip, noHover = !!p.noHover
   const gooId = useId().replace(/:/g, "")
   const frame = useRef<HTMLDivElement>(null)
   const scroller = useRef<HTMLDivElement>(null)
@@ -193,6 +220,13 @@ export function FloatingBarPreview({ option }: { option: Option }) {
     setPress({ blob, x: Math.min(1, Math.max(0, (e.clientX - box.left) / box.width)) })
   }
   const release = () => setPress(null)
+  // Cristal: tinte translúcido + refracción en los bordes + desenfoque. Safari y Firefox no aplican la refracción
+  // (filtro SVG en backdrop-filter) y se quedan con el desenfoque.
+  const glassStyle = (k: "a" | "b"): CSSProperties => ({
+    background: "var(--lab-glass-fill)", boxShadow: "var(--lab-glass-edge)",
+    backdropFilter: `url(#${gooId}-${k}) blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate))`,
+    WebkitBackdropFilter: "blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate))",
+  })
 
   // ---------- pestaña activa: fondo que sigue (y gota) ----------
   const target = hover ?? tab
@@ -214,6 +248,11 @@ export function FloatingBarPreview({ option }: { option: Option }) {
     return Math.min(n - 1, Math.max(0, Math.floor(((e.clientX - box.left - pad) / (box.width - pad * 2)) * n)))
   }
 
+  // Con cristal, las fotos de producto son degradados de color para que se vea cómo se doblan detrás de la barra
+  const art = (t: string): CSSProperties => {
+    const i = PRODUCTS.indexOf(t) % 5
+    return { backgroundImage: `linear-gradient(135deg, var(--color-chart-${i + 1}), var(--color-chart-${((i + 2) % 5) + 1}))` }
+  }
   const content: CSSProperties = {
     transitionProperty: "opacity", transitionDuration: "var(--motion-duration-default)", transitionTimingFunction: "var(--motion-easing-default)",
   }
@@ -233,14 +272,14 @@ export function FloatingBarPreview({ option }: { option: Option }) {
           <div className="grid grid-cols-2 gap-gap-lg p-inset-lg pb-section">
             {PRODUCTS.map((t) => (
               <button key={t} type="button" onClick={() => { setProduct(t); go("detail") }} className="grid gap-gap-sm text-start">
-                <span className="block h-field-sm rounded-card bg-primary-subtle" />
+                <span className="block h-field-sm rounded-card bg-primary-subtle" style={glass ? art(t) : undefined} />
                 <span>{t}</span>
               </button>
             ))}
           </div>
         ) : (
           <div className="grid gap-gap-md p-inset-lg pb-section">
-            <span className="block aspect-square rounded-card bg-primary-subtle" />
+            <span className="block aspect-square rounded-card bg-primary-subtle" style={glass ? art(product) : undefined} />
             <p className="text-title font-strong">{product}</p>
             <p className="text-ui text-muted-foreground">Ligeras, transpirables y con suela de goma reciclada. Pulsa «Ver tallas» para abrir la ventana del tercer nivel.</p>
             <div><Button variant="outline" onClick={() => go("modal")}>Ver tallas</Button></div>
@@ -267,9 +306,21 @@ export function FloatingBarPreview({ option }: { option: Option }) {
             </filter>
           </svg>
         )}
-        <div aria-hidden className="absolute inset-0" style={{ filter: goo && merging ? `url(#${gooId}) var(--lab-bar-shadow)` : "var(--lab-bar-shadow)" }}>
-          <span className="absolute rounded-pill bg-popover motion-reduce:transition-none" style={place(a, "a")} />
-          <span className="absolute rounded-pill bg-popover motion-reduce:transition-none" style={place(b, "b")} />
+        {glass && (
+          <svg aria-hidden className="absolute size-0">
+            {([["a", a], ["b", b]] as const).map(([k, r]) => (
+              <filter key={k} id={`${gooId}-${k}`} x="0" y="0" width={r.w} height={r.h} filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                <feImage href={refractionMap(r.w, r.h, Number(p.edge ?? 16))} x="0" y="0" width={r.w} height={r.h} preserveAspectRatio="none" result="map" />
+                <feDisplacementMap in="SourceGraphic" in2="map" scale={p.refraction ?? "40"} xChannelSelector="R" yChannelSelector="G" />
+              </filter>
+            ))}
+          </svg>
+        )}
+        <div aria-hidden className="absolute inset-0" style={{ filter: glass ? "none" : goo && merging ? `url(#${gooId}) var(--lab-bar-shadow)` : "var(--lab-bar-shadow)" }}>
+          {(["a", "b"] as const).map((k) => (
+            <span key={k} className={cn("absolute rounded-pill motion-reduce:transition-none", !glass && "bg-popover")}
+              style={{ ...place(k === "a" ? a : b, k), ...(glass ? glassStyle(k) : {}) }} />
+          ))}
         </div>
 
         {/* Inicio: pestañas */}
