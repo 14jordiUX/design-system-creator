@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { FloatingBarPreview } from "./floating-bar"
 
 export type Option = { id: string; label: string; vars?: Record<string, string>; params?: Record<string, any> }
 type P = { option: Option }
@@ -397,6 +398,7 @@ function Icons(_: P) {
 }
 
 export const PREVIEWS: Record<string, (p: P) => ReactNode> = {
+  "barra-flotante": FloatingBarPreview,
   "movimiento": Motion,
   "fondo-sigue": FollowBackground,
   "indicador-estira": StretchIndicator,

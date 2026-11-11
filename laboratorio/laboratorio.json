@@ -6,6 +6,125 @@
   },
   "experiments": [
     {
+      "id": "barra-flotante",
+      "group": "movimiento",
+      "title": "Barra flotante (la de ayer)",
+      "source": "App Sidebar flotante + Liquid Glass",
+      "text": "La barra de pestañas, la de detalle y la X de la ventana en un móvil de prueba. Prueba cada novedad por separado o todas juntas.",
+      "try": "Baja por la lista (la barra se encoge), pasa el ratón o arrastra por las pestañas, entra en un producto, abre «Ver tallas» y vuelve. Mantén pulsado en distintos puntos de la barra.",
+      "options": [
+        {
+          "id": "ayer",
+          "label": "Como ayer",
+          "vars": {
+            "--lab-lead": "320ms",
+            "--lab-trail": "320ms",
+            "--lab-ease": "cubic-bezier(0.2, 0, 0, 1)",
+            "--lab-shape-time": "320ms",
+            "--lab-shape-ease": "cubic-bezier(0.2, 0, 0, 1)",
+            "--lab-persp": "600px",
+            "--lab-tilt": "0deg",
+            "--lab-push": "1",
+            "--lab-press-time": "90ms",
+            "--lab-release-time": "200ms",
+            "--lab-release-ease": "cubic-bezier(0.2, 0, 0, 1)",
+            "--lab-bar-shadow": "drop-shadow(0 0 0.5px var(--color-border-strong)) drop-shadow(0 8px 16px color-mix(in oklch, var(--color-text-default) 14%, transparent))"
+          },
+          "params": {}
+        },
+        {
+          "id": "gota",
+          "label": "Sigue con gota",
+          "vars": {
+            "--lab-lead": "360ms",
+            "--lab-trail": "680ms",
+            "--lab-ease": "linear(0, 0.053, 0.177, 0.331, 0.489, 0.633, 0.756, 0.853, 0.926, 0.977, 1.009, 1.028, 1.037, 1.038, 1.036, 1.03, 1.024, 1.018, 1.013, 1.008, 1.005, 1.002, 1.001, 0.999, 1)",
+            "--lab-shape-time": "320ms",
+            "--lab-shape-ease": "cubic-bezier(0.2, 0, 0, 1)",
+            "--lab-persp": "600px",
+            "--lab-tilt": "0deg",
+            "--lab-push": "1",
+            "--lab-press-time": "90ms",
+            "--lab-release-time": "200ms",
+            "--lab-release-ease": "cubic-bezier(0.2, 0, 0, 1)",
+            "--lab-bar-shadow": "drop-shadow(0 0 0.5px var(--color-border-strong)) drop-shadow(0 8px 16px color-mix(in oklch, var(--color-text-default) 14%, transparent))"
+          },
+          "params": {
+            "drop": true
+          }
+        },
+        {
+          "id": "fusion",
+          "label": "Fusión líquida",
+          "vars": {
+            "--lab-lead": "320ms",
+            "--lab-trail": "320ms",
+            "--lab-ease": "cubic-bezier(0.2, 0, 0, 1)",
+            "--lab-shape-time": "760ms",
+            "--lab-shape-ease": "linear(0, 0.053, 0.177, 0.331, 0.489, 0.633, 0.756, 0.853, 0.926, 0.977, 1.009, 1.028, 1.037, 1.038, 1.036, 1.03, 1.024, 1.018, 1.013, 1.008, 1.005, 1.002, 1.001, 0.999, 1)",
+            "--lab-persp": "600px",
+            "--lab-tilt": "0deg",
+            "--lab-push": "1",
+            "--lab-press-time": "90ms",
+            "--lab-release-time": "200ms",
+            "--lab-release-ease": "cubic-bezier(0.2, 0, 0, 1)",
+            "--lab-bar-shadow": "drop-shadow(0 0 0.5px var(--color-border-strong)) drop-shadow(0 8px 16px color-mix(in oklch, var(--color-text-default) 14%, transparent))"
+          },
+          "params": {
+            "goo": true,
+            "blur": "10",
+            "matrix": "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10"
+          }
+        },
+        {
+          "id": "empuje",
+          "label": "Empuje",
+          "vars": {
+            "--lab-lead": "320ms",
+            "--lab-trail": "320ms",
+            "--lab-ease": "cubic-bezier(0.2, 0, 0, 1)",
+            "--lab-shape-time": "320ms",
+            "--lab-shape-ease": "cubic-bezier(0.2, 0, 0, 1)",
+            "--lab-persp": "600px",
+            "--lab-tilt": "14deg",
+            "--lab-push": "0.96",
+            "--lab-press-time": "90ms",
+            "--lab-release-time": "560ms",
+            "--lab-release-ease": "linear(0, 0.068, 0.233, 0.442, 0.654, 0.841, 0.987, 1.087, 1.143, 1.163, 1.155, 1.13, 1.097, 1.062, 1.031, 1.006, 0.988, 0.978, 0.974, 0.974, 0.978, 0.983, 0.989, 0.994, 1)",
+            "--lab-bar-shadow": "drop-shadow(0 0 0.5px var(--color-border-strong)) drop-shadow(0 8px 16px color-mix(in oklch, var(--color-text-default) 14%, transparent))"
+          },
+          "params": {
+            "push": true
+          }
+        },
+        {
+          "id": "todo",
+          "label": "Todo junto",
+          "vars": {
+            "--lab-lead": "360ms",
+            "--lab-trail": "680ms",
+            "--lab-ease": "linear(0, 0.053, 0.177, 0.331, 0.489, 0.633, 0.756, 0.853, 0.926, 0.977, 1.009, 1.028, 1.037, 1.038, 1.036, 1.03, 1.024, 1.018, 1.013, 1.008, 1.005, 1.002, 1.001, 0.999, 1)",
+            "--lab-shape-time": "760ms",
+            "--lab-shape-ease": "linear(0, 0.053, 0.177, 0.331, 0.489, 0.633, 0.756, 0.853, 0.926, 0.977, 1.009, 1.028, 1.037, 1.038, 1.036, 1.03, 1.024, 1.018, 1.013, 1.008, 1.005, 1.002, 1.001, 0.999, 1)",
+            "--lab-persp": "600px",
+            "--lab-tilt": "14deg",
+            "--lab-push": "0.96",
+            "--lab-press-time": "90ms",
+            "--lab-release-time": "560ms",
+            "--lab-release-ease": "linear(0, 0.068, 0.233, 0.442, 0.654, 0.841, 0.987, 1.087, 1.143, 1.163, 1.155, 1.13, 1.097, 1.062, 1.031, 1.006, 0.988, 0.978, 0.974, 0.974, 0.978, 0.983, 0.989, 0.994, 1)",
+            "--lab-bar-shadow": "drop-shadow(0 0 0.5px var(--color-border-strong)) drop-shadow(0 8px 16px color-mix(in oklch, var(--color-text-default) 14%, transparent))"
+          },
+          "params": {
+            "drop": true,
+            "goo": true,
+            "push": true,
+            "blur": "10",
+            "matrix": "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10"
+          }
+        }
+      ]
+    },
+    {
       "id": "movimiento",
       "group": "movimiento",
       "title": "Personalidad del movimiento",
