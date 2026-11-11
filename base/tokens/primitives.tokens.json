@@ -337,6 +337,14 @@
           "ui-monospace",
           "monospace"
         ]
+      },
+      "texto": {
+        "$value": [
+          "EB Garamond",
+          "ui-serif",
+          "Georgia",
+          "serif"
+        ]
       }
     },
     "size": {

@@ -58,7 +58,7 @@
     },
     "lead": {
       "$value": {
-        "fontFamily": "{text.family.base}",
+        "fontFamily": "{text.family.texto}",
         "fontSize": "{text.size.lead}",
         "fontWeight": "{text.weight.normal}",
         "lineHeight": "{text.leading.prose}",
@@ -69,7 +69,7 @@
     },
     "body": {
       "$value": {
-        "fontFamily": "{text.family.base}",
+        "fontFamily": "{text.family.texto}",
         "fontSize": "{text.size.body}",
         "fontWeight": "{text.weight.normal}",
         "lineHeight": "{text.leading.body}",
@@ -536,6 +536,9 @@
       },
       "code": {
         "$value": "{font.family.mono}"
+      },
+      "texto": {
+        "$value": "{font.family.texto}"
       }
     },
     "leading": {
