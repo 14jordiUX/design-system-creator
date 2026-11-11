@@ -152,13 +152,14 @@ export function FloatingBarPreview({ option }: { option: Option }) {
   const itemW = (a.w - pad * 2) / n
   const indLeft = pad + target * itemW, indRight = a.w - indLeft - itemW
   const lead = "var(--lab-lead) var(--lab-ease)", trail = "var(--lab-trail) var(--lab-ease)"
+  // La dirección siempre se calcula desde donde está el fondo ahora mismo, también al salir (vuelve a la pestaña activa):
+  // así el borde de delante es siempre el que va primero y el fondo nunca se queda sin ancho ni desaparece.
   const follow = (i: number | null) => {
-    if (i === null) { setHover(null); return }
-    const from = hover ?? tab
-    if (i !== from) setDir(i > from ? 1 : -1)
-    setHover(drop ? i : null)
+    const from = hover ?? tab, to = i ?? tab
+    if (to !== from) setDir(to > from ? 1 : -1)
+    setHover(i === null || !drop ? null : i)
   }
-  const pick = (i: number) => { setDir(i > tab ? 1 : i < tab ? -1 : dir); setTab(i) }
+  const pick = (i: number) => { const from = hover ?? tab; if (i !== from) setDir(i > from ? 1 : -1); setTab(i) }
   const itemAt = (e: RPointerEvent<HTMLElement>) => {
     const box = e.currentTarget.getBoundingClientRect()
     return Math.min(n - 1, Math.max(0, Math.floor(((e.clientX - box.left - pad) / (box.width - pad * 2)) * n)))
@@ -246,8 +247,8 @@ export function FloatingBarPreview({ option }: { option: Option }) {
             <ArrowLeft />
           </button>
           <div className="absolute flex items-center gap-gap-2xs p-inset-2xs motion-reduce:transition-none" style={place(b, "b")} onPointerDown={onDown("b")}>
-            <Button variant="ghost" size="icon" className="size-full max-w-tab-bar-compact rounded-pill" aria-label="Favorito"><Heart /></Button>
-            <Button variant="ghost" size="icon" className="size-full max-w-tab-bar-compact rounded-pill" aria-label="Compartir"><Share2 /></Button>
+            <Button variant="ghost" size="icon" className="aspect-square h-full w-auto shrink-0 rounded-pill hover:bg-primary-subtle hover:text-link" aria-label="Favorito"><Heart /></Button>
+            <Button variant="ghost" size="icon" className="aspect-square h-full w-auto shrink-0 rounded-pill hover:bg-primary-subtle hover:text-link" aria-label="Compartir"><Share2 /></Button>
             <Button className="h-full flex-1 rounded-pill">Añadir a la cesta</Button>
           </div>
         </div>
