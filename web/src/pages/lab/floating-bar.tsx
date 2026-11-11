@@ -42,7 +42,7 @@ function Tip({ show, label, children }: { show: boolean; label: string; children
 
 export function FloatingBarPreview({ option }: { option: Option }) {
   const p = option.params ?? {}
-  const goo = !!p.goo, drop = !!p.drop, push = !!p.push, tips = !!p.tooltip
+  const goo = !!p.goo, drop = !!p.drop, push = !!p.push, tips = !!p.tooltip, noHover = !!p.noHover
   const gooId = useId().replace(/:/g, "")
   const frame = useRef<HTMLDivElement>(null)
   const scroller = useRef<HTMLDivElement>(null)
@@ -168,9 +168,10 @@ export function FloatingBarPreview({ option }: { option: Option }) {
   // La dirección siempre se calcula desde donde está el fondo ahora mismo, también al salir (vuelve a la pestaña activa):
   // así el borde de delante es siempre el que va primero y el fondo nunca se queda sin ancho ni desaparece.
   const follow = (i: number | null) => {
+    if (noHover) return
     const from = hover ?? tab, to = i ?? tab
     if (to !== from) setDir(to > from ? 1 : -1)
-    setHover(i === null || !drop ? null : i)
+    setHover(i === null || !drop || noHover ? null : i)   // sin hover: la pastilla solo se mueve al hacer clic
   }
   const pick = (i: number) => { const from = hover ?? tab; if (i !== from) setDir(i > from ? 1 : -1); setTab(i) }
   const itemAt = (e: RPointerEvent<HTMLElement>) => {
@@ -264,8 +265,8 @@ export function FloatingBarPreview({ option }: { option: Option }) {
             </button>
           </Tip>
           <div className="absolute flex items-center gap-gap-2xs p-inset-2xs motion-reduce:transition-none" style={place(b, "b")} onPointerDown={onDown("b")}>
-            <Tip show={tips} label="Favorito"><Button variant="ghost" size="icon" className="aspect-square h-full w-auto shrink-0 rounded-pill hover:bg-primary-subtle hover:text-link" aria-label="Favorito"><Heart /></Button></Tip>
-            <Tip show={tips} label="Compartir"><Button variant="ghost" size="icon" className="aspect-square h-full w-auto shrink-0 rounded-pill hover:bg-primary-subtle hover:text-link" aria-label="Compartir"><Share2 /></Button></Tip>
+            <Tip show={tips} label="Favorito"><Button variant="ghost" size="icon" className={cn("aspect-square h-full w-auto shrink-0 rounded-pill", noHover ? "hover:bg-transparent" : "hover:bg-primary-subtle hover:text-link")} aria-label="Favorito"><Heart /></Button></Tip>
+            <Tip show={tips} label="Compartir"><Button variant="ghost" size="icon" className={cn("aspect-square h-full w-auto shrink-0 rounded-pill", noHover ? "hover:bg-transparent" : "hover:bg-primary-subtle hover:text-link")} aria-label="Compartir"><Share2 /></Button></Tip>
             <Button className="h-full flex-1 rounded-pill">Añadir a la cesta</Button>
           </div>
         </div>
