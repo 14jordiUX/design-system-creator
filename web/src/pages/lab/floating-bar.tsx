@@ -53,6 +53,8 @@ export function FloatingBarPreview({ option }: { option: Option }) {
   const trackers = useMemo(() => [trackA, trackB], [])
   const [opacity, setOpacity] = useState(Number(p.opacity ?? 45))
   const [blur, setBlur] = useState(Number(p.glassBlur ?? 3))
+  const [thickness, setThickness] = useState(Number(p.depth ?? 60))            // grosor del cristal: cuánto dobla el canto y lo ancho que es
+  const [diffraction, setDiffraction] = useState(Number(p.diffraction ?? 30))   // separación de colores en el canto
   const frame = useRef<HTMLDivElement>(null)
   const scroller = useRef<HTMLDivElement>(null)
   const sheet = useRef<HTMLDivElement>(null)
@@ -232,10 +234,9 @@ export function FloatingBarPreview({ option }: { option: Option }) {
   }
   const fade = (l: Level) => cn("absolute inset-0 flex", shown === l && visible ? "opacity-100" : "pointer-events-none opacity-0")
 
-  const glassVars = { "--lab-glass-opacity": `${opacity}%`, "--lab-glass-blur": `${blur}px` } as CSSProperties
   return (
     <div className="grid gap-gap-lg">
-    <div ref={frame} style={glass ? glassVars : undefined} className="relative mx-auto h-dialog w-full max-w-sheet overflow-hidden rounded-overlay border-thin bg-background">
+    <div ref={frame} className="relative mx-auto h-dialog w-full max-w-sheet overflow-hidden rounded-overlay border-thin bg-background">
       {/* Páginas */}
       <span ref={ctaProbe} aria-hidden className="pointer-events-none invisible absolute">
         <Button size="sm" tabIndex={-1} className="rounded-pill">Añadir a la cesta</Button>
@@ -282,8 +283,8 @@ export function FloatingBarPreview({ option }: { option: Option }) {
             </filter>
           </svg>
         )}
-        {glass && <LiquidGlass trackers={trackers} id={`${gooId}-glass`} refraction={Number(p.refraction ?? 70)}
-          dispersion={Number(p.dispersion ?? 0.08)} edge={Number(p.edge ?? 18)} merge={Number(p.merge ?? 10)} />}
+        {glass && <LiquidGlass trackers={trackers} id={`${gooId}-glass`} opacity={opacity} blur={blur}
+          refraction={thickness * 1.2} edge={6 + thickness * 0.2} dispersion={(diffraction / 100) * 0.3} merge={Number(p.merge ?? 10)} />}
         <div aria-hidden className="absolute inset-0" style={{ filter: glass ? "none" : goo && merging ? `url(#${gooId}) var(--lab-bar-shadow)` : "var(--lab-bar-shadow)" }}>
           {(["a", "b"] as const).map((k) => (
             <span key={k} ref={k === "a" ? trackA : trackB} className={cn("absolute rounded-pill motion-reduce:transition-none", !glass && "bg-popover")}
@@ -343,7 +344,8 @@ export function FloatingBarPreview({ option }: { option: Option }) {
     </div>
     {glass && (
       <div className="mx-auto grid w-full max-w-sheet gap-gap-md text-ui">
-        {([["Opacidad del cristal", opacity, setOpacity, 0, 100, "%"], ["Desenfoque", blur, setBlur, 0, 24, "px"]] as const).map(([label, v, set, min, max, unit]) => (
+        {([["Opacidad del cristal", opacity, setOpacity, 0, 100, "%"], ["Desenfoque", blur, setBlur, 0, 24, "px"],
+          ["Profundidad del material", thickness, setThickness, 0, 100, "%"], ["Difracción de la luz", diffraction, setDiffraction, 0, 100, "%"]] as const).map(([label, v, set, min, max, unit]) => (
           <label key={label} className="grid gap-gap-xs">
             <span className="flex justify-between"><span>{label}</span><span className="text-muted-foreground tabular-nums">{v} {unit}</span></span>
             <Slider aria-label={label} min={min} max={max} step={1} value={[v]} onValueChange={([n]) => set(n)} />
