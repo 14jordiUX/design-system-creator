@@ -80,7 +80,7 @@
     },
     "ui": {
       "$value": {
-        "fontFamily": "{text.family.base}",
+        "fontFamily": "{text.family.texto}",
         "fontSize": "{text.size.ui}",
         "fontWeight": "{text.weight.normal}",
         "lineHeight": "{text.leading.body}",

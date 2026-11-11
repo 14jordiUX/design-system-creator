@@ -396,7 +396,7 @@
 @utility typo-title { font-family: var(--text-family-base); font-size: var(--text-size-title); font-weight: var(--text-weight-strong); line-height: var(--text-leading-title); letter-spacing: var(--text-tracking-body); }
 @utility typo-lead { font-family: var(--text-family-texto); font-size: var(--text-size-lead); font-weight: var(--text-weight-normal); line-height: var(--text-leading-prose); letter-spacing: var(--text-tracking-body); }
 @utility typo-body { font-family: var(--text-family-texto); font-size: var(--text-size-body); font-weight: var(--text-weight-normal); line-height: var(--text-leading-body); letter-spacing: var(--text-tracking-body); }
-@utility typo-ui { font-family: var(--text-family-base); font-size: var(--text-size-ui); font-weight: var(--text-weight-normal); line-height: var(--text-leading-body); letter-spacing: var(--text-tracking-body); }
+@utility typo-ui { font-family: var(--text-family-texto); font-size: var(--text-size-ui); font-weight: var(--text-weight-normal); line-height: var(--text-leading-body); letter-spacing: var(--text-tracking-body); }
 @utility typo-caption { font-family: var(--text-family-base); font-size: var(--text-size-caption); font-weight: var(--text-weight-normal); line-height: var(--text-leading-body); letter-spacing: var(--text-tracking-body); }
 
 /* Animaciones: duración, curva, escala y distancia salen de los tokens motion.* */
