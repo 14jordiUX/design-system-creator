@@ -718,7 +718,7 @@
       },
       "body": {
         "$value": {
-          "fontFamily": "{text.family.texto}",
+          "fontFamily": "{text.family.base}",
           "fontSize": "{text.size.body}",
           "fontWeight": "{text.weight.normal}",
           "lineHeight": "{text.leading.body}",
@@ -729,7 +729,7 @@
       },
       "ui": {
         "$value": {
-          "fontFamily": "{text.family.texto}",
+          "fontFamily": "{text.family.base}",
           "fontSize": "{text.size.ui}",
           "fontWeight": "{text.weight.normal}",
           "lineHeight": "{text.leading.body}",

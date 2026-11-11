@@ -135,8 +135,8 @@ Cárgalas de Google Fonts (por ejemplo con un `<link>` en el `<head>`):
 | `text-h3` | Inter | 24px | 600 | 1.3 | 0em |
 | `text-title` | Inter | 20px | 600 | 1.3 | 0em |
 | `text-lead` | EB Garamond | 18px | 400 | 1.7 | 0em |
-| `text-body` | EB Garamond | 16px | 400 | 1.5 | 0em |
-| `text-ui` | EB Garamond | 14px | 400 | 1.5 | 0em |
+| `text-body` | Inter | 16px | 400 | 1.5 | 0em |
+| `text-ui` | Inter | 14px | 400 | 1.5 | 0em |
 | `text-caption` | Inter | 12px | 400 | 1.5 | 0em |
 
 ## Espaciado, radios, elevación y movimiento
