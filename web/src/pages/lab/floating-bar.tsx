@@ -6,7 +6,7 @@
 //   · empuje: al pulsar, la barra se hunde desde el punto que tocas, como si empujaras una pieza sólida
 // Todos los valores (tiempos, curvas, ángulos) llegan como variables --lab-* desde laboratorio.json.
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent, type ReactElement } from "react"
-import { ArrowLeft, Calendar, Heart, Home, Inbox, MessageSquare, MoreHorizontal, Share2, X } from "lucide-react"
+import { ArrowLeft, Calendar, Heart, Home, Inbox, MessageSquare, MoreHorizontal, Share2, ShoppingBag, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
@@ -20,6 +20,7 @@ const TABS = [
   { icon: Home, label: "Inicio" }, { icon: Inbox, label: "Bandeja" }, { icon: Calendar, label: "Agenda" },
   { icon: MessageSquare, label: "Chat" }, { icon: MoreHorizontal, label: "Más" },
 ]
+const SIZES = ["35 · 22,5 cm", "36 · 23 cm", "37 · 23,5 cm", "38 · 24,5 cm", "39 · 25 cm", "40 · 25,5 cm", "41 · 26,5 cm", "42 · 27 cm", "43 · 27,5 cm", "44 · 28 cm", "45 · 29 cm", "46 · 29,5 cm"]
 const PRODUCTS = ["Zapatillas", "Mochilas", "Gorras", "Botellas", "Chaquetas", "Calcetines", "Camisetas", "Gafas", "Relojes", "Bolsas"]
 
 const px = (el: Element | null, name: string) => (el ? parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0 : 0)
@@ -46,6 +47,8 @@ export function FloatingBarPreview({ option }: { option: Option }) {
   const gooId = useId().replace(/:/g, "")
   const frame = useRef<HTMLDivElement>(null)
   const scroller = useRef<HTMLDivElement>(null)
+  const sheet = useRef<HTMLDivElement>(null)
+  const levelRef = useRef<Level>("home")
   const dock = useRef<HTMLDivElement>(null)
 
   const [level, setLevel] = useState<Level>("home")
@@ -84,26 +87,33 @@ export function FloatingBarPreview({ option }: { option: Option }) {
     return () => window.clearTimeout(u)
   }, [level])
 
-  // Al bajar se encoge, al subir (o arriba del todo) vuelve a ser grande (igual que AppTabBar floating)
+  // Al bajar se encoge, al subir (o arriba del todo) vuelve a ser grande (igual que AppTabBar floating).
+  // Vale para las tres pantallas: la página (inicio y detalle) y la ventana, que tiene su propio scroll.
   useEffect(() => {
-    const el = scroller.current
-    if (!el) return
-    const step = px(el, "--motion-distance-scroll")
-    let last = el.scrollTop, run = 0
-    const onScroll = () => {
-      const y = Math.max(0, el.scrollTop), d = y - last
-      last = y
-      if (y <= step) { run = 0; setCompact(false); return }
-      run = Math.sign(d) === Math.sign(run) ? run + d : d
-      if (run > step) setCompact(true)
-      else if (run < -step) setCompact(false)
-    }
-    el.addEventListener("scroll", onScroll, { passive: true })
-    return () => el.removeEventListener("scroll", onScroll)
+    const els = [scroller.current, sheet.current].filter((e): e is HTMLDivElement => !!e)
+    const offs = els.map((el) => {
+      const own = el === sheet.current   // la ventana solo manda cuando está abierta, y la página solo cuando no
+      const step = px(el, "--motion-distance-scroll")
+      let last = el.scrollTop, run = 0
+      const onScroll = () => {
+        const y = Math.max(0, el.scrollTop), d = y - last
+        last = y
+        if (own !== (levelRef.current === "modal")) return
+        if (y <= step) { run = 0; setCompact(false); return }
+        run = Math.sign(d) === Math.sign(run) ? run + d : d
+        if (run > step) setCompact(true)
+        else if (run < -step) setCompact(false)
+      }
+      el.addEventListener("scroll", onScroll, { passive: true })
+      return () => el.removeEventListener("scroll", onScroll)
+    })
+    return () => offs.forEach((off) => off())
   }, [])
 
   const go = (l: Level) => {
     if (l !== "modal" && scroller.current) scroller.current.scrollTop = 0
+    if (l === "modal" && sheet.current) sheet.current.scrollTop = 0
+    levelRef.current = l
     setCompact(false); setHover(null); setLevel(l)
   }
 
@@ -113,16 +123,24 @@ export function FloatingBarPreview({ option }: { option: Option }) {
   const item = px(root, "--size-tab-bar-item"), pad = px(root, "--space-inset-2xs"), gap = px(root, "--space-gap-sm")
   const W = width
   const n = TABS.length
-  const small = level === "home" && compact
+  const small = compact
+  const g2 = px(root, "--space-gap-2xs"), dot = Hc - pad * 2   // en pequeño, cada acción del detalle es un círculo
   let a: Rect, b: Rect
   if (level === "home") {
     const w = small ? n * item + pad * 2 : W
     a = b = { x: (W - w) / 2, w, h: small ? Hc : H }
   } else if (level === "detail") {
-    a = { x: 0, w: H, h: H }
-    b = { x: H + gap, w: Math.max(H, W - H - gap), h: H }
+    if (small) {   // volver + tres acciones solo con icono, centradas
+      const bw = dot * 3 + g2 * 2 + pad * 2, x0 = (W - Hc - gap - bw) / 2
+      a = { x: x0, w: Hc, h: Hc }
+      b = { x: x0 + Hc + gap, w: bw, h: Hc }
+    } else {
+      a = { x: 0, w: H, h: H }
+      b = { x: H + gap, w: Math.max(H, W - H - gap), h: H }
+    }
   } else {
-    a = b = { x: (W - H) / 2, w: H, h: H }
+    const d = small ? Hc : H
+    a = b = { x: (W - d) / 2, w: d, h: d }
   }
 
   const shapeMove: CSSProperties = {
@@ -212,11 +230,11 @@ export function FloatingBarPreview({ option }: { option: Option }) {
       </div>
 
       {/* Tercer nivel: ventana que sube desde abajo */}
-      <div aria-hidden={level !== "modal"}
-        className={cn("absolute inset-0 z-raised flex flex-col gap-gap-md bg-background p-inset-lg transition-transform duration-emphasis ease-emphasis motion-reduce:transition-none",
+      <div ref={sheet} aria-hidden={level !== "modal"}
+        className={cn("absolute inset-0 z-raised flex flex-col gap-gap-md overflow-y-auto bg-background p-inset-lg pb-section transition-transform duration-emphasis ease-emphasis motion-reduce:transition-none",
           level === "modal" ? "translate-y-0" : "pointer-events-none translate-y-full")}>
         <p className="text-title font-strong">Guía de tallas</p>
-        {["36 · 23 cm", "38 · 24,5 cm", "40 · 25,5 cm", "42 · 27 cm", "44 · 28 cm"].map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
+        {SIZES.map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
       </div>
 
       {/* Barra: capa de fondo (con fusión líquida) + capa de iconos y botones */}
@@ -267,7 +285,11 @@ export function FloatingBarPreview({ option }: { option: Option }) {
           <div className="absolute flex items-center gap-gap-2xs p-inset-2xs motion-reduce:transition-none" style={place(b, "b")} onPointerDown={onDown("b")}>
             <Tip show={tips} label="Favorito"><Button variant="ghost" size="icon" className={cn("aspect-square h-full w-auto shrink-0 rounded-pill", noHover ? "hover:bg-transparent" : "hover:bg-primary-subtle hover:text-link")} aria-label="Favorito"><Heart /></Button></Tip>
             <Tip show={tips} label="Compartir"><Button variant="ghost" size="icon" className={cn("aspect-square h-full w-auto shrink-0 rounded-pill", noHover ? "hover:bg-transparent" : "hover:bg-primary-subtle hover:text-link")} aria-label="Compartir"><Share2 /></Button></Tip>
-            <Button className="h-full flex-1 rounded-pill">Añadir a la cesta</Button>
+            <Tip show={tips && small} label="Añadir a la cesta">
+              <Button aria-label={small ? "Añadir a la cesta" : undefined} className={cn("h-full rounded-pill", small ? "aspect-square w-auto shrink-0 px-0" : "min-w-0 flex-1")}>
+                {small ? <ShoppingBag /> : "Añadir a la cesta"}
+              </Button>
+            </Tip>
           </div>
         </div>
 
