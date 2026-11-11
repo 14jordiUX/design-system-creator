@@ -32,7 +32,7 @@ Tipo de producto: Producto digital informal (app o web de consumo).
    - Relleno y distancias a bordes: `p-inset-*`, `px-inset-*`, `top-inset-*`… con la escala `3xs, 2xs, xs, sm, md, lg, xl, 2xl, 3xl, 4xl`.
    - Separación: `gap-gap-*`, `space-y-gap-*`, `mt-gap-*`… (misma escala) y `section`. `0` significa «nada» y se escribe tal cual (`p-0`).
    - Tamaños: `control-sm|md|lg` (alturas), `icon-sm|md|lg`, `avatar-sm…2xl`, `indicator`, `line`, `field-xs|sm`, `area-min`, `menu-min`, `popover`, `tooltip`, `dialog`, `sheet`, `header`, `sidebar`, `prose`, `content`, `page`.
-   - Tipografía: `text-caption|ui|body|lead|title|h3|h2|h1|display`, `font-normal|emphasis|strong|heavy`, `font-base|code`, `leading-compact|body|prose`, `tracking-heading|body|caps`, o el estilo completo `typo-heading-h1`, `typo-body-md`, `typo-label-md`…
+   - Tipografía: `text-caption|ui|body|lead|title|h3|h2|h1|display`, `font-normal|emphasis|strong|heavy`, `font-base|code`, `leading-compact|body|prose`, `tracking-heading|body|caps`. Cada `text-*` ya aplica su estilo de texto completo (familia, peso, interlineado y espaciado de `typography.*`): añade `font-*`, `leading-*` o `tracking-*` solo si ese texto necesita otra cosa. `typo-h1`, `typo-body`… fuerzan el estilo entero.
    - Forma: `rounded-control|card|overlay|pill|inner|fine|square`, `border-thin`, `border-t-thin`…, `border-thick`.
    - Profundidad y foco: `shadow-flat|raised|overlay|modal`, `focus-visible:focus-ring`, `opacity-disabled`.
    - Movimiento: `transition-*` (ya usa la duración y curva del sistema), `duration-micro|default|emphasis`, `animate-enter|exit|fade-in|slide-in-right|collapse-down`…
@@ -120,22 +120,23 @@ Tipo de producto: Producto digital informal (app o web de consumo).
 
 ## Tipografía
 
-Familias: sans = Quicksand, ui-sans-serif, system-ui, sans-serif; mono = JetBrains Mono, ui-monospace, monospace.
+Familias: `font-base` = Quicksand, ui-sans-serif, system-ui, sans-serif; `font-code` = JetBrains Mono, ui-monospace, monospace.
 
-| Clase | Tamaño / peso |
-|---|---|
-| `.text-display` | 48px / 700 |
-| `.text-heading-h1` | 36px / 700 |
-| `.text-heading-h2` | 30px / 700 |
-| `.text-heading-h3` | 24px / 700 |
-| `.text-heading-h4` | 20px / 700 |
-| `.text-body-lg` | 18px / 400 |
-| `.text-body-md` | 16px / 400 |
-| `.text-body-sm` | 14px / 400 |
-| `.text-label-md` | 14px / 500 |
-| `.text-label-sm` | 12px / 500 |
-| `.text-caption` | 12px / 400 |
-| `.text-code` | 14px / 400 |
+Cárgalas de Google Fonts (por ejemplo con un `<link>` en el `<head>`):
+- https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap
+- https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap
+
+| Clase | Familia | Tamaño | Peso | Interlineado | Espaciado |
+|---|---|---|---|---|---|
+| `text-display` | Quicksand | 48px | 700 | 1.15 | -0.02em |
+| `text-h1` | Quicksand | 36px | 700 | 1.15 | -0.02em |
+| `text-h2` | Quicksand | 30px | 700 | 1.15 | -0.02em |
+| `text-h3` | Quicksand | 24px | 700 | 1.3 | 0em |
+| `text-title` | Quicksand | 20px | 700 | 1.3 | 0em |
+| `text-lead` | Quicksand | 18px | 400 | 1.7 | 0em |
+| `text-body` | Quicksand | 16px | 400 | 1.5 | 0em |
+| `text-ui` | Quicksand | 14px | 400 | 1.5 | 0em |
+| `text-caption` | Quicksand | 12px | 400 | 1.5 | 0em |
 
 ## Espaciado, radios, elevación y movimiento
 
@@ -248,6 +249,7 @@ Familias: sans = Quicksand, ui-sans-serif, system-ui, sans-serif; mono = JetBrai
 | `--text-leading-compact` | 1.15 |  |
 | `--text-leading-body` | 1.5 |  |
 | `--text-leading-prose` | 1.7 |  |
+| `--text-leading-title` | 1.3 | Títulos pequeños |
 | `--text-tracking-heading` | -0.02em |  |
 | `--text-tracking-body` | 0em |  |
 | `--text-tracking-caps` | 0.04em | Textos en mayúsculas |

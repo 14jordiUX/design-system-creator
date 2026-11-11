@@ -128,25 +128,8 @@ def semantic_colors(dark):
     }}
 
 # ---------- SEMANTIC (mode-independent) ----------
-def typo(family, size, weight, lh, ls="normal"):
-    return t({"fontFamily": ref(f"font.family.{family}"), "fontSize": ref(f"font.size.{size}"),
-              "fontWeight": ref(f"font.weight.{weight}"), "lineHeight": ref(f"font.line-height.{lh}"),
-              "letterSpacing": ref(f"font.letter-spacing.{ls}")}, "typography")
-
 semantic_base = {
-    "typography": {
-        "display": typo("sans", "5xl", "bold", "tight", "tight"),
-        "heading": {"h1": typo("sans", "4xl", "bold", "tight", "tight"),
-                    "h2": typo("sans", "3xl", "semibold", "tight", "tight"),
-                    "h3": typo("sans", "2xl", "semibold", "snug"),
-                    "h4": typo("sans", "xl", "semibold", "snug")},
-        "body": {"lg": typo("sans", "lg", "regular", "relaxed"),
-                 "md": typo("sans", "md", "regular", "normal"),
-                 "sm": typo("sans", "sm", "regular", "normal")},
-        "label": {"md": typo("sans", "sm", "medium", "snug"), "sm": typo("sans", "xs", "medium", "snug", "wide")},
-        "caption": typo("sans", "xs", "regular", "normal"),
-        "code": typo("mono", "sm", "regular", "normal"),
-    },
+    "typography": {},   # los estilos de texto los pone token_extras.text_styles (apuntan a text.*)
     "space": {"$type": "dimension",
         "inset": {k: t(ref(f"space.{v}"), desc=d) for k, v, d in [
             ("xs", "1", "Padding interno mínimo"), ("sm", "2", "Badges, chips"), ("md", "4", "Botones, campos"),

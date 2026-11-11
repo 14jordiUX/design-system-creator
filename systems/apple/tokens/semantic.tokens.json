@@ -1,130 +1,104 @@
 {
   "typography": {
+    "$description": "Estilos de texto completos. Cada uno manda en su clase (text-h1, text-body…): los componentes solo añaden font-*, leading-* o tracking-* cuando necesitan otra cosa",
     "display": {
       "$value": {
-        "fontFamily": "{font.family.sans}",
-        "fontSize": "{font.size.5xl}",
-        "fontWeight": "{font.weight.bold}",
-        "lineHeight": "{font.line-height.tight}",
-        "letterSpacing": "{font.letter-spacing.tight}"
+        "fontFamily": "{text.family.base}",
+        "fontSize": "{text.size.display}",
+        "fontWeight": "{text.weight.heavy}",
+        "lineHeight": "{text.leading.compact}",
+        "letterSpacing": "{text.tracking.heading}"
       },
-      "$type": "typography"
+      "$type": "typography",
+      "$description": "Cifras y titulares muy grandes"
     },
-    "heading": {
-      "h1": {
-        "$value": {
-          "fontFamily": "{font.family.sans}",
-          "fontSize": "{font.size.4xl}",
-          "fontWeight": "{font.weight.bold}",
-          "lineHeight": "{font.line-height.tight}",
-          "letterSpacing": "{font.letter-spacing.tight}"
-        },
-        "$type": "typography"
+    "h1": {
+      "$value": {
+        "fontFamily": "{text.family.base}",
+        "fontSize": "{text.size.h1}",
+        "fontWeight": "{text.weight.heavy}",
+        "lineHeight": "{text.leading.compact}",
+        "letterSpacing": "{text.tracking.heading}"
       },
-      "h2": {
-        "$value": {
-          "fontFamily": "{font.family.sans}",
-          "fontSize": "{font.size.3xl}",
-          "fontWeight": "{font.weight.semibold}",
-          "lineHeight": "{font.line-height.tight}",
-          "letterSpacing": "{font.letter-spacing.tight}"
-        },
-        "$type": "typography"
+      "$type": "typography",
+      "$description": "Título de página"
+    },
+    "h2": {
+      "$value": {
+        "fontFamily": "{text.family.base}",
+        "fontSize": "{text.size.h2}",
+        "fontWeight": "{text.weight.strong}",
+        "lineHeight": "{text.leading.compact}",
+        "letterSpacing": "{text.tracking.heading}"
       },
-      "h3": {
-        "$value": {
-          "fontFamily": "{font.family.sans}",
-          "fontSize": "{font.size.2xl}",
-          "fontWeight": "{font.weight.semibold}",
-          "lineHeight": "{font.line-height.snug}",
-          "letterSpacing": "{font.letter-spacing.normal}"
-        },
-        "$type": "typography"
+      "$type": "typography",
+      "$description": "Título de sección"
+    },
+    "h3": {
+      "$value": {
+        "fontFamily": "{text.family.base}",
+        "fontSize": "{text.size.h3}",
+        "fontWeight": "{text.weight.strong}",
+        "lineHeight": "{text.leading.title}",
+        "letterSpacing": "{text.tracking.body}"
       },
-      "h4": {
-        "$value": {
-          "fontFamily": "{font.family.sans}",
-          "fontSize": "{font.size.xl}",
-          "fontWeight": "{font.weight.semibold}",
-          "lineHeight": "{font.line-height.snug}",
-          "letterSpacing": "{font.letter-spacing.normal}"
-        },
-        "$type": "typography"
-      }
+      "$type": "typography",
+      "$description": "Subtítulo"
+    },
+    "title": {
+      "$value": {
+        "fontFamily": "{text.family.base}",
+        "fontSize": "{text.size.title}",
+        "fontWeight": "{text.weight.strong}",
+        "lineHeight": "{text.leading.title}",
+        "letterSpacing": "{text.tracking.body}"
+      },
+      "$type": "typography",
+      "$description": "Títulos de tarjetas y bloques pequeños"
+    },
+    "lead": {
+      "$value": {
+        "fontFamily": "{text.family.base}",
+        "fontSize": "{text.size.lead}",
+        "fontWeight": "{text.weight.normal}",
+        "lineHeight": "{text.leading.prose}",
+        "letterSpacing": "{text.tracking.body}"
+      },
+      "$type": "typography",
+      "$description": "Entradilla y texto destacado"
     },
     "body": {
-      "lg": {
-        "$value": {
-          "fontFamily": "{font.family.sans}",
-          "fontSize": "{font.size.lg}",
-          "fontWeight": "{font.weight.regular}",
-          "lineHeight": "{font.line-height.relaxed}",
-          "letterSpacing": "{font.letter-spacing.normal}"
-        },
-        "$type": "typography"
+      "$value": {
+        "fontFamily": "{text.family.base}",
+        "fontSize": "{text.size.body}",
+        "fontWeight": "{text.weight.normal}",
+        "lineHeight": "{text.leading.body}",
+        "letterSpacing": "{text.tracking.body}"
       },
-      "md": {
-        "$value": {
-          "fontFamily": "{font.family.sans}",
-          "fontSize": "{font.size.md}",
-          "fontWeight": "{font.weight.regular}",
-          "lineHeight": "{font.line-height.normal}",
-          "letterSpacing": "{font.letter-spacing.normal}"
-        },
-        "$type": "typography"
-      },
-      "sm": {
-        "$value": {
-          "fontFamily": "{font.family.sans}",
-          "fontSize": "{font.size.sm}",
-          "fontWeight": "{font.weight.regular}",
-          "lineHeight": "{font.line-height.normal}",
-          "letterSpacing": "{font.letter-spacing.normal}"
-        },
-        "$type": "typography"
-      }
+      "$type": "typography",
+      "$description": "Texto de lectura"
     },
-    "label": {
-      "md": {
-        "$value": {
-          "fontFamily": "{font.family.sans}",
-          "fontSize": "{font.size.sm}",
-          "fontWeight": "{font.weight.medium}",
-          "lineHeight": "{font.line-height.snug}",
-          "letterSpacing": "{font.letter-spacing.normal}"
-        },
-        "$type": "typography"
+    "ui": {
+      "$value": {
+        "fontFamily": "{text.family.base}",
+        "fontSize": "{text.size.ui}",
+        "fontWeight": "{text.weight.normal}",
+        "lineHeight": "{text.leading.body}",
+        "letterSpacing": "{text.tracking.body}"
       },
-      "sm": {
-        "$value": {
-          "fontFamily": "{font.family.sans}",
-          "fontSize": "{font.size.xs}",
-          "fontWeight": "{font.weight.medium}",
-          "lineHeight": "{font.line-height.snug}",
-          "letterSpacing": "{font.letter-spacing.wide}"
-        },
-        "$type": "typography"
-      }
+      "$type": "typography",
+      "$description": "Botones, menús y formularios"
     },
     "caption": {
       "$value": {
-        "fontFamily": "{font.family.sans}",
-        "fontSize": "{font.size.xs}",
-        "fontWeight": "{font.weight.regular}",
-        "lineHeight": "{font.line-height.normal}",
-        "letterSpacing": "{font.letter-spacing.normal}"
+        "fontFamily": "{text.family.base}",
+        "fontSize": "{text.size.caption}",
+        "fontWeight": "{text.weight.normal}",
+        "lineHeight": "{text.leading.body}",
+        "letterSpacing": "{text.tracking.body}"
       },
-      "$type": "typography"
-    },
-    "code": {
-      "$value": {
-        "fontFamily": "{font.family.mono}",
-        "fontSize": "{font.size.sm}",
-        "fontWeight": "{font.weight.regular}",
-        "lineHeight": "{font.line-height.normal}",
-        "letterSpacing": "{font.letter-spacing.normal}"
-      },
-      "$type": "typography"
+      "$type": "typography",
+      "$description": "Notas, metadatos y ayudas"
     }
   },
   "space": {
@@ -574,6 +548,10 @@
       },
       "prose": {
         "$value": "{font.line-height.relaxed}"
+      },
+      "title": {
+        "$value": "{font.line-height.snug}",
+        "$description": "Títulos pequeños"
       }
     },
     "tracking": {

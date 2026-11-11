@@ -74,8 +74,15 @@ export function cssVarName(path: string) {
 export function cssVars(files: TokenFiles, mode: Mode): Record<string, string> {
   const table = tableFor(files, mode)
   const vars: Record<string, string> = {}
+  const PROPS: Record<string, string> = { fontFamily: "font-family", fontSize: "font-size", fontWeight: "font-weight", lineHeight: "line-height", letterSpacing: "letter-spacing" }
   for (const t of Object.values(table)) {
-    const css = toCss(resolve(t.value, table), t.type)
+    const v = resolve(t.value, table)
+    // Estilos de texto: una variable por propiedad (--typography-h1-font-size…), como en tokens.css
+    if (t.type === "typography" && v && typeof v === "object") {
+      for (const [k, x] of Object.entries(v)) if (PROPS[k]) vars[`${cssVarName(t.path)}-${PROPS[k]}`] = k === "fontFamily" ? fontFamilyCss(x) : String(x)
+      continue
+    }
+    const css = toCss(v, t.type)
     if (css != null) vars[cssVarName(t.path)] = css
   }
   const v = (p: string) => vars[cssVarName(p)]
@@ -155,9 +162,20 @@ export function contrastReport(files: TokenFiles, mode: Mode) {
 export function getAt(obj: Json, path: string) {
   return path.split(".").reduce((o, k) => o?.[k], obj)
 }
+/** Cambia el valor de un token. Si no existe, lo crea (por ejemplo, una familia tipográfica nueva).
+ *  Con `value === undefined` lo borra. */
 export function setTokenValue(files: TokenFiles, file: keyof TokenFiles, path: string, value: Json): TokenFiles {
   const copy: TokenFiles = structuredClone(files)
-  const node = getAt(copy[file], path)
-  if (node && typeof node === "object") node.$value = value
+  const keys = path.split(".")
+  const last = keys.pop()!
+  let parent = copy[file]
+  for (const k of keys) {
+    if (value === undefined && !parent?.[k]) return copy
+    parent = parent[k] ??= {}
+  }
+  if (value === undefined) { delete parent[last]; return copy }
+  const node = parent[last]
+  if (node && typeof node === "object" && "$value" in node) node.$value = value
+  else parent[last] = { $value: value }
   return copy
 }

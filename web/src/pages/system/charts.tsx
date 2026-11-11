@@ -221,7 +221,7 @@ function PieDemo({ variant = "simple" }: { variant?: "simple" | "donut" | "text"
             {variant === "text" && (
               <Label content={({ viewBox }) => viewBox && "cx" in viewBox ? (
                 <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
-                  <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-h2 font-strong">{total.toLocaleString("es")}</tspan>
+                  <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-h2">{total.toLocaleString("es")}</tspan>
                   <tspan x={viewBox.cx} y={(viewBox.cy ?? 0) + t.gap * 3} className="fill-muted-foreground">Reservas</tspan>
                 </text>
               ) : null} />
@@ -273,7 +273,7 @@ function RadialDemo({ variant = "simple" }: { variant?: "simple" | "text" | "sta
             <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
               <Label content={({ viewBox }) => viewBox && "cx" in viewBox ? (
                 <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
-                  <tspan x={viewBox.cx} y={(viewBox.cy ?? 0) - (variant === "stacked" ? t.gap * 2 : 0)} dominantBaseline="middle" className="fill-foreground text-h2 font-strong">{variant === "stacked" ? "1.830" : `${done} %`}</tspan>
+                  <tspan x={viewBox.cx} y={(viewBox.cy ?? 0) - (variant === "stacked" ? t.gap * 2 : 0)} dominantBaseline="middle" className="fill-foreground text-h2">{variant === "stacked" ? "1.830" : `${done} %`}</tspan>
                   <tspan x={viewBox.cx} y={(viewBox.cy ?? 0) + (variant === "stacked" ? t.gap : t.gap * 3)} dominantBaseline="middle" className="fill-muted-foreground">{variant === "stacked" ? "Total" : "Ocupación"}</tspan>
                 </text>
               ) : null} />

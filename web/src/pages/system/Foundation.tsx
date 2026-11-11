@@ -15,11 +15,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Code, EmptyState, PageHeader, Section } from "@/components/app/common"
 import { useDS } from "./context"
 import TokenStructurePage from "./TokenStructure"
+import TypographyPage from "./Typography"
 
 const INTRO: Record<string, string> = {
   estructura: "Cómo están construidos los tokens de este sistema: las capas, la norma de nombres con ejemplos reales y la lista completa con a qué apunta cada uno.",
   color: "Escalas de color en bruto (primitivos) y los roles que las usan (semánticos). Los componentes solo usan los semánticos.",
-  tipografia: "Familias tipográficas y los estilos de texto del sistema.",
+  tipografia: "Las fuentes del sistema (de Google Fonts) y sus estilos de texto: qué familia, tamaño, peso, interlineado y espaciado usa cada uno.",
   espaciado: "Escala de espaciado (base 4 px) y los espacios de uso para rellenos y separaciones.",
   radios: "Redondeo de esquinas: la escala y a qué elementos se aplica cada radio.",
   elevacion: "Sombras para dar profundidad a tarjetas, menús y modales.",
@@ -270,53 +271,6 @@ function ColorPage() {
               {!r.ok && editor && <ContrastFix r={r} report={report} />}
             </div>
           ))}
-        </div>
-      </Section>
-    </>
-  )
-}
-
-// ---------- Tipografía ----------
-function TypographyPage() {
-  const { tokens, editor, update } = useDS()
-  const { val } = useResolved()
-  const fam = tokens.primitives.font.family
-  const styles = Object.values(flatten(tokens.semantic)).filter((t) => t.type === "typography")
-  return (
-    <>
-      <Section title="Familias" description={editor ? "Escribe el nombre exacto de una fuente de Google Fonts (por ejemplo «Nunito» o «Fraunces»)." : undefined}>
-        <div className="grid gap-gap-lg md:grid-cols-3">
-          {Object.keys(fam).filter((k) => !k.startsWith("$")).map((k) => {
-            const list: string[] = fam[k].$value
-            return (
-              <div key={k} className="rounded-card border-thin p-inset-lg">
-                <div className="mb-gap-md text-caption text-muted-foreground">font.family.{k}</div>
-                <div className="mb-gap-md text-h1" style={{ fontFamily: toCss(list, "fontFamily")! }}>Aa</div>
-                {editor ? (
-                  <Input defaultValue={list[0]} onBlur={(e) => e.target.value !== list[0] && update("primitives", `font.family.${k}`, [e.target.value, ...list.slice(1)])} />
-                ) : <div className="font-emphasis">{list[0]}</div>}
-                <div className="mt-gap-2xs truncate font-code text-caption text-muted-foreground">{list.slice(1).join(", ")}</div>
-              </div>
-            )
-          })}
-        </div>
-      </Section>
-      <Section title="Estilos de texto">
-        <div className="[&>*+*]:border-t-thin rounded-card border-thin">
-          {styles.map((t) => {
-            const v = val(t.path)
-            return (
-              <div key={t.path} className="grid gap-gap-sm px-inset-lg py-inset-lg md:grid-cols-[1fr_var(--size-popover)] md:items-center">
-                <div className="truncate" style={{ fontFamily: toCss(v.fontFamily, "fontFamily")!, fontSize: v.fontSize, fontWeight: v.fontWeight, lineHeight: v.lineHeight, letterSpacing: v.letterSpacing }}>
-                  {t.path.includes("code") ? "const sonrisa = true" : "Una sonrisa sana"}
-                </div>
-                <div className="text-caption">
-                  <div className="font-code">{t.path.replace(/^typography\./, "")}</div>
-                  <div className="text-muted-foreground">{v.fontSize} · {v.fontWeight} · interlineado {v.lineHeight}</div>
-                </div>
-              </div>
-            )
-          })}
         </div>
       </Section>
     </>

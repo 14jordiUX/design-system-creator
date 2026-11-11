@@ -26,9 +26,9 @@ const imp = (name: string, file: string) => `import { ${name} } from "@/componen
 function TypographyDemo() {
   return (
     <article className="max-w-prose">
-      <h1 className="text-h1 font-heavy tracking-heading text-balance">El cuidado empieza por escuchar</h1>
+      <h1 className="text-h1 text-balance">El cuidado empieza por escuchar</h1>
       <p className="mt-gap-lg text-lead text-muted-foreground">Una guía breve sobre cómo preparamos tu primera visita.</p>
-      <h2 className="mt-gap-3xl border-b-thin pb-inset-sm text-h2 font-strong tracking-heading">Antes de venir</h2>
+      <h2 className="mt-gap-3xl border-b-thin pb-inset-sm text-h2">Antes de venir</h2>
       <p className="mt-gap-lg text-body leading-prose">
         Te pediremos tu historial y cualquier prueba reciente. Si tomas medicación, tráenos la lista: nos ayuda a
         decidir el tratamiento con más seguridad.
@@ -36,7 +36,7 @@ function TypographyDemo() {
       <blockquote className="mt-gap-xl border-s-thick ps-inset-xl text-body italic">
         «Lo que más valoro es que me explicaran cada paso antes de hacerlo.»
       </blockquote>
-      <h3 className="mt-gap-2xl text-h3 font-strong tracking-heading">Qué traer</h3>
+      <h3 className="mt-gap-2xl text-h3">Qué traer</h3>
       <ul className="my-gap-lg ms-gap-xl list-disc text-body [&>li]:mt-gap-xs">
         <li>Documento de identidad</li>
         <li>Tarjeta del seguro, si tienes</li>
@@ -51,10 +51,10 @@ function TypographyDemo() {
 }
 
 const TYPE_ROWS: [string, string, string][] = [
-  ["h1", "text-h1 font-heavy tracking-heading", "Título de página"],
-  ["h2", "border-b-thin pb-inset-sm text-h2 font-strong tracking-heading", "Título de sección"],
-  ["h3", "text-h3 font-strong tracking-heading", "Subsección"],
-  ["h4", "text-title font-strong tracking-heading", "Bloque"],
+  ["h1", "text-h1", "Título de página"],
+  ["h2", "border-b-thin pb-inset-sm text-h2", "Título de sección"],
+  ["h3", "text-h3", "Subsección"],
+  ["h4", "text-title", "Bloque"],
   ["Entradilla", "text-lead text-muted-foreground", "Una frase que presenta el contenido."],
   ["Párrafo", "text-body leading-prose", "El texto de lectura, con interlineado cómodo."],
   ["Grande", "text-lead font-strong", "Un dato que destaca"],
@@ -217,10 +217,10 @@ function DirectionDemo() {
 
 export const DEMOS5: Record<string, Demo> = {
   typography: {
-    description: "Estilos para títulos, párrafos, listas y citas. No es un componente: son clases de tokens (text-h1, text-body, leading-prose…) que se aplican a las etiquetas normales.",
+    description: "Estilos para títulos, párrafos, listas y citas. No es un componente: son clases de tokens que se aplican a las etiquetas normales. Cada text-h1, text-body… ya trae su estilo completo (familia, peso, interlineado y espaciado), que se edita en Fundamentos › Tipografía.",
     examples: [
       { title: "Un texto completo", render: <TypographyDemo />,
-        code: `<h1 className="text-h1 font-heavy tracking-heading">…</h1>\n<p className="text-lead text-muted-foreground">…</p>\n<h2 className="border-b-thin pb-inset-sm text-h2 font-strong tracking-heading">…</h2>\n<p className="text-body leading-prose">…</p>\n<blockquote className="border-s-thick ps-inset-xl italic">…</blockquote>\n<ul className="ms-gap-xl list-disc [&>li]:mt-gap-xs">…</ul>` },
+        code: `<h1 className="text-h1">…</h1>\n<p className="text-lead text-muted-foreground">…</p>\n<h2 className="border-b-thin pb-inset-sm text-h2">…</h2>\n<p className="text-body leading-prose">…</p>\n<blockquote className="border-s-thick ps-inset-xl italic">…</blockquote>\n<ul className="ms-gap-xl list-disc [&>li]:mt-gap-xs">…</ul>` },
       { title: "Cada estilo", render: (
         <div className="grid w-full gap-gap-lg">
           {TYPE_ROWS.map(([n, cls, t]) => (

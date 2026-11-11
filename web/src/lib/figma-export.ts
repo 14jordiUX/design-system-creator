@@ -294,9 +294,18 @@ function textStyle(ctx: Ctx, holder: Element, root: Element, chars: string, r: D
   if (weightTok) bind.fontWeight = weightTok
   const famTok = inherited(holder, root, /^font-/, (t) => ctx.table[t]?.type === "fontFamily")
   const family = cs.fontFamily.split(",")[0].replace(/["']/g, "").trim()
-  const baseFam = ctx.resolved["text.family.base"]
+  const first = (v: any) => (Array.isArray(v) ? v[0] : v)
+  // Lo que no pone una clase font-* sale del estilo de texto de su tamaño (text-h1 → typography.h1)
+  const style = sizeTok?.startsWith("text.size.") ? ctx.table["typography." + sizeTok.slice(10)]?.value : undefined
+  const styleRef = (prop: string) => (typeof style?.[prop] === "string" ? style[prop].replace(/^\{|\}$/g, "") : undefined)
+  if (!weightTok) {
+    const w = styleRef("fontWeight")
+    if (w && Math.abs((px(ctx.resolved[w]) ?? -1) - weight) < 1) bind.fontWeight = w
+  }
+  const styleFam = styleRef("fontFamily")
   if (famTok) bind.fontFamily = famTok
-  else if ((Array.isArray(baseFam) ? baseFam[0] : baseFam) === family) bind.fontFamily = "text.family.base"
+  else if (styleFam && first(ctx.resolved[styleFam]) === family) bind.fontFamily = styleFam
+  else if (first(ctx.resolved["text.family.base"]) === family) bind.fontFamily = "text.family.base"
   const colorTok = inherited(holder, root, /^(text|placeholder)-/, (t) => ctx.table[t]?.type === "color" && sameColor(String(ctx.resolved[t]), color))
     ?? ctx.semanticColors.find((t) => /^color\.text\./.test(t) && sameColor(String(ctx.resolved[t]), color))
   return {

@@ -556,7 +556,7 @@ function AllToFigma({ list, tokens, system, mode }: { list: Prototype[]; tokens:
             <div key={"catalogo" + c.slug} ref={(el) => { refs.current["catalogo|" + c.slug] = el }} className="flex w-content shrink-0 flex-col gap-gap-xl bg-background p-inset-2xl">
               <div className="flex flex-col gap-gap-2xs">
                 <p className="text-caption text-muted-foreground">{c.group}</p>
-                <h2 className="text-h2 font-strong tracking-heading">{c.label}</h2>
+                <h2 className="text-h2">{c.label}</h2>
               </div>
               {c.slug === "button" && <AllButtons />}
               {c.examples.map((ex) => (

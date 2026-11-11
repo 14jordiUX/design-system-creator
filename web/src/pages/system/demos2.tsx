@@ -367,7 +367,7 @@ export const DEMOS2: Record<string, Demo> = {
         <Carousel className="w-popover">
           <CarouselContent>
             {[1, 2, 3, 4, 5].map((n) => (
-              <CarouselItem key={n}><div className="flex aspect-square items-center justify-center rounded-card border-thin bg-card text-h2 font-strong">{n}</div></CarouselItem>
+              <CarouselItem key={n}><div className="flex aspect-square items-center justify-center rounded-card border-thin bg-card text-h2">{n}</div></CarouselItem>
             ))}
           </CarouselContent>
           <CarouselPrevious />

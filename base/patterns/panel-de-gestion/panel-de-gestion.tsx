@@ -129,7 +129,7 @@ function Contenido({ page, setPage }: { page: string; setPage: (p: string) => vo
         <div className={mobile ? "grid gap-gap-lg p-inset-md" : "grid gap-gap-xl p-inset-xl"}>
           <div className="flex items-end justify-between gap-gap-md">
             <div>
-              <h1 className="text-h3 font-strong tracking-heading">Buenos días, Marta</h1>
+              <h1 className="text-h3">Buenos días, Marta</h1>
               <p className="text-ui text-muted-foreground">Lunes, 10 de noviembre · 5 citas hoy</p>
             </div>
             {!mobile && <Button><Plus />Nueva cita</Button>}

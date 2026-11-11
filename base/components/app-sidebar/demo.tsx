@@ -114,7 +114,7 @@ function DetailDemo({ kind }: { kind: "cta" | "filter" }) {
           <div className="flex flex-col gap-gap-md p-inset-lg">
             <button type="button" aria-label="Ver la foto" onClick={() => setModal("Fotos")}
               className="aspect-[4/3] w-full rounded-card bg-subtle outline-none focus-visible:focus-ring" />
-            <div className="text-title font-strong">{detail}</div>
+            <div className="text-title">{detail}</div>
             <div className="text-body text-muted-foreground">Ligeras, cómodas y hechas para caminar todo el día. Envío en 24 horas y devolución gratis.</div>
             <div className="flex flex-col">
               {row("Guía de tallas", undefined, () => setModal("Guía de tallas"))}
@@ -158,7 +158,7 @@ function DetailDemo({ kind }: { kind: "cta" | "filter" }) {
           ) : (
             <div className="flex flex-col gap-gap-md p-inset-lg">
               <div className="aspect-[4/3] w-full rounded-card bg-subtle" />
-              <div className="text-title font-strong">{modal}</div>
+              <div className="text-title">{modal}</div>
               <div className="text-body text-muted-foreground">Vista rápida: cierra con la X de abajo para volver a donde estabas.</div>
               {Array.from({ length: 3 }, (_, i) => <div key={i} className="aspect-[4/3] w-full rounded-card bg-subtle" />)}
             </div>
