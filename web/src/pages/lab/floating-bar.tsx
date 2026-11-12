@@ -30,6 +30,7 @@ const MORE_PRODUCTS = ["Sudaderas", "Pantalones", "Bufandas", "Guantes", "Cintur
 const DETAILS = ["Envío gratis", "Devolución en 30 días", "Garantía de 2 años"]
 const MORE_DETAILS = ["Recogida en tienda", "Pago a plazos sin intereses", "Material: algodón orgánico", "Lavar a 30 grados", "Fabricado en Portugal",
   "Peso: 320 g", "Opiniones: 4,6 de 5", "Preguntas frecuentes", "Cambio de talla gratis", "Atención al cliente 24 h", "Envoltorio de regalo", "Tarjeta regalo"]
+const CONCENTRIC = "calc(var(--lab-screen-radius) - var(--size-tab-bar-expanded) / 2)"
 const KIDS = ["28 · 17,5 cm", "29 · 18 cm", "30 · 19 cm", "31 · 19,5 cm", "32 · 20,5 cm", "33 · 21 cm", "34 · 22 cm"]
 
 const px = (el: Element | null, name: string) => (el ? parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0 : 0)
@@ -51,7 +52,9 @@ function Tip({ show, label, children }: { show: boolean; label: string; children
 }
 
 // fullscreen: la misma barra a pantalla completa, sin el marco del móvil de prueba, para abrirla en el teléfono
-// (#/laboratorio/barra-flotante/<opción>). Respeta la zona segura de abajo (la rayita de inicio del iPhone).
+// (#/laboratorio/barra-flotante/<opción>). Esquinas concéntricas con la pantalla física: la barra se separa del borde
+// lo justo para que su redondeo + la distancia = el redondeo de la pantalla (--lab-screen-radius, iPhone 16 Pro Max = 62 px).
+// Con la barra grande (la que llega a las esquinas): distancia = radio de pantalla − mitad del alto de la barra.
 export function FloatingBarPreview({ option, fullscreen = false }: { option: Option; fullscreen?: boolean }) {
   const p = option.params ?? {}
   const glass = !!p.glass   // cristal: fondo translúcido que desenfoca y dobla lo que hay detrás (refracción)
@@ -257,7 +260,8 @@ export function FloatingBarPreview({ option, fullscreen = false }: { option: Opt
         <Button size="sm" tabIndex={-1} className="rounded-pill">Añadir a la cesta</Button>
       </span>
       <div ref={scroller} className="absolute inset-0 overflow-y-auto overscroll-contain">
-        <header className="sticky top-0 z-raised flex h-header items-center gap-gap-sm border-b-thin bg-background px-inset-lg">
+        <header className="sticky top-0 z-raised flex h-header items-center gap-gap-sm border-b-thin bg-background px-inset-lg"
+          style={fullscreen ? { height: "calc(var(--layout-header) + env(safe-area-inset-top))", paddingTop: "env(safe-area-inset-top)" } : undefined}>
           <span className="font-strong">{level === "home" ? TABS[tab].label === "Inicio" ? "Tienda" : TABS[tab].label : product}</span>
         </header>
         {level === "home" ? (
@@ -284,7 +288,7 @@ export function FloatingBarPreview({ option, fullscreen = false }: { option: Opt
       <div ref={sheet} aria-hidden={level !== "modal"}
         className={cn("absolute inset-0 z-raised flex flex-col gap-gap-md overflow-y-auto bg-background p-inset-lg pb-section transition-transform duration-emphasis ease-emphasis motion-reduce:transition-none",
           level === "modal" ? "visible translate-y-0" : "pointer-events-none invisible translate-y-full")}
-        style={{ transitionProperty: "translate, transform, visibility" }}>
+        style={{ transitionProperty: "translate, transform, visibility", ...(fullscreen ? { paddingTop: "calc(var(--space-inset-lg) + env(safe-area-inset-top))" } : {}) }}>
         <p className="text-title font-strong">Guía de tallas</p>
         {SIZES.map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
         {fullscreen && <>
@@ -297,7 +301,7 @@ export function FloatingBarPreview({ option, fullscreen = false }: { option: Opt
 
       {/* Barra: capa de fondo (con fusión líquida) + capa de iconos y botones */}
       <div ref={dock} className="absolute inset-x-inset-md bottom-inset-md z-overlay h-tab-bar-expanded"
-        style={fullscreen ? { bottom: "calc(var(--space-inset-md) + env(safe-area-inset-bottom))" } : undefined} onPointerUp={release} onPointerLeave={release} onPointerCancel={release}>
+        style={fullscreen ? { left: CONCENTRIC, right: CONCENTRIC, bottom: CONCENTRIC } : undefined} onPointerUp={release} onPointerLeave={release} onPointerCancel={release}>
         {goo && (
           <svg aria-hidden className="absolute size-0">
             <filter id={gooId}>
