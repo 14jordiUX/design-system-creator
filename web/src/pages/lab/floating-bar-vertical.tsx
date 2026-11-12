@@ -3,10 +3,12 @@
 //   · Inicio: las pestañas en una columna abajo a la derecha. Al bajar por la lista se encoge (sin textos, más estrecha).
 //   · Detalle: volver, favorito y compartir en la columna de la derecha; el CTA «Añadir a la cesta» sigue flotando abajo en el centro.
 //   · Ventana: la X abajo a la derecha.
+//   · Lado: la columna puede ir a la derecha o a la izquierda. Se cambia arrastrando el menú principal (solo el de inicio)
+//     hacia el lado contrario; una capa de tutorial lo explica la primera vez. El lado elegido se recuerda.
 // Las tres piezas de fondo (a, b, c) se juntan en una sola en inicio y en la ventana, y se separan como un líquido en el detalle.
 // Todos los valores salen de tokens del sistema o de variables --lab-* de laboratorio.json.
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react"
-import { ArrowLeft, Heart, Share2, X } from "lucide-react"
+import { ArrowLeft, Hand, Heart, Share2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { Option } from "./previews"
@@ -17,6 +19,10 @@ type Blob = "a" | "b" | "c"
 type Rect = { x: number; y: number; w: number; h: number }
 type Press = { blob: Blob; x: number; y: number } | null
 const BLOBS: Blob[] = ["a", "b", "c"]
+type Side = "right" | "left"
+const SIDE_KEY = "dsc.lab.barra.lado", TUTORIAL_KEY = "dsc.lab.barra.tutorial"
+const stored = (store: () => Storage, key: string) => { try { return store().getItem(key) } catch { return null } }
+const store = (st: () => Storage, key: string, value: string) => { try { st().setItem(key, value) } catch { /* modo privado: no se recuerda */ } }
 
 export function FloatingBarVertical({ option, fullscreen = false }: { option: Option; fullscreen?: boolean }) {
   const p = option.params ?? {}
@@ -42,6 +48,12 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
   const [box, setBox] = useState({ w: 0, h: 0 })
   const [cta, setCta] = useState({ md: 0, sm: 0 })   // ancho del CTA en tamaño normal y pequeño, medido de copias invisibles
   const [merging, setMerging] = useState(false)
+  const [side, setSide] = useState<Side>(() => (stored(() => localStorage, SIDE_KEY) === "left" ? "left" : "right"))
+  const [drag, setDrag] = useState<number | null>(null)   // px que llevas arrastrado el menú (null: no se está arrastrando)
+  const [tutorial, setTutorial] = useState(() => stored(() => sessionStorage, TUTORIAL_KEY) !== "visto")
+  const dragNow = useRef<number | null>(null)   // el mismo valor que drag, al momento (soltar puede llegar antes de que se repinte)
+  const dragged = useRef(false)   // para que soltar después de arrastrar no cuente como un toque en una pestaña
+  const ghost = useRef<HTMLSpanElement>(null)
 
   useLayoutEffect(() => {
     const el = dock.current
@@ -120,7 +132,9 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
   const small = compact
   const col = small ? Hc : H            // ancho de la columna (y diámetro de los círculos)
   const cell = col - pad * 2            // cada pestaña o acción es un cuadrado dentro de la columna
-  const colX = W - col
+  const travel = Math.max(0, W - col)   // lo que recorre la columna de un lado al otro
+  const sign = side === "right" ? -1 : 1
+  const colX = (side === "right" ? travel : 0) + (drag ?? 0)
   let a: Rect, b: Rect, c: Rect
   if (level === "home") {
     const h = n * cell + pad * 2
@@ -130,10 +144,11 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
     b = { x: colX, y: D - bh, w: col, h: bh }
     a = { x: colX, y: b.y - gap - col, w: col, h: col }
     const ch = small ? Hc : H, cw = (small ? cta.sm : cta.md) + pad * 2
-    // En el centro de la pantalla; si en un teléfono estrecho tocara la columna, se aparta a la izquierda
-    c = { x: Math.min((W - cw) / 2, colX - gap - cw), y: D - ch, w: cw, h: ch }
+    // En el centro de la pantalla; si en un teléfono estrecho tocara la columna, se aparta hacia el otro lado
+    const mid = (W - cw) / 2
+    c = { x: side === "right" ? Math.min(mid, colX - gap - cw) : Math.max(mid, colX + col + gap), y: D - ch, w: cw, h: ch }
   } else {
-    a = b = c = { x: W - col, y: D - col, w: col, h: col }
+    a = b = c = { x: colX, y: D - col, w: col, h: col }
   }
   const rects: Record<Blob, Rect> = { a, b, c }
 
@@ -153,7 +168,7 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
   }
   const timing = (pressed: boolean): CSSProperties => ({
     transitionProperty: "left, top, width, height, transform",
-    transitionDuration: `var(--lab-shape-time), var(--lab-shape-time), var(--lab-shape-time), var(--lab-shape-time), ${pressed ? "var(--lab-press-time)" : "var(--lab-release-time)"}`,
+    transitionDuration: `${drag === null ? "var(--lab-shape-time)" : "0s"}, var(--lab-shape-time), var(--lab-shape-time), var(--lab-shape-time), ${pressed ? "var(--lab-press-time)" : "var(--lab-release-time)"}`,
     transitionTimingFunction: `var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-shape-ease), ${pressed ? "var(--lab-press-ease)" : "var(--lab-release-ease)"}`,
   })
   const place = (blob: Blob): CSSProperties => {
@@ -165,6 +180,62 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
     setPress({ blob, x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) })
   }
   const release = () => setPress(null)
+
+  // ---------- cambiar de lado: arrastrar el menú principal hacia el lado contrario ----------
+  // Empieza a contar cuando el dedo se mueve más a los lados que arriba/abajo. Al soltar, si ha pasado de la mitad
+  // del camino se queda en el otro lado; si no, vuelve al suyo (con el mismo muelle que el resto de la barra).
+  // Se escucha en toda la ventana: un dedo rápido sale del menú antes de que el menú se haya movido.
+  const geo = useRef({ side, travel, gap })
+  geo.current = { side, travel, gap }
+  const dragDown = (e: RPointerEvent<HTMLElement>) => {
+    const st = { x: e.clientX, y: e.clientY, id: e.pointerId }
+    dragged.current = false
+    const move = (ev: PointerEvent) => {
+      if (ev.pointerId !== st.id) return
+      const { side, travel, gap } = geo.current
+      const dx = ev.clientX - st.x, dy = ev.clientY - st.y
+      if (dragNow.current === null) {
+        if (Math.abs(dx) < gap || Math.abs(dx) < Math.abs(dy)) return
+        dragged.current = true
+        setPress(null)
+      }
+      dragNow.current = side === "right" ? Math.min(0, Math.max(-travel, dx)) : Math.max(0, Math.min(travel, dx))
+      setDrag(dragNow.current)
+    }
+    const end = (ev: PointerEvent) => {
+      if (ev.pointerId !== st.id) return
+      window.removeEventListener("pointermove", move)
+      window.removeEventListener("pointerup", end)
+      window.removeEventListener("pointercancel", end)
+      const moved = dragNow.current
+      dragNow.current = null
+      if (moved === null) return
+      const { side, travel } = geo.current
+      if (Math.abs(moved) > travel / 2) {
+        const next: Side = side === "right" ? "left" : "right"
+        setSide(next); store(() => localStorage, SIDE_KEY, next)
+        closeTutorial()
+      }
+      setDrag(null)
+      setPress(null)
+    }
+    window.addEventListener("pointermove", move)
+    window.addEventListener("pointerup", end)
+    window.addEventListener("pointercancel", end)
+  }
+  const closeTutorial = () => { setTutorial(false); store(() => sessionStorage, TUTORIAL_KEY, "visto") }
+  const showTutorial = tutorial && level === "home" && shown === "home" && W > 0
+  // Tutorial: una copia del menú va y vuelve hacia el otro lado, para enseñar el gesto
+  useEffect(() => {
+    const el = ghost.current
+    if (!showTutorial || !el || !travel) return
+    const time = ms(frame.current, "--lab-shape-time") * 3
+    const anim = el.animate(
+      [{ transform: "translateX(0)", offset: 0 }, { transform: "translateX(0)", offset: 0.2 },
+        { transform: `translateX(${sign * travel}px)`, offset: 0.7 }, { transform: `translateX(${sign * travel}px)`, offset: 1 }],
+      { duration: time, iterations: Infinity, direction: "alternate", easing: getComputedStyle(el).getPropertyValue("--motion-easing-default").trim() || "ease" })
+    return () => anim.cancel()
+  }, [showTutorial, travel, sign])
 
   // ---------- pestaña activa: el fondo va de una a otra como una gota (borde de delante primero) ----------
   const indTop = pad + tab * cell, indBottom = a.h - indTop - cell
@@ -230,6 +301,9 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
         </>}
       </div>
 
+      {/* Fondo oscurecido del tutorial: va por debajo de la barra, así el menú queda destacado y se puede arrastrar */}
+      {showTutorial && <div aria-hidden className="absolute inset-0 z-overlay animate-enter bg-overlay" />}
+
       {/* Barra: capa de sombras + capa de fondo (con fusión líquida) + capa de iconos y botones */}
       <div ref={dock} className="pointer-events-none absolute inset-inset-md z-overlay"
         style={fullscreen ? { left: CONCENTRIC, right: CONCENTRIC, bottom: CONCENTRIC, top: CONCENTRIC } : undefined}
@@ -255,7 +329,8 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
         {/* Inicio: pestañas en columna */}
         <div className={layer("home")} style={content}>
           <nav aria-label="Navegación de prueba" className={cn("absolute flex flex-col p-inset-2xs motion-reduce:transition-none", live("home"))}
-            style={place("a")} onPointerDown={onDown("a")}>
+            style={{ ...place("a"), touchAction: "none" }} onPointerDown={(e) => { onDown("a")(e); dragDown(e) }}
+            onClickCapture={(e) => { if (dragged.current) { e.stopPropagation(); e.preventDefault(); dragged.current = false } }}>
             <span aria-hidden className="absolute inset-x-inset-2xs rounded-pill bg-primary-subtle motion-reduce:transition-none"
               style={{ top: indTop, bottom: indBottom, transition: resizing ? `top ${shape}, bottom ${shape}` : dir > 0 ? `bottom ${lead}, top ${trail}` : `top ${lead}, bottom ${trail}` }} />
             {TABS.map(({ icon: Icon, label }, i) => (
@@ -272,7 +347,7 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
           </nav>
         </div>
 
-        {/* Detalle: volver, favorito y compartir a la derecha; el CTA flota en el centro */}
+        {/* Detalle: volver, favorito y compartir en la columna (en el lado elegido); el CTA flota en el centro */}
         <div className={layer("detail")} style={content}>
           <button type="button" aria-label="Volver" onClick={() => go("home")} onPointerDown={onDown("a")} className={cn(tip, live("detail"))} style={place("a")}>
             <ArrowLeft />
@@ -287,13 +362,35 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
           </div>
         </div>
 
-        {/* Ventana: una sola X, abajo a la derecha */}
+        {/* Ventana: una sola X, abajo, en el lado elegido */}
         <div className={layer("modal")} style={content}>
           <button type="button" aria-label="Cerrar" onClick={() => go("detail")} onPointerDown={onDown("a")} className={cn(tip, live("modal"))} style={place("a")}>
             <X />
           </button>
         </div>
       </div>
+
+      {/* Tutorial, encima de todo menos del menú: una mano enseña el gesto y una tarjeta lo explica. No recibe toques
+          (salvo la tarjeta), así el menú de verdad se puede arrastrar ya */}
+      {showTutorial && (
+        <div className={cn("pointer-events-none absolute inset-0 z-overlay animate-enter transition-opacity duration-default ease-default", drag !== null && "opacity-0")}>
+          <div className="absolute inset-inset-md" style={fullscreen ? { left: CONCENTRIC, right: CONCENTRIC, bottom: CONCENTRIC, top: CONCENTRIC } : undefined}>
+            <span ref={ghost} aria-hidden className="absolute flex items-center justify-center rounded-pill bg-primary text-primary-foreground shadow-overlay"
+              style={{ left: a.x, top: a.y + (a.h - col) / 2, width: col, height: col }}>
+              <Hand className="size-icon-lg" />
+            </span>
+            <div role="dialog" aria-labelledby={`${gooId}-tutorial`}
+              className={cn(drag === null && "pointer-events-auto", "absolute inset-x-0 grid gap-gap-md rounded-card bg-popover p-inset-lg shadow-modal")}
+              style={{ bottom: a.h + gap * 2 }}>
+              <p id={`${gooId}-tutorial`} className="text-body font-strong">Pon el menú en el lado que prefieras</p>
+              <p className="text-ui text-muted-foreground">
+                Arrastra el menú hacia el lado contrario de la pantalla y suéltalo. Se queda ahí, a mano de tu pulgar, hasta que lo vuelvas a mover.
+              </p>
+              <div><Button size="sm" onClick={closeTutorial}>Entendido</Button></div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
