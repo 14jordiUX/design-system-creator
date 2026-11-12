@@ -34,6 +34,8 @@ import { CodeBlock } from "./Components"
 import { DEMOS } from "./demos"
 import { ALL_COMPONENTS } from "@/lib/nav"
 import { customFor } from "@/lib/custom"
+import { QrButton } from "@/components/app/qr-button"
+import lab from "../../../../laboratorio/laboratorio.json"
 
 export default function Prototypes() {
   const { ds, mode, tokens } = useDS()
@@ -58,6 +60,7 @@ export default function Prototypes() {
       ) : (
         <EmptyState icon={<Workflow className="size-icon-lg" />} title="No hay prototipos todavía" />
       )}
+      <MobilePrototypes systemId={ds.meta.id} systemName={ds.meta.name} mode={mode} />
       <AllToFigma list={list} tokens={tokens} system={{ id: ds.meta.id, name: ds.meta.name }} mode={mode} />
       <Alert className="mt-gap-2xl">
         <Lightbulb />
@@ -67,6 +70,40 @@ export default function Prototypes() {
           Lo monto solo con este sistema y aparece aquí.
         </AlertDescription>
       </Alert>
+    </div>
+  )
+}
+
+// Prototipos de móvil que vienen del Laboratorio: se abren a pantalla completa en el teléfono (con enlace o con QR).
+// Los datos (qué prueba y qué opción) están en laboratorio.json, en «prototipos».
+type MobileProto = { exp: string; opt: string; label: string; description: string }
+const MOBILE = (lab as { prototipos?: MobileProto[] }).prototipos ?? []
+
+function MobilePrototypes({ systemId, systemName, mode }: { systemId: string; systemName: string; mode: "light" | "dark" }) {
+  if (!MOBILE.length) return null
+  return (
+    <div className="mt-gap-2xl">
+    <Section title="Para probar en el móvil" description={`Se abren a pantalla completa en el teléfono, con ${systemName}. Escanea el QR con la cámara o abre el enlace.`}>
+      <div className="grid gap-gap-lg md:grid-cols-2">
+        {MOBILE.map((m) => {
+          const path = `/laboratorio/${m.exp}/${m.opt}?sistema=${systemId}${mode === "dark" ? "&modo=oscuro" : ""}`
+          return (
+            <div key={m.exp + m.opt} className="flex flex-col rounded-card border-thin p-inset-lg">
+              <div className="mb-gap-xs flex items-center gap-gap-sm text-body font-strong">
+                <Smartphone className="size-icon-md text-primary" />{m.label}
+              </div>
+              <p className="text-ui text-muted-foreground">{m.description}</p>
+              <div className="mt-auto flex flex-wrap gap-gap-sm pt-inset-md">
+                <QrButton url={`${siteUrl()}/#${path}`} title={`${m.label} · ${systemName}`} />
+                <Button variant="outline" size="sm" asChild>
+                  <Link to={path} target="_blank"><ExternalLink />Abrir</Link>
+                </Button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </Section>
     </div>
   )
 }
@@ -328,9 +365,12 @@ function Share({ p, systemId, systemName, mode, view }: { p: Prototype; systemId
           </Select>
         </div>
         <CopyRow id="proto-url" label="Enlace" value={url} />
-        <Button variant="outline" className="self-start" asChild>
-          <a href={url} target="_blank" rel="noreferrer"><ExternalLink />Abrir a pantalla completa</a>
-        </Button>
+        <div className="flex flex-wrap gap-gap-sm">
+          <Button variant="outline" asChild>
+            <a href={url} target="_blank" rel="noreferrer"><ExternalLink />Abrir a pantalla completa</a>
+          </Button>
+          <QrButton size="default" url={url.replace(`${location.origin}${location.pathname}`, `${siteUrl()}/`)} title={`${p.meta.label} · ${systemName}`} />
+        </div>
       </section>
       <section className="flex flex-col gap-gap-md">
         <h3 className="flex items-center gap-gap-sm text-body font-strong"><Presentation className="size-icon-md text-primary" />En una presentación</h3>

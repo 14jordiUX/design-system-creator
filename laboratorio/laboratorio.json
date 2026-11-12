@@ -908,5 +908,19 @@
         }
       ]
     }
+  ],
+  "prototipos": [
+    {
+      "exp": "barra-flotante",
+      "opt": "todo-sin-hover",
+      "label": "Barra flotante",
+      "description": "Barra de pestañas abajo que se encoge al bajar, barra de detalle con volver, favorito, compartir y «Añadir a la cesta», y ventana de tallas."
+    },
+    {
+      "exp": "barra-flotante",
+      "opt": "vertical",
+      "label": "Barra flotante vertical",
+      "description": "Las pestañas y las acciones van en columna abajo a la derecha, para el pulgar. «Añadir a la cesta» flota en el centro."
+    }
   ]
 }
