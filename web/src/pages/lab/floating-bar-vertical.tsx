@@ -5,6 +5,8 @@
 //   · Ventana: la X abajo a la derecha.
 //   · Lado: la columna puede ir a la derecha o a la izquierda. Se cambia arrastrando el menú principal (solo el de inicio)
 //     hacia el lado contrario; una capa de tutorial lo explica la primera vez. El lado elegido se recuerda.
+//   · Opción «mano» (params.hand): sin tutorial y con magia: si haces scroll con el dedo en la mitad derecha de la pantalla,
+//     el menú se va a la derecha; si lo haces en la mitad izquierda, a la izquierda. Arrastrarlo sigue funcionando.
 // Las tres piezas de fondo (a, b, c) se juntan en una sola en inicio y en la ventana, y se separan como un líquido en el detalle.
 // Todos los valores salen de tokens del sistema o de variables --lab-* de laboratorio.json.
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react"
@@ -50,7 +52,11 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
   const [merging, setMerging] = useState(false)
   const [side, setSide] = useState<Side>(() => (stored(() => localStorage, SIDE_KEY) === "left" ? "left" : "right"))
   const [drag, setDrag] = useState<number | null>(null)   // px que llevas arrastrado el menú (null: no se está arrastrando)
-  const [tutorial, setTutorial] = useState(() => stored(() => sessionStorage, TUTORIAL_KEY) !== "visto")
+  const hand = !!p.hand
+  const [tutorial, setTutorial] = useState(() => !hand && stored(() => sessionStorage, TUTORIAL_KEY) !== "visto")
+  // Mano: dónde empezó el último gesto (dedo o rueda del ratón). Se decide una vez por gesto, cuando de verdad hay scroll.
+  const gestureX = useRef<number | null>(null)
+  const sideRef = useRef<Side>("right")
   const dragNow = useRef<number | null>(null)   // el mismo valor que drag, al momento (soltar puede llegar antes de que se repinte)
   const dragged = useRef(false)   // para que soltar después de arrastrar no cuente como un toque en una pestaña
   const ghost = useRef<HTMLSpanElement>(null)
@@ -105,16 +111,26 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
         const y = Math.max(0, el.scrollTop), d = y - last
         last = y
         if (own !== (levelRef.current === "modal")) return
+        const gx = gestureX.current, box = frame.current?.getBoundingClientRect()
+        if (hand && gx !== null && box && Math.abs(d) > 0) {
+          gestureX.current = null
+          const next: Side = gx - box.left > box.width / 2 ? "right" : "left"
+          if (next !== sideRef.current) { setSide(next); store(() => localStorage, SIDE_KEY, next) }
+        }
         if (y <= step) { run = 0; setCompact(false); return }
         run = Math.sign(d) === Math.sign(run) ? run + d : d
         if (run > step) setCompact(true)
         else if (run < -step) setCompact(false)
       }
+      // Al tocar se apunta dónde está el dedo; con la rueda del ratón, dónde está el puntero
+      const onStart = (e: PointerEvent | WheelEvent) => { gestureX.current = e.clientX }
       el.addEventListener("scroll", onScroll, { passive: true })
-      return () => el.removeEventListener("scroll", onScroll)
+      el.addEventListener("pointerdown", onStart, { passive: true })
+      el.addEventListener("wheel", onStart, { passive: true })
+      return () => { el.removeEventListener("scroll", onScroll); el.removeEventListener("pointerdown", onStart); el.removeEventListener("wheel", onStart) }
     })
     return () => offs.forEach((off) => off())
-  }, [])
+  }, [hand])
 
   const go = (l: Level) => {
     if (l !== "modal" && scroller.current) scroller.current.scrollTop = 0
@@ -132,6 +148,7 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
   const small = compact
   const col = small ? Hc : H            // ancho de la columna (y diámetro de los círculos)
   const cell = col - pad * 2            // cada pestaña o acción es un cuadrado dentro de la columna
+  sideRef.current = side
   const travel = Math.max(0, W - col)   // lo que recorre la columna de un lado al otro
   const sign = side === "right" ? -1 : 1
   const colX = (side === "right" ? travel : 0) + (drag ?? 0)
