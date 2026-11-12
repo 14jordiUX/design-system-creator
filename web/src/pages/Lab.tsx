@@ -201,6 +201,17 @@ export function LabFullscreen() {
   const option = exp?.options.find((o) => o.id === opt) ?? exp?.options[0]
   const Preview = exp && FULLSCREEN.has(exp.id) ? PREVIEWS[exp.id] : undefined
   useEffect(() => { if (option?.params?.font) loadFonts([option.params.font]) }, [option])
+  // Para el teléfono: la página llega hasta los bordes físicos (viewport-fit=cover). Si se añade a la pantalla de inicio,
+  // se abre como una app, sin la barra de Safari (etiquetas en index.html)
+  useEffect(() => {
+    const vp = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')
+    const before = vp?.content
+    if (vp) vp.content = `${before}, viewport-fit=cover`
+    return () => { if (vp && before) vp.content = before }
+  }, [])
+  // ?radio=55 cambia el redondeo de la pantalla física (por defecto el del iPhone 16 Pro Max)
+  const radius = Number(q.get("radio"))
+  const vars = { ...(option?.vars ?? {}), ...(radius > 0 ? { "--lab-screen-radius": `${radius}px` } : {}) }
   if (!exp || !option || !Preview) {
     return (
       <div className="mx-auto grid max-w-dialog gap-gap-md p-inset-3xl">
@@ -209,5 +220,5 @@ export function LabFullscreen() {
       </div>
     )
   }
-  return <div className="bg-background text-foreground" style={option.vars as CSSProperties}><Preview option={option} fullscreen /></div>
+  return <div className="bg-background text-foreground" style={vars as CSSProperties}><Preview option={option} fullscreen /></div>
 }
