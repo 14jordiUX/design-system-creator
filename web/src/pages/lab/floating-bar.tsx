@@ -24,6 +24,13 @@ const TABS = [
 ]
 const SIZES = ["35 · 22,5 cm", "36 · 23 cm", "37 · 23,5 cm", "38 · 24,5 cm", "39 · 25 cm", "40 · 25,5 cm", "41 · 26,5 cm", "42 · 27 cm", "43 · 27,5 cm", "44 · 28 cm", "45 · 29 cm", "46 · 29,5 cm"]
 const PRODUCTS = ["Zapatillas", "Mochilas", "Gorras", "Botellas", "Chaquetas", "Calcetines", "Camisetas", "Gafas", "Relojes", "Bolsas"]
+// A pantalla completa hay más contenido, para que el scroll dé de sí en un teléfono grande
+const MORE_PRODUCTS = ["Sudaderas", "Pantalones", "Bufandas", "Guantes", "Cinturones", "Carteras", "Paraguas", "Sandalias", "Botas", "Gorros",
+  "Chalecos", "Faldas", "Vestidos", "Abrigos", "Pijamas", "Bañadores", "Toallas", "Fundas", "Llaveros", "Cuadernos"]
+const DETAILS = ["Envío gratis", "Devolución en 30 días", "Garantía de 2 años"]
+const MORE_DETAILS = ["Recogida en tienda", "Pago a plazos sin intereses", "Material: algodón orgánico", "Lavar a 30 grados", "Fabricado en Portugal",
+  "Peso: 320 g", "Opiniones: 4,6 de 5", "Preguntas frecuentes", "Cambio de talla gratis", "Atención al cliente 24 h", "Envoltorio de regalo", "Tarjeta regalo"]
+const KIDS = ["28 · 17,5 cm", "29 · 18 cm", "30 · 19 cm", "31 · 19,5 cm", "32 · 20,5 cm", "33 · 21 cm", "34 · 22 cm"]
 
 const px = (el: Element | null, name: string) => (el ? parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0 : 0)
 const ms = (el: Element | null, name: string) => {
@@ -56,6 +63,8 @@ export function FloatingBarPreview({ option, fullscreen = false }: { option: Opt
   const [opacity, setOpacity] = useState(Number(p.opacity ?? 45))
   const [blur, setBlur] = useState(Number(p.glassBlur ?? 3))
   const [thickness, setThickness] = useState(Number(p.depth ?? 60))            // grosor del cristal: cuánto dobla el canto y lo ancho que es
+  const products = fullscreen ? [...PRODUCTS, ...MORE_PRODUCTS] : PRODUCTS
+  const details = fullscreen ? [...DETAILS, ...MORE_DETAILS] : DETAILS
   const [diffraction, setDiffraction] = useState(Number(p.diffraction ?? 30))   // separación de colores en el canto
   const frame = useRef<HTMLDivElement>(null)
   const scroller = useRef<HTMLDivElement>(null)
@@ -228,7 +237,7 @@ export function FloatingBarPreview({ option, fullscreen = false }: { option: Opt
 
   // Con cristal, las fotos de producto son degradados de color para que se vea cómo se doblan detrás de la barra
   const art = (t: string): CSSProperties => {
-    const i = PRODUCTS.indexOf(t) % 5
+    const i = Math.max(0, products.indexOf(t)) % 5
     return { backgroundImage: `linear-gradient(135deg, var(--color-chart-${i + 1}), var(--color-chart-${((i + 2) % 5) + 1}))` }
   }
   const content: CSSProperties = {
@@ -237,9 +246,12 @@ export function FloatingBarPreview({ option, fullscreen = false }: { option: Opt
   const fade = (l: Level) => cn("absolute inset-0 flex", shown === l && visible ? "opacity-100" : "pointer-events-none opacity-0")
 
   return (
-    <div className={cn("grid gap-gap-lg", fullscreen && "h-dvh")}>
-    <div ref={frame} className={cn("relative mx-auto w-full max-w-sheet overflow-hidden bg-background",
-      fullscreen ? "h-dvh overscroll-none" : "h-dialog rounded-overlay border-thin")}>
+    <div className="grid gap-gap-lg">
+    {/* A pantalla completa el marco es fijo y no recorta: así la sombra de la barra no se corta abajo y la página no rebota */}
+    <div ref={frame} className={cn("bg-background", fullscreen
+      ? "fixed inset-x-0 top-0 h-dvh touch-manipulation select-none"
+      : "relative mx-auto h-dialog w-full max-w-sheet overflow-hidden rounded-overlay border-thin")}
+      style={fullscreen ? { WebkitTapHighlightColor: "transparent" } : undefined}>
       {/* Páginas */}
       <span ref={ctaProbe} aria-hidden className="pointer-events-none invisible absolute">
         <Button size="sm" tabIndex={-1} className="rounded-pill">Añadir a la cesta</Button>
@@ -250,7 +262,7 @@ export function FloatingBarPreview({ option, fullscreen = false }: { option: Opt
         </header>
         {level === "home" ? (
           <div className="grid grid-cols-2 gap-gap-lg p-inset-lg pb-section">
-            {PRODUCTS.map((t) => (
+            {products.map((t) => (
               <button key={t} type="button" onClick={() => { setProduct(t); go("detail") }} className="grid gap-gap-sm text-start">
                 <span className="block h-field-sm rounded-card bg-primary-subtle" style={glass ? art(t) : undefined} />
                 <span>{t}</span>
@@ -263,7 +275,7 @@ export function FloatingBarPreview({ option, fullscreen = false }: { option: Opt
             <p className="text-title font-strong">{product}</p>
             <p className="text-ui text-muted-foreground">Ligeras, transpirables y con suela de goma reciclada. Pulsa «Ver tallas» para abrir la ventana del tercer nivel.</p>
             <div><Button variant="outline" onClick={() => go("modal")}>Ver tallas</Button></div>
-            {["Envío gratis", "Devolución en 30 días", "Garantía de 2 años"].map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
+            {details.map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
           </div>
         )}
       </div>
@@ -271,9 +283,16 @@ export function FloatingBarPreview({ option, fullscreen = false }: { option: Opt
       {/* Tercer nivel: ventana que sube desde abajo */}
       <div ref={sheet} aria-hidden={level !== "modal"}
         className={cn("absolute inset-0 z-raised flex flex-col gap-gap-md overflow-y-auto bg-background p-inset-lg pb-section transition-transform duration-emphasis ease-emphasis motion-reduce:transition-none",
-          level === "modal" ? "translate-y-0" : "pointer-events-none translate-y-full")}>
+          level === "modal" ? "visible translate-y-0" : "pointer-events-none invisible translate-y-full")}
+        style={{ transitionProperty: "translate, transform, visibility" }}>
         <p className="text-title font-strong">Guía de tallas</p>
         {SIZES.map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
+        {fullscreen && <>
+          <p className="pt-inset-md text-title font-strong">Tallas de niño</p>
+          {KIDS.map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
+          <p className="pt-inset-md text-title font-strong">Cómo medir el pie</p>
+          <p className="text-ui text-muted-foreground">Ponte de pie sobre un papel, marca el talón y la punta del dedo más largo y mide la distancia en centímetros. Si estás entre dos tallas, elige la mayor.</p>
+        </>}
       </div>
 
       {/* Barra: capa de fondo (con fusión líquida) + capa de iconos y botones */}
@@ -289,7 +308,16 @@ export function FloatingBarPreview({ option, fullscreen = false }: { option: Opt
         )}
         {glass && <LiquidGlass trackers={trackers} id={`${gooId}-glass`} opacity={opacity} blur={blur}
           refraction={thickness * 1.2} edge={6 + thickness * 0.2} dispersion={(diffraction / 100) * 0.3} merge={Number(p.merge ?? 10)} />}
-        <div aria-hidden className="absolute inset-0" style={{ filter: glass ? "none" : goo && merging ? `url(#${gooId}) var(--lab-bar-shadow)` : "var(--lab-bar-shadow)" }}>
+        {/* Sombra en su propia capa (box-shadow, ligera en el móvil). Cuando las dos piezas coinciden, solo la primera la lleva */}
+        {!glass && (
+          <div aria-hidden className="absolute inset-0">
+            {(["a", "b"] as const).map((k) => (
+              <span key={k} className="absolute rounded-pill motion-reduce:transition-none"
+                style={{ ...place(k === "a" ? a : b, k), boxShadow: k === "b" && merged ? "none" : "var(--lab-bar-box-shadow)" }} />
+            ))}
+          </div>
+        )}
+        <div aria-hidden className="absolute inset-0" style={{ filter: !glass && goo && merging ? `url(#${gooId})` : "none" }}>
           {(["a", "b"] as const).map((k) => (
             <span key={k} ref={k === "a" ? trackA : trackB} className={cn("absolute rounded-pill motion-reduce:transition-none", !glass && "bg-popover")}
               style={place(k === "a" ? a : b, k)} />
