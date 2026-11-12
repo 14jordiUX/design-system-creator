@@ -278,8 +278,9 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
             <ArrowLeft />
           </button>
           <div className={cn("absolute flex flex-col p-inset-2xs motion-reduce:transition-none", live("detail"))} style={place("b")} onPointerDown={onDown("b")}>
-            <Button variant="ghost" size="icon" className="aspect-square h-auto w-full flex-1 rounded-pill hover:bg-transparent" aria-label="Favorito"><Heart /></Button>
-            <Button variant="ghost" size="icon" className="aspect-square h-auto w-full flex-1 rounded-pill hover:bg-transparent" aria-label="Compartir"><Share2 /></Button>
+            {/* Cada acción ocupa la mitad exacta de la columna (sin proporciones automáticas, que Safari calcula distinto) */}
+            <Button variant="ghost" size="icon" className="h-auto min-h-0 w-full flex-1 basis-0 rounded-pill hover:bg-transparent" aria-label="Favorito"><Heart /></Button>
+            <Button variant="ghost" size="icon" className="h-auto min-h-0 w-full flex-1 basis-0 rounded-pill hover:bg-transparent" aria-label="Compartir"><Share2 /></Button>
           </div>
           <div className={cn("absolute flex p-inset-2xs motion-reduce:transition-none", live("detail"))} style={place("c")} onPointerDown={onDown("c")}>
             <Button size={small ? "sm" : "default"} className="h-full min-w-max flex-1 rounded-pill">Añadir a la cesta</Button>
