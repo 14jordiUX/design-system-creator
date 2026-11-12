@@ -12,29 +12,30 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils"
 import { Slider } from "@/components/ui/slider"
 import { LiquidGlass } from "./liquid-glass"
+import { FloatingBarVertical } from "./floating-bar-vertical"
 import type { Option } from "./previews"
 
 type Level = "home" | "detail" | "modal"
 type Rect = { x: number; w: number; h: number }
 type Press = { blob: "a" | "b"; x: number } | null
 
-const TABS = [
+export const TABS = [
   { icon: Home, label: "Inicio" }, { icon: Inbox, label: "Bandeja" }, { icon: Calendar, label: "Agenda" },
   { icon: MessageSquare, label: "Chat" }, { icon: MoreHorizontal, label: "Más" },
 ]
-const SIZES = ["35 · 22,5 cm", "36 · 23 cm", "37 · 23,5 cm", "38 · 24,5 cm", "39 · 25 cm", "40 · 25,5 cm", "41 · 26,5 cm", "42 · 27 cm", "43 · 27,5 cm", "44 · 28 cm", "45 · 29 cm", "46 · 29,5 cm"]
-const PRODUCTS = ["Zapatillas", "Mochilas", "Gorras", "Botellas", "Chaquetas", "Calcetines", "Camisetas", "Gafas", "Relojes", "Bolsas"]
+export const SIZES = ["35 · 22,5 cm", "36 · 23 cm", "37 · 23,5 cm", "38 · 24,5 cm", "39 · 25 cm", "40 · 25,5 cm", "41 · 26,5 cm", "42 · 27 cm", "43 · 27,5 cm", "44 · 28 cm", "45 · 29 cm", "46 · 29,5 cm"]
+export const PRODUCTS = ["Zapatillas", "Mochilas", "Gorras", "Botellas", "Chaquetas", "Calcetines", "Camisetas", "Gafas", "Relojes", "Bolsas"]
 // A pantalla completa hay más contenido, para que el scroll dé de sí en un teléfono grande
-const MORE_PRODUCTS = ["Sudaderas", "Pantalones", "Bufandas", "Guantes", "Cinturones", "Carteras", "Paraguas", "Sandalias", "Botas", "Gorros",
+export const MORE_PRODUCTS = ["Sudaderas", "Pantalones", "Bufandas", "Guantes", "Cinturones", "Carteras", "Paraguas", "Sandalias", "Botas", "Gorros",
   "Chalecos", "Faldas", "Vestidos", "Abrigos", "Pijamas", "Bañadores", "Toallas", "Fundas", "Llaveros", "Cuadernos"]
-const DETAILS = ["Envío gratis", "Devolución en 30 días", "Garantía de 2 años"]
-const MORE_DETAILS = ["Recogida en tienda", "Pago a plazos sin intereses", "Material: algodón orgánico", "Lavar a 30 grados", "Fabricado en Portugal",
+export const DETAILS = ["Envío gratis", "Devolución en 30 días", "Garantía de 2 años"]
+export const MORE_DETAILS = ["Recogida en tienda", "Pago a plazos sin intereses", "Material: algodón orgánico", "Lavar a 30 grados", "Fabricado en Portugal",
   "Peso: 320 g", "Opiniones: 4,6 de 5", "Preguntas frecuentes", "Cambio de talla gratis", "Atención al cliente 24 h", "Envoltorio de regalo", "Tarjeta regalo"]
-const CONCENTRIC = "calc(var(--lab-screen-radius) - var(--size-tab-bar-expanded) / 2)"
-const KIDS = ["28 · 17,5 cm", "29 · 18 cm", "30 · 19 cm", "31 · 19,5 cm", "32 · 20,5 cm", "33 · 21 cm", "34 · 22 cm"]
+export const CONCENTRIC = "calc(var(--lab-screen-radius) - var(--size-tab-bar-expanded) / 2)"
+export const KIDS = ["28 · 17,5 cm", "29 · 18 cm", "30 · 19 cm", "31 · 19,5 cm", "32 · 20,5 cm", "33 · 21 cm", "34 · 22 cm"]
 
-const px = (el: Element | null, name: string) => (el ? parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0 : 0)
-const ms = (el: Element | null, name: string) => {
+export const px = (el: Element | null, name: string) => (el ? parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0 : 0)
+export const ms = (el: Element | null, name: string) => {
   const v = el ? getComputedStyle(el).getPropertyValue(name).trim() : ""
   return v.endsWith("ms") ? parseFloat(v) : v.endsWith("s") ? parseFloat(v) * 1000 : 0
 }
@@ -55,7 +56,11 @@ function Tip({ show, label, children }: { show: boolean; label: string; children
 // (#/laboratorio/barra-flotante/<opción>). Esquinas concéntricas con la pantalla física: la barra se separa del borde
 // lo justo para que su redondeo + la distancia = el redondeo de la pantalla (--lab-screen-radius, iPhone 16 Pro Max = 62 px).
 // Con la barra grande (la que llega a las esquinas): distancia = radio de pantalla − mitad del alto de la barra.
-export function FloatingBarPreview({ option, fullscreen = false }: { option: Option; fullscreen?: boolean }) {
+export function FloatingBarPreview(props: { option: Option; fullscreen?: boolean }) {
+  return props.option.params?.vertical ? <FloatingBarVertical {...props} /> : <FloatingBarHorizontal {...props} />
+}
+
+function FloatingBarHorizontal({ option, fullscreen = false }: { option: Option; fullscreen?: boolean }) {
   const p = option.params ?? {}
   const glass = !!p.glass   // cristal: fondo translúcido que desenfoca y dobla lo que hay detrás (refracción)
   const goo = !!p.goo && !glass, drop = !!p.drop, push = !!p.push, tips = !!p.tooltip, noHover = !!p.noHover
