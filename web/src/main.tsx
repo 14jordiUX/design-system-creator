@@ -6,7 +6,7 @@ import "./index.css"
 import Library from "./pages/Library"
 import NewSystem from "./pages/NewSystem"
 import References from "./pages/References"
-import Lab from "./pages/Lab"
+import Lab, { LabFullscreen } from "./pages/Lab"
 import SystemLayout from "./pages/system/SystemLayout"
 import SystemHome from "./pages/system/SystemHome"
 import Foundation from "./pages/system/Foundation"
@@ -41,6 +41,8 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/nuevo" element={<NewSystem />} />
           <Route path="/referencias" element={<References />} />
           <Route path="/laboratorio" element={<Lab />} />
+          {/* Una prueba del Laboratorio a pantalla completa, para abrirla en el teléfono */}
+          <Route path="/laboratorio/:exp/:opt" element={<LabFullscreen />} />
           <Route path="/s/:id" element={<SystemLayout />}>
             {systemPages}
             <Route path="editar">{systemPages}</Route>

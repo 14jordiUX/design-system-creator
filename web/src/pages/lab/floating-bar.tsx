@@ -43,7 +43,9 @@ function Tip({ show, label, children }: { show: boolean; label: string; children
   )
 }
 
-export function FloatingBarPreview({ option }: { option: Option }) {
+// fullscreen: la misma barra a pantalla completa, sin el marco del móvil de prueba, para abrirla en el teléfono
+// (#/laboratorio/barra-flotante/<opción>). Respeta la zona segura de abajo (la rayita de inicio del iPhone).
+export function FloatingBarPreview({ option, fullscreen = false }: { option: Option; fullscreen?: boolean }) {
   const p = option.params ?? {}
   const glass = !!p.glass   // cristal: fondo translúcido que desenfoca y dobla lo que hay detrás (refracción)
   const goo = !!p.goo && !glass, drop = !!p.drop, push = !!p.push, tips = !!p.tooltip, noHover = !!p.noHover
@@ -235,13 +237,14 @@ export function FloatingBarPreview({ option }: { option: Option }) {
   const fade = (l: Level) => cn("absolute inset-0 flex", shown === l && visible ? "opacity-100" : "pointer-events-none opacity-0")
 
   return (
-    <div className="grid gap-gap-lg">
-    <div ref={frame} className="relative mx-auto h-dialog w-full max-w-sheet overflow-hidden rounded-overlay border-thin bg-background">
+    <div className={cn("grid gap-gap-lg", fullscreen && "h-dvh")}>
+    <div ref={frame} className={cn("relative mx-auto w-full max-w-sheet overflow-hidden bg-background",
+      fullscreen ? "h-dvh overscroll-none" : "h-dialog rounded-overlay border-thin")}>
       {/* Páginas */}
       <span ref={ctaProbe} aria-hidden className="pointer-events-none invisible absolute">
         <Button size="sm" tabIndex={-1} className="rounded-pill">Añadir a la cesta</Button>
       </span>
-      <div ref={scroller} className="absolute inset-0 overflow-y-auto">
+      <div ref={scroller} className="absolute inset-0 overflow-y-auto overscroll-contain">
         <header className="sticky top-0 z-raised flex h-header items-center gap-gap-sm border-b-thin bg-background px-inset-lg">
           <span className="font-strong">{level === "home" ? TABS[tab].label === "Inicio" ? "Tienda" : TABS[tab].label : product}</span>
         </header>
@@ -274,7 +277,8 @@ export function FloatingBarPreview({ option }: { option: Option }) {
       </div>
 
       {/* Barra: capa de fondo (con fusión líquida) + capa de iconos y botones */}
-      <div ref={dock} className="absolute inset-x-inset-md bottom-inset-md z-overlay h-tab-bar-expanded" onPointerUp={release} onPointerLeave={release} onPointerCancel={release}>
+      <div ref={dock} className="absolute inset-x-inset-md bottom-inset-md z-overlay h-tab-bar-expanded"
+        style={fullscreen ? { bottom: "calc(var(--space-inset-md) + env(safe-area-inset-bottom))" } : undefined} onPointerUp={release} onPointerLeave={release} onPointerCancel={release}>
         {goo && (
           <svg aria-hidden className="absolute size-0">
             <filter id={gooId}>

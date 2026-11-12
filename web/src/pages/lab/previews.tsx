@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 import { FloatingBarPreview } from "./floating-bar"
 
 export type Option = { id: string; label: string; vars?: Record<string, string>; params?: Record<string, any> }
-type P = { option: Option }
+type P = { option: Option; fullscreen?: boolean }
 
 const Stage = ({ children, className }: { children: ReactNode; className?: string }) => (
   <div className={cn("flex min-h-popover flex-col items-center justify-center gap-gap-lg rounded-card bg-subtle p-inset-xl", className)}>{children}</div>
@@ -417,3 +417,7 @@ export const PREVIEWS: Record<string, (p: P) => ReactNode> = {
   "forma-sombra": ShadowShape,
   "iconos": Icons,
 }
+
+/** Pruebas que también se pueden abrir a pantalla completa (para probarlas en el teléfono) */
+const WITH_FULLSCREEN: ((p: P) => ReactNode)[] = [FloatingBarPreview]
+export const FULLSCREEN = new Set(Object.keys(PREVIEWS).filter((k) => WITH_FULLSCREEN.includes(PREVIEWS[k])))

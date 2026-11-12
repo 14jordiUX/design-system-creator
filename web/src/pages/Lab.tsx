@@ -2,8 +2,8 @@
 // Jordi las prueba con cualquier sistema y marca cada una: Incluir, Descartar o Ajustar (con una nota).
 // Las pruebas viven en ../laboratorio/laboratorio.json y las decisiones en ../laboratorio/decisiones.json.
 import { useEffect, useMemo, useState, type CSSProperties } from "react"
-import { Link } from "react-router-dom"
-import { ArrowLeft, Check, FlaskConical, Loader2, Moon, Pencil, Save, Sun, X } from "lucide-react"
+import { Link, useParams, useSearchParams } from "react-router-dom"
+import { ArrowLeft, Check, Smartphone, FlaskConical, Loader2, Moon, Pencil, Save, Sun, X } from "lucide-react"
 import { toast } from "sonner"
 import lab from "../../../laboratorio/laboratorio.json"
 import saved from "../../../laboratorio/decisiones.json"
@@ -18,7 +18,7 @@ import { toFileText } from "@/lib/orderedJson"
 import { useGitHubConnect } from "@/components/app/github-connect"
 import type { Mode } from "@/lib/tokens"
 import { cn } from "@/lib/utils"
-import { PREVIEWS, type Option } from "./lab/previews"
+import { FULLSCREEN, PREVIEWS, type Option } from "./lab/previews"
 
 type Experiment = { id: string; group: string; title: string; source: string; text: string; try: string; options: Option[] }
 type State = "incluir" | "descartar" | "ajustar"
@@ -38,7 +38,7 @@ const STATES: { id: State; label: string; icon: typeof Check }[] = [
 ]
 const STATE_LABEL: Record<State, string> = { incluir: "Incluida", ajustar: "Por ajustar", descartar: "Descartada" }
 
-function ExperimentCard({ exp, decision, onDecide }: { exp: Experiment; decision?: Decision; onDecide: (d: Decision | null) => void }) {
+function ExperimentCard({ exp, decision, onDecide, sysId, mode }: { exp: Experiment; decision?: Decision; onDecide: (d: Decision | null) => void; sysId: string; mode: Mode }) {
   const [optId, setOptId] = useState(decision?.opcion ?? exp.options[0].id)
   const option = exp.options.find((o) => o.id === optId) ?? exp.options[0]
   const Preview = PREVIEWS[exp.id]
@@ -73,6 +73,15 @@ function ExperimentCard({ exp, decision, onDecide }: { exp: Experiment; decision
 
       <div style={option.vars as CSSProperties}>{Preview ? <Preview option={option} /> : null}</div>
       <p className="text-caption text-muted-foreground">{exp.try}</p>
+      {FULLSCREEN.has(exp.id) && (
+        <div>
+          <Button asChild size="sm" variant="outline">
+            <Link to={`/laboratorio/${exp.id}/${option.id}?sistema=${sysId}${mode === "dark" ? "&modo=oscuro" : ""}`} target="_blank">
+              <Smartphone />Abrir a pantalla completa (para el móvil)
+            </Link>
+          </Button>
+        </div>
+      )}
 
       <div className="mt-auto grid gap-gap-sm border-t-thin pt-inset-md">
         <div className="flex flex-wrap gap-gap-xs">
@@ -168,7 +177,7 @@ export default function Lab() {
             <h2 className="mb-gap-lg text-title font-strong">{label}</h2>
             <div className="grid gap-gap-xl lg:grid-cols-2">
               {EXPERIMENTS.filter((e) => e.group === g).map((e) => (
-                <ExperimentCard key={e.id} exp={e} decision={decisions[e.id]} onDecide={(d) => update(e.id, d)} />
+                <ExperimentCard key={e.id} exp={e} decision={decisions[e.id]} onDecide={(d) => update(e.id, d)} sysId={sysId} mode={mode} />
               ))}
             </div>
           </section>
@@ -179,4 +188,26 @@ export default function Lab() {
       {dialog}
     </div>
   )
+}
+
+/** Una prueba a pantalla completa, sin nada de la web alrededor, para abrirla en el teléfono:
+ *  #/laboratorio/<prueba>/<opción>?sistema=<id>&modo=oscuro */
+export function LabFullscreen() {
+  const { exp: expId, opt } = useParams()
+  const [q] = useSearchParams()
+  const sys = systems.find((s) => s.meta.id === q.get("sistema")) ?? systems.find((s) => s.meta.id === "base") ?? systems[0]
+  useSystemTheme(sys.tokens, q.get("modo") === "oscuro" ? "dark" : "light")
+  const exp = EXPERIMENTS.find((e) => e.id === expId)
+  const option = exp?.options.find((o) => o.id === opt) ?? exp?.options[0]
+  const Preview = exp && FULLSCREEN.has(exp.id) ? PREVIEWS[exp.id] : undefined
+  useEffect(() => { if (option?.params?.font) loadFonts([option.params.font]) }, [option])
+  if (!exp || !option || !Preview) {
+    return (
+      <div className="mx-auto grid max-w-dialog gap-gap-md p-inset-3xl">
+        <p className="text-title font-strong">Esta prueba no existe</p>
+        <Link className="text-link" to="/laboratorio">Ir al Laboratorio</Link>
+      </div>
+    )
+  }
+  return <div className="bg-background text-foreground" style={option.vars as CSSProperties}><Preview option={option} fullscreen /></div>
 }
