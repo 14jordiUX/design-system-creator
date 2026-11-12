@@ -1,0 +1,298 @@
+// Laboratorio · Barra flotante en vertical, a la derecha (para usarla con el pulgar).
+// Misma idea que la barra horizontal («Todo, sin hover»): fusión líquida entre niveles, fondo de pestaña con gota y empuje al pulsar.
+//   · Inicio: las pestañas en una columna abajo a la derecha. Al bajar por la lista se encoge (sin textos, más estrecha).
+//   · Detalle: volver, favorito y compartir en la columna de la derecha; el CTA «Añadir a la cesta» sigue flotando abajo en el centro.
+//   · Ventana: la X abajo a la derecha.
+// Las tres piezas de fondo (a, b, c) se juntan en una sola en inicio y en la ventana, y se separan como un líquido en el detalle.
+// Todos los valores salen de tokens del sistema o de variables --lab-* de laboratorio.json.
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react"
+import { ArrowLeft, Heart, Share2, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import type { Option } from "./previews"
+import { CONCENTRIC, DETAILS, KIDS, MORE_DETAILS, MORE_PRODUCTS, PRODUCTS, SIZES, TABS, ms, px } from "./floating-bar"
+
+type Level = "home" | "detail" | "modal"
+type Blob = "a" | "b" | "c"
+type Rect = { x: number; y: number; w: number; h: number }
+type Press = { blob: Blob; x: number; y: number } | null
+const BLOBS: Blob[] = ["a", "b", "c"]
+
+export function FloatingBarVertical({ option, fullscreen = false }: { option: Option; fullscreen?: boolean }) {
+  const p = option.params ?? {}
+  const goo = !!p.goo, push = !!p.push
+  const gooId = useId().replace(/:/g, "")
+  const frame = useRef<HTMLDivElement>(null)
+  const scroller = useRef<HTMLDivElement>(null)
+  const sheet = useRef<HTMLDivElement>(null)
+  const dock = useRef<HTMLDivElement>(null)
+  const probeMd = useRef<HTMLSpanElement>(null), probeSm = useRef<HTMLSpanElement>(null)
+  const levelRef = useRef<Level>("home")
+  const products = fullscreen ? [...PRODUCTS, ...MORE_PRODUCTS] : PRODUCTS
+  const details = fullscreen ? [...DETAILS, ...MORE_DETAILS] : DETAILS
+
+  const [level, setLevel] = useState<Level>("home")
+  const [shown, setShown] = useState<Level>("home")
+  const [visible, setVisible] = useState(true)
+  const [compact, setCompact] = useState(false)
+  const [tab, setTab] = useState(0)
+  const [dir, setDir] = useState(1)
+  const [product, setProduct] = useState(PRODUCTS[0])
+  const [press, setPress] = useState<Press>(null)
+  const [box, setBox] = useState({ w: 0, h: 0 })
+  const [cta, setCta] = useState({ md: 0, sm: 0 })   // ancho del CTA en tamaño normal y pequeño, medido de copias invisibles
+  const [merging, setMerging] = useState(false)
+
+  useLayoutEffect(() => {
+    const el = dock.current
+    if (!el) return
+    const measure = () => {
+      setBox({ w: el.clientWidth, h: el.clientHeight })
+      setCta({ md: probeMd.current?.offsetWidth ?? 0, sm: probeSm.current?.offsetWidth ?? 0 })
+    }
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    if (probeMd.current) ro.observe(probeMd.current)
+    if (probeSm.current) ro.observe(probeSm.current)
+    measure()
+    return () => ro.disconnect()
+  }, [])
+
+  // Al cambiar de nivel: se van iconos y botones, se mueve el fondo y aparecen los del nuevo nivel
+  useEffect(() => {
+    if (level === shown) return
+    setVisible(false)
+    const t = window.setTimeout(() => { setShown(level); setVisible(true) }, ms(frame.current, "--lab-shape-time") * 0.6)
+    return () => window.clearTimeout(t)
+  }, [level, shown])
+  // Mientras la columna se encoge o crece, el fondo de la pestaña se mueve con ella (los dos bordes a la vez)
+  const [resizing, setResizing] = useState(false)
+  const [sizedAs, setSizedAs] = useState(compact)
+  if (sizedAs !== compact) { setSizedAs(compact); setResizing(true) }
+  useEffect(() => {
+    if (!resizing) return
+    const r = window.setTimeout(() => setResizing(false), ms(frame.current, "--lab-shape-time"))
+    return () => window.clearTimeout(r)
+  }, [resizing, compact])
+  const first = useRef(true)
+  useEffect(() => {
+    if (first.current) { first.current = false; return }
+    setMerging(true)
+    const u = window.setTimeout(() => setMerging(false), ms(frame.current, "--lab-shape-time"))
+    return () => window.clearTimeout(u)
+  }, [level])
+
+  // Al bajar se encoge, al subir (o arriba del todo) vuelve a ser grande
+  useEffect(() => {
+    const els = [scroller.current, sheet.current].filter((e): e is HTMLDivElement => !!e)
+    const offs = els.map((el) => {
+      const own = el === sheet.current
+      const step = px(el, "--motion-distance-scroll")
+      let last = el.scrollTop, run = 0
+      const onScroll = () => {
+        const y = Math.max(0, el.scrollTop), d = y - last
+        last = y
+        if (own !== (levelRef.current === "modal")) return
+        if (y <= step) { run = 0; setCompact(false); return }
+        run = Math.sign(d) === Math.sign(run) ? run + d : d
+        if (run > step) setCompact(true)
+        else if (run < -step) setCompact(false)
+      }
+      el.addEventListener("scroll", onScroll, { passive: true })
+      return () => el.removeEventListener("scroll", onScroll)
+    })
+    return () => offs.forEach((off) => off())
+  }, [])
+
+  const go = (l: Level) => {
+    if (l !== "modal" && scroller.current) scroller.current.scrollTop = 0
+    if (l === "modal" && sheet.current) sheet.current.scrollTop = 0
+    levelRef.current = l
+    setCompact(false); setLevel(l)
+  }
+
+  // ---------- geometría (todo sale de tokens del sistema) ----------
+  const root = frame.current
+  const H = px(root, "--size-tab-bar-expanded"), Hc = px(root, "--size-tab-bar-compact")
+  const pad = px(root, "--space-inset-2xs"), gap = px(root, "--space-gap-sm")
+  const { w: W, h: D } = box
+  const n = TABS.length
+  const small = compact
+  const col = small ? Hc : H            // ancho de la columna (y diámetro de los círculos)
+  const cell = col - pad * 2            // cada pestaña o acción es un cuadrado dentro de la columna
+  const colX = W - col
+  let a: Rect, b: Rect, c: Rect
+  if (level === "home") {
+    const h = n * cell + pad * 2
+    a = b = c = { x: colX, y: D - h, w: col, h }
+  } else if (level === "detail") {
+    const bh = cell * 2 + pad * 2
+    b = { x: colX, y: D - bh, w: col, h: bh }
+    a = { x: colX, y: b.y - gap - col, w: col, h: col }
+    const ch = small ? Hc : H, cw = (small ? cta.sm : cta.md) + pad * 2
+    // En el centro de la pantalla; si en un teléfono estrecho tocara la columna, se aparta a la izquierda
+    c = { x: Math.min((W - cw) / 2, colX - gap - cw), y: D - ch, w: cw, h: ch }
+  } else {
+    a = b = c = { x: W - col, y: D - col, w: col, h: col }
+  }
+  const rects: Record<Blob, Rect> = { a, b, c }
+
+  // Empuje: se hunde la parte que tocas. En las piezas altas se inclina arriba/abajo; en las anchas, a los lados.
+  const merged = level !== "detail"
+  const hit = (blob: Blob) => !!press && (press.blob === blob || merged)
+  const depth = px(root, "--lab-depth"), sink = px(root, "--lab-press"), maxTilt = px(root, "--lab-max-tilt")
+  const pressStyle = (r: Rect, blob: Blob): CSSProperties => {
+    if (!push || !press || !hit(blob) || !r.w || !r.h) return { transform: "none", transformOrigin: "50% 50%" }
+    const tall = r.h > r.w
+    const k = ((tall ? press.y : press.x) - 0.5) * 2
+    const tilt = Math.min(maxTilt, (Math.asin(Math.min(1, depth / (tall ? r.h : r.w))) * 180) / Math.PI) * k
+    const scale = 1 - (sink * 2) / Math.max(r.w, r.h)
+    return tall
+      ? { transform: `perspective(var(--lab-persp)) rotateX(${(-tilt).toFixed(2)}deg) scale(${scale.toFixed(4)})`, transformOrigin: `50% ${((1 - press.y) * 100).toFixed(1)}%` }
+      : { transform: `perspective(var(--lab-persp)) rotateY(${tilt.toFixed(2)}deg) scale(${scale.toFixed(4)})`, transformOrigin: `${((1 - press.x) * 100).toFixed(1)}% 50%` }
+  }
+  const timing = (pressed: boolean): CSSProperties => ({
+    transitionProperty: "left, top, width, height, transform",
+    transitionDuration: `var(--lab-shape-time), var(--lab-shape-time), var(--lab-shape-time), var(--lab-shape-time), ${pressed ? "var(--lab-press-time)" : "var(--lab-release-time)"}`,
+    transitionTimingFunction: `var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-shape-ease), var(--lab-shape-ease), ${pressed ? "var(--lab-press-ease)" : "var(--lab-release-ease)"}`,
+  })
+  const place = (blob: Blob): CSSProperties => {
+    const r = rects[blob]
+    return { ...timing(hit(blob)), ...pressStyle(r, blob), left: r.x, top: r.y, width: r.w, height: r.h }
+  }
+  const onDown = (blob: Blob) => (e: RPointerEvent<HTMLElement>) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    setPress({ blob, x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) })
+  }
+  const release = () => setPress(null)
+
+  // ---------- pestaña activa: el fondo va de una a otra como una gota (borde de delante primero) ----------
+  const indTop = pad + tab * cell, indBottom = a.h - indTop - cell
+  const lead = "var(--lab-lead) var(--lab-ease)", trail = "var(--lab-trail) var(--lab-ease)", shape = "var(--lab-shape-time) var(--lab-shape-ease)"
+  const pick = (i: number) => { if (i !== tab) setDir(i > tab ? 1 : -1); setTab(i) }
+
+  const content: CSSProperties = {
+    transitionProperty: "opacity", transitionDuration: "var(--motion-duration-default)", transitionTimingFunction: "var(--motion-easing-default)",
+  }
+  const on = (l: Level) => shown === l && visible
+  const layer = (l: Level) => cn("pointer-events-none absolute inset-0", on(l) ? "opacity-100" : "opacity-0")
+  const live = (l: Level) => (on(l) ? "pointer-events-auto" : "pointer-events-none")
+  const tip = cn("absolute flex items-center justify-center rounded-pill motion-reduce:transition-none [&_svg]:size-icon-lg")
+
+  return (
+    <div ref={frame} className={cn("bg-background", fullscreen
+      ? "fixed inset-x-0 top-0 h-dvh touch-manipulation select-none"
+      : "relative mx-auto h-dialog w-full max-w-sheet overflow-hidden rounded-overlay border-thin")}
+      style={fullscreen ? { WebkitTapHighlightColor: "transparent" } : undefined}>
+      <span aria-hidden className="pointer-events-none invisible absolute flex gap-gap-xs">
+        <span ref={probeMd}><Button tabIndex={-1} className="rounded-pill">Añadir a la cesta</Button></span>
+        <span ref={probeSm}><Button size="sm" tabIndex={-1} className="rounded-pill">Añadir a la cesta</Button></span>
+      </span>
+
+      {/* Páginas */}
+      <div ref={scroller} className="absolute inset-0 overflow-y-auto overscroll-contain">
+        <header className="sticky top-0 z-raised flex h-header items-center gap-gap-sm border-b-thin bg-background px-inset-lg"
+          style={fullscreen ? { height: "calc(var(--layout-header) + env(safe-area-inset-top))", paddingTop: "env(safe-area-inset-top)" } : undefined}>
+          <span className="font-strong">{level === "home" ? TABS[tab].label === "Inicio" ? "Tienda" : TABS[tab].label : product}</span>
+        </header>
+        {level === "home" ? (
+          <div className="grid grid-cols-2 gap-gap-lg p-inset-lg pb-section">
+            {products.map((t) => (
+              <button key={t} type="button" onClick={() => { setProduct(t); go("detail") }} className="grid gap-gap-sm text-start">
+                <span className="block h-field-sm rounded-card bg-primary-subtle" />
+                <span>{t}</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-gap-md p-inset-lg pb-section">
+            <span className="block aspect-square rounded-card bg-primary-subtle" />
+            <p className="text-title font-strong">{product}</p>
+            <p className="text-ui text-muted-foreground">Ligeras, transpirables y con suela de goma reciclada. Pulsa «Ver tallas» para abrir la ventana del tercer nivel.</p>
+            <div><Button variant="outline" onClick={() => go("modal")}>Ver tallas</Button></div>
+            {details.map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
+          </div>
+        )}
+      </div>
+
+      {/* Tercer nivel: ventana que sube desde abajo */}
+      <div ref={sheet} aria-hidden={level !== "modal"}
+        className={cn("absolute inset-0 z-raised flex flex-col gap-gap-md overflow-y-auto bg-background p-inset-lg pb-section duration-emphasis ease-emphasis",
+          level === "modal" ? "visible translate-y-0" : "pointer-events-none invisible translate-y-full")}
+        style={{ transitionProperty: "translate, transform, visibility", ...(fullscreen ? { paddingTop: "calc(var(--space-inset-lg) + env(safe-area-inset-top))" } : {}) }}>
+        <p className="text-title font-strong">Guía de tallas</p>
+        {SIZES.map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
+        {fullscreen && <>
+          <p className="pt-inset-md text-title font-strong">Tallas de niño</p>
+          {KIDS.map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
+          <p className="pt-inset-md text-title font-strong">Cómo medir el pie</p>
+          <p className="text-ui text-muted-foreground">Ponte de pie sobre un papel, marca el talón y la punta del dedo más largo y mide la distancia en centímetros. Si estás entre dos tallas, elige la mayor.</p>
+        </>}
+      </div>
+
+      {/* Barra: capa de sombras + capa de fondo (con fusión líquida) + capa de iconos y botones */}
+      <div ref={dock} className="pointer-events-none absolute inset-inset-md z-overlay"
+        style={fullscreen ? { left: CONCENTRIC, right: CONCENTRIC, bottom: CONCENTRIC, top: CONCENTRIC } : undefined}
+        onPointerUp={release} onPointerLeave={release} onPointerCancel={release}>
+        {goo && (
+          <svg aria-hidden className="absolute size-0">
+            <filter id={gooId}>
+              <feGaussianBlur in="SourceGraphic" stdDeviation={p.blur} result="blur" />
+              <feColorMatrix in="blur" mode="matrix" values={p.matrix} />
+            </filter>
+          </svg>
+        )}
+        <div aria-hidden className="absolute inset-0">
+          {BLOBS.map((k) => (
+            <span key={k} className="absolute rounded-pill motion-reduce:transition-none"
+              style={{ ...place(k), boxShadow: k !== "a" && merged ? "none" : "var(--lab-bar-box-shadow)" }} />
+          ))}
+        </div>
+        <div aria-hidden className="absolute inset-0" style={{ filter: goo && merging ? `url(#${gooId})` : "none" }}>
+          {BLOBS.map((k) => <span key={k} className="absolute rounded-pill bg-popover motion-reduce:transition-none" style={place(k)} />)}
+        </div>
+
+        {/* Inicio: pestañas en columna */}
+        <div className={layer("home")} style={content}>
+          <nav aria-label="Navegación de prueba" className={cn("absolute flex flex-col p-inset-2xs motion-reduce:transition-none", live("home"))}
+            style={place("a")} onPointerDown={onDown("a")}>
+            <span aria-hidden className="absolute inset-x-inset-2xs rounded-pill bg-primary-subtle motion-reduce:transition-none"
+              style={{ top: indTop, bottom: indBottom, transition: resizing ? `top ${shape}, bottom ${shape}` : dir > 0 ? `bottom ${lead}, top ${trail}` : `top ${lead}, bottom ${trail}` }} />
+            {TABS.map(({ icon: Icon, label }, i) => (
+              <button key={label} type="button" onClick={() => pick(i)} aria-current={tab === i ? "page" : undefined} aria-label={small ? label : undefined}
+                className={cn("relative flex min-h-0 w-full flex-1 flex-col items-center justify-center rounded-pill text-caption transition-colors",
+                  tab === i ? "font-emphasis text-link" : "text-muted-foreground")}>
+                <Icon className="size-icon-md shrink-0" />
+                <span className={cn("grid w-full grid-cols-[minmax(0,1fr)] text-center transition-[grid-template-rows,opacity] duration-emphasis ease-emphasis",
+                  small ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100")}>
+                  <span className="min-h-0 overflow-hidden"><span className="block truncate px-inset-3xs pt-inset-3xs">{label}</span></span>
+                </span>
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Detalle: volver, favorito y compartir a la derecha; el CTA flota en el centro */}
+        <div className={layer("detail")} style={content}>
+          <button type="button" aria-label="Volver" onClick={() => go("home")} onPointerDown={onDown("a")} className={cn(tip, live("detail"))} style={place("a")}>
+            <ArrowLeft />
+          </button>
+          <div className={cn("absolute flex flex-col p-inset-2xs motion-reduce:transition-none", live("detail"))} style={place("b")} onPointerDown={onDown("b")}>
+            <Button variant="ghost" size="icon" className="aspect-square h-auto w-full flex-1 rounded-pill hover:bg-transparent" aria-label="Favorito"><Heart /></Button>
+            <Button variant="ghost" size="icon" className="aspect-square h-auto w-full flex-1 rounded-pill hover:bg-transparent" aria-label="Compartir"><Share2 /></Button>
+          </div>
+          <div className={cn("absolute flex p-inset-2xs motion-reduce:transition-none", live("detail"))} style={place("c")} onPointerDown={onDown("c")}>
+            <Button size={small ? "sm" : "default"} className="h-full min-w-max flex-1 rounded-pill">Añadir a la cesta</Button>
+          </div>
+        </div>
+
+        {/* Ventana: una sola X, abajo a la derecha */}
+        <div className={layer("modal")} style={content}>
+          <button type="button" aria-label="Cerrar" onClick={() => go("detail")} onPointerDown={onDown("a")} className={cn(tip, live("modal"))} style={place("a")}>
+            <X />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
