@@ -138,32 +138,45 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
         if (run > step) setCompact(true)
         else if (run < -step) setCompact(false)
       }
-      // Al tocar se apunta dónde está el dedo; con la rueda del ratón, dónde está el puntero
-      const onStart = (e: PointerEvent | WheelEvent) => { gestureX.current = e.clientX }
-      // Arco: dónde empieza y dónde acaba el dedo (eventos de toque, que siguen llegando mientras la página se desliza)
-      let arcStart: { x: number; top: number } | null = null
-      const onTouchStart = (e: TouchEvent) => { arcStart = e.touches.length === 1 ? { x: e.touches[0].clientX, top: el.scrollTop } : null }
+      // Rueda del ratón (ordenador): cuenta dónde está el puntero
+      const onWheel = (e: WheelEvent) => { gestureX.current = e.clientX }
+      // Dedo: todo se decide con el movimiento del propio dedo, no con el de la página. Así también funciona si tocas
+      // mientras la página aún se desliza por la inercia del gesto anterior (la página se mueve pero el dedo no ha hecho nada).
+      const minMove = () => px(el, "--space-gap-sm")
+      let touch: { x: number; y: number; decided: boolean } | null = null
+      const decide = (next: Side) => { if (next !== sideRef.current) { setSide(next); store(() => localStorage, SIDE_KEY, next) } }
+      const onTouchStart = (e: TouchEvent) => {
+        gestureX.current = null   // el gesto con el dedo manda; la decisión por «scroll» queda solo para la rueda
+        touch = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, decided: false } : null
+      }
+      const onTouchMove = (e: TouchEvent) => {
+        const t = e.touches[0]
+        if (!touch || !t || touch.decided || !hand || !autoRef.current) return
+        if (Math.abs(t.clientY - touch.y) < minMove()) return   // aún no es scroll (puede ser un toque)
+        touch.decided = true
+        const box = frame.current?.getBoundingClientRect()
+        if (box) decide(touch.x - box.left > box.width / 2 ? "right" : "left")
+      }
       const onTouchEnd = (e: TouchEvent) => {
-        const st = arcStart, t = e.changedTouches[0]
-        arcStart = null
-        if (!st || !t || !autoRef.current || el.scrollTop === st.top) return   // solo cuenta si de verdad hubo scroll (un toque no mueve el menú)
-        const dx = t.clientX - st.x
-        if (Math.abs(dx) < px(el, "--space-gap-sm")) return   // casi recto: no se sabe la mano, se queda donde está
-        const down = el.scrollTop > st.top   // bajando por la página: el dedo sube y el arco se curva hacia el lado de la mano
-        const next: Side = (dx < 0) === down ? "left" : "right"
-        if (next !== sideRef.current) { setSide(next); store(() => localStorage, SIDE_KEY, next) }
+        const st = touch, t = e.changedTouches[0]
+        touch = null
+        if (!st || !t || !arc || !autoRef.current) return
+        const dx = t.clientX - st.x, dy = t.clientY - st.y
+        if (Math.abs(dy) < minMove()) return   // no hubo scroll (un toque no mueve el menú)
+        if (Math.abs(dx) < minMove()) return   // casi recto: no se sabe la mano, se queda donde está
+        const down = dy < 0   // el dedo sube = bajas por la página: el arco se curva hacia el lado de la mano
+        decide((dx < 0) === down ? "left" : "right")
       }
       el.addEventListener("scroll", onScroll, { passive: true })
-      el.addEventListener("pointerdown", onStart, { passive: true })
-      el.addEventListener("wheel", onStart, { passive: true })
-      if (arc) {
-        el.addEventListener("touchstart", onTouchStart, { passive: true })
-        el.addEventListener("touchend", onTouchEnd, { passive: true })
-        el.addEventListener("touchcancel", onTouchEnd, { passive: true })
-      }
+      el.addEventListener("wheel", onWheel, { passive: true })
+      el.addEventListener("touchstart", onTouchStart, { passive: true })
+      el.addEventListener("touchmove", onTouchMove, { passive: true })
+      el.addEventListener("touchend", onTouchEnd, { passive: true })
+      el.addEventListener("touchcancel", onTouchEnd, { passive: true })
       return () => {
-        el.removeEventListener("scroll", onScroll); el.removeEventListener("pointerdown", onStart); el.removeEventListener("wheel", onStart)
-        el.removeEventListener("touchstart", onTouchStart); el.removeEventListener("touchend", onTouchEnd); el.removeEventListener("touchcancel", onTouchEnd)
+        el.removeEventListener("scroll", onScroll); el.removeEventListener("wheel", onWheel)
+        el.removeEventListener("touchstart", onTouchStart); el.removeEventListener("touchmove", onTouchMove)
+        el.removeEventListener("touchend", onTouchEnd); el.removeEventListener("touchcancel", onTouchEnd)
       }
     })
     return () => offs.forEach((off) => off())
