@@ -27,10 +27,55 @@ export const SIZES = ["35 · 22,5 cm", "36 · 23 cm", "37 · 23,5 cm", "38 · 24
 export const PRODUCTS = ["Zapatillas", "Mochilas", "Gorras", "Botellas", "Chaquetas", "Calcetines", "Camisetas", "Gafas", "Relojes", "Bolsas"]
 // A pantalla completa hay más contenido, para que el scroll dé de sí en un teléfono grande
 export const MORE_PRODUCTS = ["Sudaderas", "Pantalones", "Bufandas", "Guantes", "Cinturones", "Carteras", "Paraguas", "Sandalias", "Botas", "Gorros",
-  "Chalecos", "Faldas", "Vestidos", "Abrigos", "Pijamas", "Bañadores", "Toallas", "Fundas", "Llaveros", "Cuadernos"]
+  "Chalecos", "Faldas", "Vestidos", "Abrigos", "Pijamas", "Bañadores", "Toallas", "Fundas", "Llaveros", "Cuadernos",
+  "Camisas", "Polos", "Leggings", "Mallas", "Chanclas", "Mocasines", "Pulseras", "Collares", "Pendientes", "Anillos",
+  "Bolsos", "Riñoneras", "Maletas", "Neceseres", "Termos", "Fiambreras", "Esterillas", "Cascos", "Rodilleras", "Muñequeras"]
 export const DETAILS = ["Envío gratis", "Devolución en 30 días", "Garantía de 2 años"]
 export const MORE_DETAILS = ["Recogida en tienda", "Pago a plazos sin intereses", "Material: algodón orgánico", "Lavar a 30 grados", "Fabricado en Portugal",
-  "Peso: 320 g", "Opiniones: 4,6 de 5", "Preguntas frecuentes", "Cambio de talla gratis", "Atención al cliente 24 h", "Envoltorio de regalo", "Tarjeta regalo"]
+  "Peso: 320 g", "Opiniones: 4,6 de 5", "Preguntas frecuentes", "Cambio de talla gratis", "Atención al cliente 24 h", "Envoltorio de regalo", "Tarjeta regalo",
+  "Suela: goma reciclada", "Plantilla extraíble", "Cordones de repuesto", "Apta para vegetarianos", "Colección otoño", "Referencia 48213",
+  "Disponible en 6 colores", "Entrega en 24 o 48 h", "Envío a Canarias y Baleares", "Puntos de fidelidad: 45"]
+// Contenido extra solo a pantalla completa (prueba en el móvil): más que recorrer en cada nivel
+export const REVIEWS = [
+  ["Laura", "Muy cómodas desde el primer día. Las uso para caminar a diario."], ["Marc", "Talla bien, pedí mi número de siempre."],
+  ["Ana", "El color es tal cual sale en la foto. Repetiré."], ["Pablo", "Ligeras y bonitas, aunque la suela se ensucia rápido."],
+  ["Sara", "Llegaron en dos días y bien empaquetadas."], ["Jorge", "Buena relación calidad precio."],
+  ["Elena", "Las cambié de talla sin problema y gratis."], ["Iván", "Perfectas para el gimnasio."],
+]
+export const SIZE_GUIDE = [
+  ["Tallas de mujer", ["35 · EE. UU. 5", "36 · EE. UU. 6", "37 · EE. UU. 6,5", "38 · EE. UU. 7,5", "39 · EE. UU. 8", "40 · EE. UU. 9", "41 · EE. UU. 9,5", "42 · EE. UU. 10,5"]],
+  ["Tallas de hombre", ["39 · R. U. 6", "40 · R. U. 6,5", "41 · R. U. 7,5", "42 · R. U. 8", "43 · R. U. 9", "44 · R. U. 9,5", "45 · R. U. 10,5", "46 · R. U. 11"]],
+  ["Ancho del pie", ["Estrecho · hasta 9 cm", "Normal · de 9 a 10 cm", "Ancho · de 10 a 11 cm", "Muy ancho · más de 11 cm"]],
+] as const
+
+// Bloques extra a pantalla completa: opiniones y productos parecidos (detalle) y más tablas de tallas (ventana)
+export function DetailExtra() {
+  return <>
+    <p className="pt-inset-md text-title font-strong">Opiniones</p>
+    {REVIEWS.map(([who, text]) => (
+      <div key={who} className="grid gap-gap-xs border-b-thin pb-inset-sm">
+        <span className="text-ui font-strong">{who}</span>
+        <span className="text-ui text-muted-foreground">{text}</span>
+      </div>
+    ))}
+    <p className="pt-inset-md text-title font-strong">También te puede gustar</p>
+    <div className="grid grid-cols-2 gap-gap-lg">
+      {MORE_PRODUCTS.slice(0, 6).map((t) => (
+        <div key={t} className="grid gap-gap-sm"><span className="block h-field-sm rounded-card bg-primary-subtle" /><span>{t}</span></div>
+      ))}
+    </div>
+  </>
+}
+export function SizeExtra() {
+  return <>
+    {SIZE_GUIDE.map(([title, rows]) => (
+      <div key={title} className="contents">
+        <p className="pt-inset-md text-title font-strong">{title}</p>
+        {rows.map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
+      </div>
+    ))}
+  </>
+}
 export const CONCENTRIC = "calc(var(--lab-screen-radius) - var(--size-tab-bar-expanded) / 2)"
 export const KIDS = ["28 · 17,5 cm", "29 · 18 cm", "30 · 19 cm", "31 · 19,5 cm", "32 · 20,5 cm", "33 · 21 cm", "34 · 22 cm"]
 
@@ -285,6 +330,7 @@ function FloatingBarHorizontal({ option, fullscreen = false }: { option: Option;
             <p className="text-ui text-muted-foreground">Ligeras, transpirables y con suela de goma reciclada. Pulsa «Ver tallas» para abrir la ventana del tercer nivel.</p>
             <div><Button variant="outline" onClick={() => go("modal")}>Ver tallas</Button></div>
             {details.map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
+            {fullscreen && <DetailExtra />}
           </div>
         )}
       </div>
@@ -301,6 +347,7 @@ function FloatingBarHorizontal({ option, fullscreen = false }: { option: Option;
           {KIDS.map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
           <p className="pt-inset-md text-title font-strong">Cómo medir el pie</p>
           <p className="text-ui text-muted-foreground">Ponte de pie sobre un papel, marca el talón y la punta del dedo más largo y mide la distancia en centímetros. Si estás entre dos tallas, elige la mayor.</p>
+          <SizeExtra />
         </>}
       </div>
 
