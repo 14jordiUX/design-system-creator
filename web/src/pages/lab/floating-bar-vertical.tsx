@@ -10,10 +10,14 @@
 //   · Opción «arco» (params.arc): sin tutorial. Al hacer scroll con el pulgar, el dedo dibuja un arco y termina hacia el lado
 //     de su mano. Bajando (el dedo sube): si acaba más a la izquierda de donde empezó, el menú va a la izquierda; más a la derecha, a la derecha.
 //     Subiendo (el dedo baja) el arco va al revés, así que la regla se invierte.
+//   · En las dos opciones automáticas, arrastrar el menú desactiva el reconocimiento (se puede seguir arrastrando). Sale una
+//     bolita de aviso en «Más»; al pulsarlo se abre un panel lateral que lo explica, con un interruptor para volver a activarlo.
+//     Tienen su propio tutorial: explica que el menú sigue tu mano y que arrastrarlo lo desactiva.
 // Las tres piezas de fondo (a, b, c) se juntan en una sola en inicio y en la ventana, y se separan como un líquido en el detalle.
 // Todos los valores salen de tokens del sistema o de variables --lab-* de laboratorio.json.
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react"
 import { ArrowLeft, Hand, Heart, Share2, X } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { Option } from "./previews"
@@ -25,7 +29,7 @@ type Rect = { x: number; y: number; w: number; h: number }
 type Press = { blob: Blob; x: number; y: number } | null
 const BLOBS: Blob[] = ["a", "b", "c"]
 type Side = "right" | "left"
-const SIDE_KEY = "dsc.lab.barra.lado", TUTORIAL_KEY = "dsc.lab.barra.tutorial"
+const SIDE_KEY = "dsc.lab.barra.lado", TUTORIAL_KEY = "dsc.lab.barra.tutorial", AUTO_KEY = "dsc.lab.barra.auto"
 const stored = (store: () => Storage, key: string) => { try { return store().getItem(key) } catch { return null } }
 const store = (st: () => Storage, key: string, value: string) => { try { st().setItem(key, value) } catch { /* modo privado: no se recuerda */ } }
 
@@ -56,7 +60,16 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
   const [side, setSide] = useState<Side>(() => (stored(() => localStorage, SIDE_KEY) === "left" ? "left" : "right"))
   const [drag, setDrag] = useState<number | null>(null)   // px que llevas arrastrado el menú (null: no se está arrastrando)
   const hand = !!p.hand, arc = !!p.arc
-  const [tutorial, setTutorial] = useState(() => !hand && !arc && stored(() => sessionStorage, TUTORIAL_KEY) !== "visto")
+  const autoMode = hand || arc   // versiones que reconocen la mano
+  const tutorialKey = autoMode ? `${TUTORIAL_KEY}.auto` : TUTORIAL_KEY
+  const [tutorial, setTutorial] = useState(() => stored(() => sessionStorage, tutorialKey) !== "visto")
+  // Reconocimiento automático: activo hasta que arrastras el menú; se reactiva con el interruptor del panel de «Más»
+  const [autoOn, setAutoOn] = useState(() => stored(() => localStorage, AUTO_KEY) !== "no")
+  const autoRef = useRef(autoOn)
+  autoRef.current = autoOn
+  const [notice, setNotice] = useState(false)   // bolita de aviso en «Más»
+  const [panel, setPanel] = useState(false)     // panel lateral de «Más»
+  const setAuto = (on: boolean) => { setAutoOn(on); store(() => localStorage, AUTO_KEY, on ? "si" : "no"); if (on) setNotice(false) }
   // Mano: dónde empezó el último gesto (dedo o rueda del ratón). Se decide una vez por gesto, cuando de verdad hay scroll.
   const gestureX = useRef<number | null>(null)
   const sideRef = useRef<Side>("right")
@@ -115,7 +128,7 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
         last = y
         if (own !== (levelRef.current === "modal")) return
         const gx = gestureX.current, box = frame.current?.getBoundingClientRect()
-        if (hand && gx !== null && box && Math.abs(d) > 0) {
+        if (hand && autoRef.current && gx !== null && box && Math.abs(d) > 0) {
           gestureX.current = null
           const next: Side = gx - box.left > box.width / 2 ? "right" : "left"
           if (next !== sideRef.current) { setSide(next); store(() => localStorage, SIDE_KEY, next) }
@@ -133,7 +146,7 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
       const onTouchEnd = (e: TouchEvent) => {
         const st = arcStart, t = e.changedTouches[0]
         arcStart = null
-        if (!st || !t || el.scrollTop === st.top) return   // solo cuenta si de verdad hubo scroll (un toque no mueve el menú)
+        if (!st || !t || !autoRef.current || el.scrollTop === st.top) return   // solo cuenta si de verdad hubo scroll (un toque no mueve el menú)
         const dx = t.clientX - st.x
         if (Math.abs(dx) < px(el, "--space-gap-sm")) return   // casi recto: no se sabe la mano, se queda donde está
         const down = el.scrollTop > st.top   // bajando por la página: el dedo sube y el arco se curva hacia el lado de la mano
@@ -226,8 +239,8 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
   // Empieza a contar cuando el dedo se mueve más a los lados que arriba/abajo. Al soltar, si ha pasado de la mitad
   // del camino se queda en el otro lado; si no, vuelve al suyo (con el mismo muelle que el resto de la barra).
   // Se escucha en toda la ventana: un dedo rápido sale del menú antes de que el menú se haya movido.
-  const geo = useRef({ side, travel, gap })
-  geo.current = { side, travel, gap }
+  const geo = useRef({ side, travel, gap, autoMode })
+  geo.current = { side, travel, gap, autoMode }
   const dragDown = (e: RPointerEvent<HTMLElement>) => {
     const st = { x: e.clientX, y: e.clientY, id: e.pointerId }
     dragged.current = false
@@ -251,7 +264,9 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
       const moved = dragNow.current
       dragNow.current = null
       if (moved === null) return
-      const { side, travel } = geo.current
+      const { side, travel, autoMode } = geo.current
+      // Si lo mueves tú, manda tu decisión: se apaga el reconocimiento automático y se avisa en «Más»
+      if (autoMode && autoRef.current) { setAuto(false); setNotice(true) }
       if (Math.abs(moved) > travel / 2) {
         const next: Side = side === "right" ? "left" : "right"
         setSide(next); store(() => localStorage, SIDE_KEY, next)
@@ -264,7 +279,7 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
     window.addEventListener("pointerup", end)
     window.addEventListener("pointercancel", end)
   }
-  const closeTutorial = () => { setTutorial(false); store(() => sessionStorage, TUTORIAL_KEY, "visto") }
+  const closeTutorial = () => { setTutorial(false); store(() => sessionStorage, tutorialKey, "visto") }
   const showTutorial = tutorial && level === "home" && shown === "home" && W > 0
   // Tutorial: una copia del menú va y vuelve hacia el otro lado, para enseñar el gesto
   useEffect(() => {
@@ -375,10 +390,17 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
             <span aria-hidden className="absolute inset-x-inset-2xs rounded-pill bg-primary-subtle motion-reduce:transition-none"
               style={{ top: indTop, bottom: indBottom, transition: resizing ? `top ${shape}, bottom ${shape}` : dir > 0 ? `bottom ${lead}, top ${trail}` : `top ${lead}, bottom ${trail}` }} />
             {TABS.map(({ icon: Icon, label }, i) => (
-              <button key={label} type="button" onClick={() => pick(i)} aria-current={tab === i ? "page" : undefined} aria-label={small ? label : undefined}
+              <button key={label} type="button" aria-current={tab === i ? "page" : undefined} aria-label={small ? label : undefined}
+                onClick={() => { if (autoMode && i === n - 1) { setPanel(true); setNotice(false) } else pick(i) }}
                 className={cn("relative flex min-h-0 w-full flex-1 flex-col items-center justify-center rounded-pill text-caption transition-colors",
                   tab === i ? "font-emphasis text-link" : "text-muted-foreground")}>
-                <Icon className="size-icon-md shrink-0" />
+                <span className="relative shrink-0">
+                  <Icon className="size-icon-md" />
+                  {autoMode && notice && i === n - 1 && (
+                    <span role="status" aria-label="Aviso: reconocimiento de la mano desactivado"
+                      className="absolute -top-inset-3xs -right-inset-3xs size-indicator rounded-pill bg-destructive" />
+                  )}
+                </span>
                 <span className={cn("grid w-full grid-cols-[minmax(0,1fr)] text-center transition-[grid-template-rows,opacity] duration-emphasis ease-emphasis",
                   small ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100")}>
                   <span className="min-h-0 overflow-hidden"><span className="block truncate px-inset-3xs pt-inset-3xs">{label}</span></span>
@@ -423,15 +445,59 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
             <div role="dialog" aria-labelledby={`${gooId}-tutorial`}
               className={cn(drag === null && "pointer-events-auto", "absolute inset-x-0 grid gap-gap-md rounded-card bg-popover p-inset-lg shadow-modal")}
               style={{ bottom: a.h + gap * 2 }}>
-              <p id={`${gooId}-tutorial`} className="text-body font-strong">Pon el menú en el lado que prefieras</p>
-              <p className="text-ui text-muted-foreground">
-                Arrastra el menú hacia el lado contrario de la pantalla y suéltalo. Se queda ahí, a mano de tu pulgar, hasta que lo vuelvas a mover.
-              </p>
+              {autoMode ? <>
+                <p id={`${gooId}-tutorial`} className="text-body font-strong">El menú sigue a tu mano</p>
+                <p className="text-ui text-muted-foreground">
+                  {arc ? "Al hacer scroll reconocemos con qué mano navegas por la curva que hace tu pulgar" : "Al hacer scroll reconocemos con qué mano navegas por el lado de la pantalla que usas"}, y
+                  el menú se pone en ese lado.
+                </p>
+                <p className="text-ui text-muted-foreground">
+                  Si lo prefieres, arrástralo al lado que quieras. Al arrastrarlo se desactiva el reconocimiento automático; lo puedes volver a activar en «Más».
+                </p>
+              </> : <>
+                <p id={`${gooId}-tutorial`} className="text-body font-strong">Pon el menú en el lado que prefieras</p>
+                <p className="text-ui text-muted-foreground">
+                  Arrastra el menú hacia el lado contrario de la pantalla y suéltalo. Se queda ahí, a mano de tu pulgar, hasta que lo vuelvas a mover.
+                </p>
+              </>}
               <div><Button size="sm" onClick={closeTutorial}>Entendido</Button></div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Panel lateral de «Más» (versiones automáticas): explica el reconocimiento de la mano y deja reactivarlo */}
+      {autoMode && <>
+        <div aria-hidden onClick={() => setPanel(false)}
+          className={cn("absolute inset-0 z-overlay bg-overlay transition-opacity duration-default ease-default", panel ? "opacity-100" : "pointer-events-none opacity-0")} />
+        <div role="dialog" aria-modal="true" aria-labelledby={`${gooId}-panel`} aria-hidden={!panel}
+          className={cn("absolute inset-y-0 z-overlay flex w-sheet flex-col gap-gap-lg bg-popover p-inset-lg shadow-modal duration-emphasis ease-emphasis",
+            side === "right" ? "right-0" : "left-0",
+            panel ? "visible translate-x-0" : cn("invisible", side === "right" ? "translate-x-full" : "-translate-x-full"))}
+          style={{ maxWidth: "85%", transitionProperty: "translate, transform, visibility", ...(fullscreen ? { paddingTop: "calc(var(--space-inset-lg) + env(safe-area-inset-top))" } : {}) }}>
+          <div className="flex items-center justify-between gap-gap-sm">
+            <p id={`${gooId}-panel`} className="text-title font-strong">Más</p>
+            <Button variant="ghost" size="icon" className="rounded-pill" aria-label="Cerrar" onClick={() => setPanel(false)}><X /></Button>
+          </div>
+          {!autoOn && (
+            <div className="grid gap-gap-xs rounded-card bg-subtle p-inset-md">
+              <p className="flex items-center gap-gap-xs text-ui font-strong">
+                <span aria-hidden className="size-indicator shrink-0 rounded-pill bg-destructive" />Reconocimiento de la mano desactivado
+              </p>
+              <p className="text-ui text-muted-foreground">Has movido el menú tú, así que ahora se queda donde lo dejes. Puedes seguir arrastrándolo al otro lado cuando quieras.</p>
+            </div>
+          )}
+          <label className="flex items-center justify-between gap-gap-md border-y-thin py-inset-md">
+            <span className="grid gap-gap-2xs">
+              <span className="text-ui font-strong">Reconocer la mano con la que navegas</span>
+              <span className="text-caption text-muted-foreground">
+                {arc ? "El menú se pone en el lado de tu mano según la curva que hace tu pulgar al hacer scroll." : "El menú se pone en el lado de la pantalla donde haces scroll."}
+              </span>
+            </span>
+            <Switch checked={autoOn} onCheckedChange={setAuto} />
+          </label>
+        </div>
+      </>}
     </div>
   )
 }
