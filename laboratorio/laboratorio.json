@@ -996,7 +996,7 @@
       "exp": "barra-flotante",
       "opt": "vertical-arco",
       "label": "Barra vertical, arco del pulgar",
-      "description": "Sin tutorial. Al hacer scroll con el pulgar, el dedo se curva hacia el lado de su mano: si acaba más a la izquierda de donde empezó, el menú va a la izquierda; si acaba más a la derecha, a la derecha."
+      "description": "Sin tutorial. El pulgar dibuja un arco al hacer scroll. Bajando: si el dedo acaba más a la izquierda de donde empezó, el menú va a la izquierda; más a la derecha, a la derecha. Subiendo, al revés."
     }
   ]
 }
