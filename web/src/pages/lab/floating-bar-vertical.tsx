@@ -22,7 +22,7 @@ import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { Option } from "./previews"
-import { CONCENTRIC, DETAILS, KIDS, MORE_DETAILS, MORE_PRODUCTS, PRODUCTS, SIZES, TABS, ms, px } from "./floating-bar"
+import { CONCENTRIC, DETAILS, DetailExtra, SizeExtra, KIDS, MORE_DETAILS, MORE_PRODUCTS, PRODUCTS, SIZES, TABS, ms, px } from "./floating-bar"
 
 type Level = "home" | "detail" | "modal"
 type Blob = "a" | "b" | "c"
@@ -423,6 +423,7 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
             <p className="text-ui text-muted-foreground">Ligeras, transpirables y con suela de goma reciclada. Pulsa «Ver tallas» para abrir la ventana del tercer nivel.</p>
             <div><Button variant="outline" onClick={() => go("modal")}>Ver tallas</Button></div>
             {details.map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
+            {fullscreen && <DetailExtra />}
           </div>
         )}
       </div>
@@ -439,6 +440,7 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
           {KIDS.map((t) => <p key={t} className="border-b-thin pb-inset-sm text-ui">{t}</p>)}
           <p className="pt-inset-md text-title font-strong">Cómo medir el pie</p>
           <p className="text-ui text-muted-foreground">Ponte de pie sobre un papel, marca el talón y la punta del dedo más largo y mide la distancia en centímetros. Si estás entre dos tallas, elige la mayor.</p>
+          <SizeExtra />
         </>}
       </div>
 
