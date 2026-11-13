@@ -155,13 +155,50 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
         decide((dx < 0) === (dy < 0) ? "left" : "right")
       }
       const decide = (next: Side) => { if (next !== sideRef.current) { setSide(next); store(() => localStorage, SIDE_KEY, next) } }
+
+      // Deslizamiento propio (solo en las versiones que reconocen la mano). Safari no avisa de los toques que empiezan
+      // mientras la página aún se desliza por inercia, así que aquí el scroll y la inercia los mueve la propia página:
+      // el navegador no desliza nada (touch-action: none) y nunca perdemos un toque.
+      // La frenada sale de --lab-scroll-friction (cuánto conserva la velocidad cada milisegundo, como iOS).
+      const ownScroll = hand || arc
+      let vel = 0, raf = 0, lastY = 0, lastT = 0, moved = 0
+      const stopGlide = () => { if (raf) cancelAnimationFrame(raf); raf = 0 }
+      const glide = () => {
+        const f = parseFloat(getComputedStyle(el).getPropertyValue("--lab-scroll-friction"))
+        if (!(f > 0 && f < 1)) return
+        let prev = performance.now()
+        const step = (now: number) => {
+          const dt = now - prev
+          prev = now
+          vel *= Math.pow(f, dt)
+          const before = el.scrollTop
+          el.scrollTop = before + vel * dt
+          if (Math.abs(vel * dt) < 0.1 || el.scrollTop === before) { raf = 0; return }
+          raf = requestAnimationFrame(step)
+        }
+        raf = requestAnimationFrame(step)
+      }
+      // Si arrastraste para hacer scroll, al soltar no cuenta como toque en lo que haya debajo
+      const swallowClick = () => {
+        const block = (ev: Event) => { ev.stopPropagation(); ev.preventDefault() }
+        el.addEventListener("click", block, { capture: true, once: true })
+        window.setTimeout(() => el.removeEventListener("click", block, { capture: true }), ms(el, "--motion-duration-default") || 1)
+      }
+      if (ownScroll) el.style.touchAction = "none"
       const onTouchStart = (e: TouchEvent) => {
         gestureX.current = null   // el gesto con el dedo manda; la decisión por «scroll» queda solo para la rueda
         const t = e.touches[0]
+        if (ownScroll && t) { stopGlide(); vel = 0; lastY = t.clientY; lastT = e.timeStamp; moved = 0 }
         touch = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, decided: false, seg: { x: t.clientX, y: t.clientY }, ext: { x: t.clientX, y: t.clientY }, dir: 0 } : null
       }
       const onTouchMove = (e: TouchEvent) => {
         const t = e.touches[0]
+        if (ownScroll && t) {
+          const dy = t.clientY - lastY, dt = e.timeStamp - lastT
+          el.scrollTop -= dy
+          if (dt > 0) vel = (-dy / dt) * 0.8 + vel * 0.2   // velocidad suavizada, en px por milisegundo
+          moved += Math.abs(dy); lastY = t.clientY; lastT = e.timeStamp
+        }
         if (arc && touch && t && autoRef.current) {
           const p = { x: t.clientX, y: t.clientY }, tc = touch
           if (tc.dir === 0) {
@@ -183,6 +220,11 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
       const onTouchEnd = (e: TouchEvent) => {
         const st = touch, t = e.changedTouches[0]
         touch = null
+        if (ownScroll) {
+          if (e.timeStamp - lastT > ms(el, "--motion-duration-default")) vel = 0   // el dedo se paró antes de soltar: sin inercia
+          if (vel) glide()
+          if (moved >= minMove()) swallowClick()
+        }
         if (!st || !t || !arc || !autoRef.current) return
         judgeArc(st.seg, { x: t.clientX, y: t.clientY })   // último repaso del tramo (un toque o un gesto recto no cambian nada)
       }
@@ -193,6 +235,7 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
       el.addEventListener("touchend", onTouchEnd, { passive: true })
       el.addEventListener("touchcancel", onTouchEnd, { passive: true })
       return () => {
+        stopGlide(); el.style.touchAction = ""
         el.removeEventListener("scroll", onScroll); el.removeEventListener("wheel", onWheel)
         el.removeEventListener("touchstart", onTouchStart); el.removeEventListener("touchmove", onTouchMove)
         el.removeEventListener("touchend", onTouchEnd); el.removeEventListener("touchcancel", onTouchEnd)
