@@ -13,7 +13,7 @@ import Foundation from "./pages/system/Foundation"
 import { ComponentPage, ComponentsIndex } from "./pages/system/Components"
 import Patterns, { PatternPage } from "./pages/system/Patterns"
 import Downloads from "./pages/system/Downloads"
-import Prototypes, { PrototypePage, PrototypeFullscreen } from "./pages/system/Prototypes"
+import Prototypes, { PrototypePage, MobileTestPage, PrototypeFullscreen } from "./pages/system/Prototypes"
 import { TooltipProvider } from "./components/ui/tooltip"
 
 // Las mismas páginas sirven para el modo cliente (/s/id/...) y el modo editor (/s/id/editar/...)
@@ -28,6 +28,7 @@ const systemPages = (
     <Route path="patrones/:slug" element={<PatternPage />} />
     <Route path="prototipos" element={<Prototypes />} />
     <Route path="prototipos/:slug" element={<PrototypePage />} />
+    <Route path="prototipos/movil/:exp/:opt" element={<MobileTestPage />} />
     <Route path="descargas" element={<Downloads />} />
   </>
 )

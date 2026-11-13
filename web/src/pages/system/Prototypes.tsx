@@ -35,7 +35,7 @@ import { DEMOS } from "./demos"
 import { ALL_COMPONENTS } from "@/lib/nav"
 import { customFor } from "@/lib/custom"
 import { QrButton } from "@/components/app/qr-button"
-import lab from "../../../../laboratorio/laboratorio.json"
+import { MOBILE_TESTS, mobileTestPath } from "@/lib/mobile-tests"
 
 export default function Prototypes() {
   const { ds, mode, tokens } = useDS()
@@ -75,9 +75,7 @@ export default function Prototypes() {
 }
 
 // Prototipos de móvil que vienen del Laboratorio: se abren a pantalla completa en el teléfono (con enlace o con QR).
-// Los datos (qué prueba y qué opción) están en laboratorio.json, en «prototipos».
-type MobileProto = { exp: string; opt: string; label: string; description: string }
-const MOBILE = (lab as { prototipos?: MobileProto[] }).prototipos ?? []
+const MOBILE = MOBILE_TESTS
 
 function MobilePrototypes({ systemId, systemName, mode }: { systemId: string; systemName: string; mode: "light" | "dark" }) {
   if (!MOBILE.length) return null
@@ -86,12 +84,12 @@ function MobilePrototypes({ systemId, systemName, mode }: { systemId: string; sy
     <Section title="Para probar en el móvil" description={`Se abren a pantalla completa en el teléfono, con ${systemName}. Escanea el QR con la cámara o abre el enlace.`}>
       <div className="grid gap-gap-lg md:grid-cols-2">
         {MOBILE.map((m) => {
-          const path = `/laboratorio/${m.exp}/${m.opt}?sistema=${systemId}${mode === "dark" ? "&modo=oscuro" : ""}`
+          const path = mobileTestPath(m, systemId, mode)
           return (
             <div key={m.exp + m.opt} className="flex flex-col rounded-card border-thin p-inset-lg">
-              <div className="mb-gap-xs flex items-center gap-gap-sm text-body font-strong">
+              <Link to={`movil/${m.exp}/${m.opt}`} className="mb-gap-xs flex items-center gap-gap-sm rounded-control text-body font-strong hover:underline focus-visible:focus-ring">
                 <Smartphone className="size-icon-md text-primary" />{m.label}
-              </div>
+              </Link>
               <p className="text-ui text-muted-foreground">{m.description}</p>
               <div className="mt-auto flex flex-wrap gap-gap-sm pt-inset-md">
                 <QrButton url={`${siteUrl()}/#${path}`} title={`${m.label} · ${systemName}`} />
@@ -104,6 +102,36 @@ function MobilePrototypes({ systemId, systemName, mode }: { systemId: string; sy
         })}
       </div>
     </Section>
+    </div>
+  )
+}
+
+/** Página de una prueba de móvil dentro de la web: vista previa en un marco de teléfono, QR y enlace a pantalla completa. */
+export function MobileTestPage() {
+  const { ds, mode, base } = useDS()
+  const { exp, opt } = useParams()
+  const m = MOBILE_TESTS.find((t) => t.exp === exp && t.opt === opt)
+  if (!m) {
+    return (
+      <EmptyState icon={<Smartphone className="size-icon-lg" />} title="No encuentro esta prueba" text="Puede que se haya quitado de la lista.">
+        <Button asChild><Link to={`${base}/prototipos`}>Ver todos los prototipos</Link></Button>
+      </EmptyState>
+    )
+  }
+  const path = mobileTestPath(m, ds.meta.id, mode)
+  return (
+    <div>
+      <PageHeader eyebrow="Prototipos · Para probar en el móvil" title={m.label} description={m.description} />
+      <div className="mb-gap-xl flex flex-wrap gap-gap-sm">
+        <QrButton size="default" url={`${siteUrl()}/#${path}`} title={`${m.label} · ${ds.meta.name}`} />
+        <Button variant="outline" asChild><Link to={path} target="_blank"><ExternalLink />Abrir a pantalla completa</Link></Button>
+      </div>
+      <p className="mb-gap-md text-ui text-muted-foreground">
+        Vista previa: se usa con el ratón. Los gestos del dedo (como el arco del pulgar) solo funcionan de verdad en el teléfono.
+      </p>
+      <Frame view="mobile" className="mx-auto overflow-hidden">
+        <iframe key={path} src={`${location.pathname}#${path}`} title={`${m.label} · ${ds.meta.name}`} className="size-full border-0" />
+      </Frame>
     </div>
   )
 }
