@@ -8,7 +8,8 @@
 //   · Opción «mano» (params.hand): sin tutorial y con magia: si haces scroll con el dedo en la mitad derecha de la pantalla,
 //     el menú se va a la derecha; si lo haces en la mitad izquierda, a la izquierda. Arrastrarlo sigue funcionando.
 //   · Opción «arco» (params.arc): sin tutorial. Al hacer scroll con el pulgar, el dedo dibuja un arco y termina hacia el lado
-//     de su mano: si el scroll acaba más a la izquierda de donde empezó, el menú va a la izquierda; si acaba más a la derecha, a la derecha.
+//     de su mano. Bajando (el dedo sube): si acaba más a la izquierda de donde empezó, el menú va a la izquierda; más a la derecha, a la derecha.
+//     Subiendo (el dedo baja) el arco va al revés, así que la regla se invierte.
 // Las tres piezas de fondo (a, b, c) se juntan en una sola en inicio y en la ventana, y se separan como un líquido en el detalle.
 // Todos los valores salen de tokens del sistema o de variables --lab-* de laboratorio.json.
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react"
@@ -135,7 +136,8 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
         if (!st || !t || el.scrollTop === st.top) return   // solo cuenta si de verdad hubo scroll (un toque no mueve el menú)
         const dx = t.clientX - st.x
         if (Math.abs(dx) < px(el, "--space-gap-sm")) return   // casi recto: no se sabe la mano, se queda donde está
-        const next: Side = dx < 0 ? "left" : "right"
+        const down = el.scrollTop > st.top   // bajando por la página: el dedo sube y el arco se curva hacia el lado de la mano
+        const next: Side = (dx < 0) === down ? "left" : "right"
         if (next !== sideRef.current) { setSide(next); store(() => localStorage, SIDE_KEY, next) }
       }
       el.addEventListener("scroll", onScroll, { passive: true })
