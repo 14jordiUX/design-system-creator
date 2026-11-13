@@ -9,7 +9,8 @@
 //     el menú se va a la derecha; si lo haces en la mitad izquierda, a la izquierda. Arrastrarlo sigue funcionando.
 //   · Opción «arco» (params.arc): sin tutorial. Al hacer scroll con el pulgar, el dedo dibuja un arco y termina hacia el lado
 //     de su mano. Bajando (el dedo sube): si acaba más a la izquierda de donde empezó, el menú va a la izquierda; más a la derecha, a la derecha.
-//     Subiendo (el dedo baja) el arco va al revés, así que la regla se invierte.
+//     Subiendo (el dedo baja) el arco va al revés, así que la regla se invierte. Se decide mientras mueves el dedo, en cada
+//     subida o bajada (si cambias de sentido sin soltar, cuenta como un tramo nuevo).
 //   · En las dos opciones automáticas, arrastrar el menú desactiva el reconocimiento (se puede seguir arrastrando). Sale una
 //     bolita de aviso en «Más»; al pulsarlo se abre un panel lateral que lo explica, con un interruptor para volver a activarlo.
 //     Tienen su propio tutorial: explica que el menú sigue tu mano y que arrastrarlo lo desactiva.
@@ -143,14 +144,36 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
       // Dedo: todo se decide con el movimiento del propio dedo, no con el de la página. Así también funciona si tocas
       // mientras la página aún se desliza por la inercia del gesto anterior (la página se mueve pero el dedo no ha hecho nada).
       const minMove = () => px(el, "--space-gap-sm")
-      let touch: { x: number; y: number; decided: boolean } | null = null
+      type Pt = { x: number; y: number }
+      // seg: dónde empezó el tramo actual (cada subida o bajada es un tramo); ext: el punto más lejano del tramo; dir: 1 baja el dedo, -1 sube
+      let touch: { x: number; y: number; decided: boolean; seg: Pt; ext: Pt; dir: number } | null = null
+      // Arco: con el tramo actual decide al momento, sin esperar a soltar. Dedo que sube = bajas por la página: el arco se
+      // curva hacia el lado de la mano; dedo que baja, al revés. Hace falta un poco de recorrido y de curva para decidir.
+      const judgeArc = (seg: Pt, p: Pt) => {
+        const dx = p.x - seg.x, dy = p.y - seg.y
+        if (Math.abs(dy) < px(el, "--motion-distance-scroll") || Math.abs(dx) < minMove()) return
+        decide((dx < 0) === (dy < 0) ? "left" : "right")
+      }
       const decide = (next: Side) => { if (next !== sideRef.current) { setSide(next); store(() => localStorage, SIDE_KEY, next) } }
       const onTouchStart = (e: TouchEvent) => {
         gestureX.current = null   // el gesto con el dedo manda; la decisión por «scroll» queda solo para la rueda
-        touch = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, decided: false } : null
+        const t = e.touches[0]
+        touch = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, decided: false, seg: { x: t.clientX, y: t.clientY }, ext: { x: t.clientX, y: t.clientY }, dir: 0 } : null
       }
       const onTouchMove = (e: TouchEvent) => {
         const t = e.touches[0]
+        if (arc && touch && t && autoRef.current) {
+          const p = { x: t.clientX, y: t.clientY }, tc = touch
+          if (tc.dir === 0) {
+            if (Math.abs(p.y - tc.seg.y) >= minMove()) { tc.dir = Math.sign(p.y - tc.seg.y); tc.ext = p }
+          } else if (Math.sign(p.y - tc.ext.y) === tc.dir || p.y === tc.ext.y) {
+            tc.ext = p   // sigue en el mismo sentido
+          } else if (Math.abs(p.y - tc.ext.y) >= minMove()) {
+            tc.seg = tc.ext; tc.dir = -tc.dir; tc.ext = p   // ha cambiado de sentido sin soltar: empieza otro tramo
+          }
+          judgeArc(tc.seg, p)
+          return
+        }
         if (!touch || !t || touch.decided || !hand || !autoRef.current) return
         if (Math.abs(t.clientY - touch.y) < minMove()) return   // aún no es scroll (puede ser un toque)
         touch.decided = true
@@ -161,11 +184,7 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
         const st = touch, t = e.changedTouches[0]
         touch = null
         if (!st || !t || !arc || !autoRef.current) return
-        const dx = t.clientX - st.x, dy = t.clientY - st.y
-        if (Math.abs(dy) < minMove()) return   // no hubo scroll (un toque no mueve el menú)
-        if (Math.abs(dx) < minMove()) return   // casi recto: no se sabe la mano, se queda donde está
-        const down = dy < 0   // el dedo sube = bajas por la página: el arco se curva hacia el lado de la mano
-        decide((dx < 0) === down ? "left" : "right")
+        judgeArc(st.seg, { x: t.clientX, y: t.clientY })   // último repaso del tramo (un toque o un gesto recto no cambian nada)
       }
       el.addEventListener("scroll", onScroll, { passive: true })
       el.addEventListener("wheel", onWheel, { passive: true })
