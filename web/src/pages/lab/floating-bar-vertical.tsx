@@ -7,6 +7,8 @@
 //     hacia el lado contrario; una capa de tutorial lo explica la primera vez. El lado elegido se recuerda.
 //   · Opción «mano» (params.hand): sin tutorial y con magia: si haces scroll con el dedo en la mitad derecha de la pantalla,
 //     el menú se va a la derecha; si lo haces en la mitad izquierda, a la izquierda. Arrastrarlo sigue funcionando.
+//   · Opción «arco» (params.arc): sin tutorial. Al hacer scroll con el pulgar, el dedo dibuja un arco y termina hacia el lado
+//     de su mano: si el scroll acaba más a la izquierda de donde empezó, el menú va a la izquierda; si acaba más a la derecha, a la derecha.
 // Las tres piezas de fondo (a, b, c) se juntan en una sola en inicio y en la ventana, y se separan como un líquido en el detalle.
 // Todos los valores salen de tokens del sistema o de variables --lab-* de laboratorio.json.
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react"
@@ -52,8 +54,8 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
   const [merging, setMerging] = useState(false)
   const [side, setSide] = useState<Side>(() => (stored(() => localStorage, SIDE_KEY) === "left" ? "left" : "right"))
   const [drag, setDrag] = useState<number | null>(null)   // px que llevas arrastrado el menú (null: no se está arrastrando)
-  const hand = !!p.hand
-  const [tutorial, setTutorial] = useState(() => !hand && stored(() => sessionStorage, TUTORIAL_KEY) !== "visto")
+  const hand = !!p.hand, arc = !!p.arc
+  const [tutorial, setTutorial] = useState(() => !hand && !arc && stored(() => sessionStorage, TUTORIAL_KEY) !== "visto")
   // Mano: dónde empezó el último gesto (dedo o rueda del ratón). Se decide una vez por gesto, cuando de verdad hay scroll.
   const gestureX = useRef<number | null>(null)
   const sideRef = useRef<Side>("right")
@@ -124,13 +126,33 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
       }
       // Al tocar se apunta dónde está el dedo; con la rueda del ratón, dónde está el puntero
       const onStart = (e: PointerEvent | WheelEvent) => { gestureX.current = e.clientX }
+      // Arco: dónde empieza y dónde acaba el dedo (eventos de toque, que siguen llegando mientras la página se desliza)
+      let arcStart: { x: number; top: number } | null = null
+      const onTouchStart = (e: TouchEvent) => { arcStart = e.touches.length === 1 ? { x: e.touches[0].clientX, top: el.scrollTop } : null }
+      const onTouchEnd = (e: TouchEvent) => {
+        const st = arcStart, t = e.changedTouches[0]
+        arcStart = null
+        if (!st || !t || el.scrollTop === st.top) return   // solo cuenta si de verdad hubo scroll (un toque no mueve el menú)
+        const dx = t.clientX - st.x
+        if (Math.abs(dx) < px(el, "--space-gap-sm")) return   // casi recto: no se sabe la mano, se queda donde está
+        const next: Side = dx < 0 ? "left" : "right"
+        if (next !== sideRef.current) { setSide(next); store(() => localStorage, SIDE_KEY, next) }
+      }
       el.addEventListener("scroll", onScroll, { passive: true })
       el.addEventListener("pointerdown", onStart, { passive: true })
       el.addEventListener("wheel", onStart, { passive: true })
-      return () => { el.removeEventListener("scroll", onScroll); el.removeEventListener("pointerdown", onStart); el.removeEventListener("wheel", onStart) }
+      if (arc) {
+        el.addEventListener("touchstart", onTouchStart, { passive: true })
+        el.addEventListener("touchend", onTouchEnd, { passive: true })
+        el.addEventListener("touchcancel", onTouchEnd, { passive: true })
+      }
+      return () => {
+        el.removeEventListener("scroll", onScroll); el.removeEventListener("pointerdown", onStart); el.removeEventListener("wheel", onStart)
+        el.removeEventListener("touchstart", onTouchStart); el.removeEventListener("touchend", onTouchEnd); el.removeEventListener("touchcancel", onTouchEnd)
+      }
     })
     return () => offs.forEach((off) => off())
-  }, [hand])
+  }, [hand, arc])
 
   const go = (l: Level) => {
     if (l !== "modal" && scroller.current) scroller.current.scrollTop = 0
