@@ -161,19 +161,23 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
       // el navegador no desliza nada (touch-action: none) y nunca perdemos un toque.
       // La frenada sale de --lab-scroll-friction (cuánto conserva la velocidad cada milisegundo, como iOS).
       const ownScroll = hand || arc
+      // samples: posiciones recientes del dedo; al soltar, la velocidad sale de los últimos ~100 ms (como iOS), no del
+      // último movimiento, que al levantar el dedo casi siempre es pequeño
       let vel = 0, raf = 0, lastY = 0, lastT = 0, moved = 0
+      let samples: { y: number; t: number }[] = []
       const stopGlide = () => { if (raf) cancelAnimationFrame(raf); raf = 0 }
       const glide = () => {
         const f = parseFloat(getComputedStyle(el).getPropertyValue("--lab-scroll-friction"))
         if (!(f > 0 && f < 1)) return
-        let prev = performance.now()
+        let prev = performance.now(), pos = el.scrollTop   // posición con decimales (scrollTop redondea y frenaría antes de tiempo)
+        const max = el.scrollHeight - el.clientHeight
         const step = (now: number) => {
           const dt = now - prev
           prev = now
           vel *= Math.pow(f, dt)
-          const before = el.scrollTop
-          el.scrollTop = before + vel * dt
-          if (Math.abs(vel * dt) < 0.1 || el.scrollTop === before) { raf = 0; return }
+          pos = Math.min(max, Math.max(0, pos + vel * dt))
+          el.scrollTop = pos
+          if (Math.abs(vel) < 0.01 || pos <= 0 || pos >= max) { raf = 0; return }
           raf = requestAnimationFrame(step)
         }
         raf = requestAnimationFrame(step)
@@ -188,16 +192,18 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
       const onTouchStart = (e: TouchEvent) => {
         gestureX.current = null   // el gesto con el dedo manda; la decisión por «scroll» queda solo para la rueda
         const t = e.touches[0]
-        if (ownScroll && t) { stopGlide(); vel = 0; lastY = t.clientY; lastT = e.timeStamp; moved = 0 }
+        if (ownScroll && t) { stopGlide(); vel = 0; lastY = t.clientY; lastT = e.timeStamp; moved = 0; samples = [{ y: t.clientY, t: e.timeStamp }] }
         touch = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, decided: false, seg: { x: t.clientX, y: t.clientY }, ext: { x: t.clientX, y: t.clientY }, dir: 0 } : null
       }
       const onTouchMove = (e: TouchEvent) => {
         const t = e.touches[0]
         if (ownScroll && t) {
-          const dy = t.clientY - lastY, dt = e.timeStamp - lastT
+          const dy = t.clientY - lastY
           el.scrollTop -= dy
-          if (dt > 0) vel = (-dy / dt) * 0.8 + vel * 0.2   // velocidad suavizada, en px por milisegundo
           moved += Math.abs(dy); lastY = t.clientY; lastT = e.timeStamp
+          samples.push({ y: t.clientY, t: e.timeStamp })
+          const keep = e.timeStamp - ms(el, "--motion-duration-default")
+          while (samples.length > 2 && samples[0].t < keep) samples.shift()
         }
         if (arc && touch && t && autoRef.current) {
           const p = { x: t.clientX, y: t.clientY }, tc = touch
@@ -221,7 +227,11 @@ export function FloatingBarVertical({ option, fullscreen = false }: { option: Op
         const st = touch, t = e.changedTouches[0]
         touch = null
         if (ownScroll) {
-          if (e.timeStamp - lastT > ms(el, "--motion-duration-default")) vel = 0   // el dedo se paró antes de soltar: sin inercia
+          // Velocidad = recorrido del dedo en el último instante (px por ms). Si el dedo se paró antes de soltar, sin inercia
+          const span = ms(el, "--lab-scroll-sample") || ms(el, "--motion-duration-default")
+          const from = samples.findIndex((p) => p.t >= lastT - span)
+          const first = samples[Math.max(0, from - 1)], last = samples[samples.length - 1]
+          vel = first && last && last.t > first.t && e.timeStamp - lastT < span ? -(last.y - first.y) / (last.t - first.t) : 0
           if (vel) glide()
           if (moved >= minMove()) swallowClick()
         }
