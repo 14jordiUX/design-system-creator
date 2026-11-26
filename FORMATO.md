@@ -75,6 +75,55 @@ pantallas medidas tal como se ven, y el plugin de `figma-plugin/` lo dibuja en F
 variables enlazadas. El mismo plugin exporta los cambios (`dsc-figma-changes@1`) y `scripts/figma_changes.py` los
 resume para pasarlos al código. Detalles en `figma-plugin/README.md`.
 
+## Journeys (para el simulador de usuarios sintéticos)
+
+Un journey es un recorrido de varias pantallas, con variantes (A = lo que hay hoy, B, C… = propuestas), que se
+exporta a HTML para que el simulador de «Usuarios sintéticos» lo mida. El formato de salida es el contrato
+`CONTRATO-DSC.md` de ese proyecto.
+
+```
+systems/<id>/journeys/<slug>/      ← la fuente (o base/journeys/<slug>/)
+├── journey.json                   ← id, nombre, titulo, cliente, pantallas, variantes, objetivos
+└── <slug>.tsx                     ← las pantallas: export default ({ pantalla, variante }) => …
+
+journeys/<cliente>/<slug>/         ← lo exportado (se genera solo: no se edita a mano)
+├── journey.json                   ← el del contrato: origen, sistemaDiseno, pantallas, variantes, objetivos
+├── comun/estilo.css               ← solo las clases que se usan, con el tema del sistema
+├── comun/fuentes/                 ← las tipografías copiadas dentro (funciona sin conexión)
+├── A/index.html, A/…              ← una página por pantalla
+└── B/…                            ← las mismas pantallas y los mismos nombres de archivo
+```
+
+`journey.json` (fuente):
+
+| Campo | Qué es |
+|---|---|
+| `id` | Nombre de la carpeta, en minúsculas y con guiones |
+| `nombre`, `titulo` | Nombre del journey y título de las páginas (por ejemplo el nombre del cliente) |
+| `cliente` | Id del cliente en el simulador (la carpeta de salida es `journeys/<cliente>/`) |
+| `pantallas` | `{ id, nombre, archivo? }` en el orden del recorrido; la última es la de éxito. La primera es `index.html` |
+| `variantes` | `{ id, nombre, cambios }`; la primera es la A. `cambios` dice qué cambia y qué había en A |
+| `objetivos` | Opcional: `{ id, nombre, pantalla }`. Lo que cuenta como objetivo **al pulsarlo** en esa pantalla |
+
+Las pantallas siguen las reglas de los prototipos (solo componentes del sistema y clases de tokens) y además:
+
+- Se exportan a HTML **sin JavaScript**: para ir a otra pantalla, `<Ir a="tus-datos">` (enlace) o
+  `<Formulario a="confirmacion">` (envío falso que solo pasa de pantalla), de `@/journey`. Nada de `onClick` para
+  navegar. Lo que se abre y se cierra (menú móvil, preguntas frecuentes), con `<details>`. Los campos sin `name`.
+- Las diferencias entre variantes se escriben en el mismo archivo: `variante === "B" ? … : …`.
+- Anotaciones para el simulador: `data-sim-accion` (`principal`, `secundaria`, `salida`), `data-sim-responde="<duda>"`,
+  `data-sim-compromiso` (`datos-personales`, `pago`) y `data-sim-objetivo="<id>"` en el enlace, botón o formulario
+  que cumple un objetivo de `objetivos`.
+
+```
+node scripts/export_journey.mjs systems/<id>/journeys/<slug>   # exporta uno (necesita cd web && npm install una vez)
+node scripts/export_journey.mjs --all                          # exporta todos
+```
+
+El exportador comprueba lo básico del contrato (nada de internet, enlaces y formularios solo entre pantallas,
+objetivos marcados en su pantalla). La revisión completa la hace el simulador:
+`python -m simulador revisar-journey journeys/<cliente>/<slug>` desde la carpeta «Usuarios sintéticos».
+
 ## La ficha (`system.json`)
 
 | Campo | Qué es | Ejemplo |
@@ -115,6 +164,7 @@ python scripts/migrate.py --all                              # añade a los sist
 cd web && npm run build && cp dist/index.html "../Abrir la web.html"   # actualiza la web
 python scripts/build_registry.py [web/public/r]               # publica cada sistema como registro de shadcn (lo hace GitHub al publicar)
 python scripts/check_tokens.py                               # comprueba que no hay ningún valor fijo (debe dar 0, 0 y 0)
+node scripts/export_journey.mjs --all                        # exporta los journeys a journeys/<cliente>/<journey>/ (para el simulador)
 ```
 
 ## Regla: todo sale de tokens
