@@ -287,15 +287,21 @@ async function exportar(dir, herramientas) {
         const o = objetivos.get(m[2])
         if (!o) errores.push(`${donde}: data-sim-objetivo="${m[2]}" no está en journey.json › objetivos`)
         else if (o.pantalla !== p.id) errores.push(`${donde}: el objetivo «${m[2]}» es de la pantalla «${o.pantalla}», no de «${p.id}»`)
-        if (!["a", "button", "form", "input", "summary"].includes(m[1]))
-          errores.push(`${donde}: data-sim-objetivo="${m[2]}" está en un <${m[1]}>; ponlo en el enlace, botón o formulario que se pulsa`)
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(m[2]))
+          errores.push(`${donde}: data-sim-objetivo="${m[2]}" tiene que ir en minúsculas, números y guiones`)
+        else if (!["a", "button", "form", "input", "summary"].includes(m[1]))
+          avisos.push(`${donde}: data-sim-objetivo="${m[2]}" está en un <${m[1]}>: contará si se pulsa cualquier enlace o botón de dentro`)
       }
     }
-    for (const o of objetivos.values()) {
-      const donde = `${v.id}/${j._archivo(o.pantalla)}`
-      if (!pantallasHtml[donde].includes(`data-sim-objetivo="${o.id}"`))
-        avisos.push(`variante ${v.id}: el objetivo «${o.id}» no tiene ningún elemento en «${o.pantalla}» (nadie podrá cumplirlo)`)
-    }
+  }
+  // El mismo id en A y en B es el mismo elemento. Si una variante no lo tiene, en ella nadie lo pulsa (aviso);
+  // si no lo tiene ninguna, el objetivo no se puede medir (error).
+  for (const o of objetivos.values()) {
+    const sin = j.variantes.filter((v) => !pantallasHtml[`${v.id}/${j._archivo(o.pantalla)}`].includes(`data-sim-objetivo="${o.id}"`))
+    if (sin.length === j.variantes.length)
+      errores.push(`objetivo «${o.id}»: ninguna variante tiene data-sim-objetivo="${o.id}" en la pantalla «${o.pantalla}»`)
+    else for (const v of sin)
+      avisos.push(`variante ${v.id}: el objetivo «${o.id}» no tiene ningún elemento en «${o.pantalla}» (en ella contará como que nadie lo pulsa)`)
   }
   if (errores.length) throw new ErrorJourney(`${j.id}: no cumple el contrato:\n  ✗ ` + errores.join("\n  ✗ "))
 

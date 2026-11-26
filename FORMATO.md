@@ -113,7 +113,9 @@ Las pantallas siguen las reglas de los prototipos (solo componentes del sistema 
 - Las diferencias entre variantes se escriben en el mismo archivo: `variante === "B" ? … : …`.
 - Anotaciones para el simulador: `data-sim-accion` (`principal`, `secundaria`, `salida`), `data-sim-responde="<duda>"`,
   `data-sim-compromiso` (`datos-personales`, `pago`) y `data-sim-objetivo="<id>"` en el enlace, botón o formulario
-  que cumple un objetivo de `objetivos`.
+  que cumple un objetivo de `objetivos`. El mismo id en A y en B es el mismo elemento, aunque cambie de sitio o de
+  texto; si una variante no lo tiene, en ella cuenta como que nadie lo pulsa (aviso), y si no lo tiene ninguna, es un error.
+  En un bloque (`<div>`) cuenta cualquier enlace o botón de dentro (aviso).
 
 ```
 node scripts/export_journey.mjs systems/<id>/journeys/<slug>   # exporta uno (necesita cd web && npm install una vez)
