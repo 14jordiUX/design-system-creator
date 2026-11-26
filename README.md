@@ -20,6 +20,7 @@ Herramienta para crear, ver y exportar sistemas de diseño.
 | `systems/` | Una subcarpeta por cada sistema creado (ahora: `sereno`). |
 | `FORMATO.md` | Cómo está organizada la carpeta de un sistema y qué campos tiene la ficha. |
 | `scripts/` | `new_system.py` crea un sistema nuevo desde unas respuestas (lo usa Claude en conversación; da lo mismo que el cuestionario); `generate.py` genera todo lo demás (CSS, Figma, vista previa, kit) a partir de los tokens. |
+| `journeys/` | Journeys exportados para el simulador de usuarios sintéticos (uno por cliente y recorrido, con sus variantes A/B). Se abren con doble clic. Se crean con `node scripts/export_journey.mjs` desde `systems/<id>/journeys/`. |
 | `peticiones/` | Peticiones «Desde una web» pendientes y sus resultados (las procesa GitHub). |
 | `web/` | El código de la web. |
 

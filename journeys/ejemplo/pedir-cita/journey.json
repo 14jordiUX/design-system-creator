@@ -1,0 +1,70 @@
+{
+  "id": "pedir-cita",
+  "nombre": "Pedir la primera cita",
+  "origen": "design-system-creator",
+  "sistemaDiseno": "sereno",
+  "fuente": "systems/sereno/journeys/pedir-cita",
+  "nota": "Generado con scripts/export_journey.mjs. No editar a mano: se cambia la fuente y se vuelve a exportar.",
+  "pantallas": [
+    {
+      "id": "inicio",
+      "nombre": "Inicio",
+      "archivo": "index.html"
+    },
+    {
+      "id": "primera-visita",
+      "nombre": "Qué incluye la primera visita",
+      "archivo": "primera-visita.html"
+    },
+    {
+      "id": "elegir-hora",
+      "nombre": "Elegir día y hora",
+      "archivo": "elegir-hora.html"
+    },
+    {
+      "id": "tus-datos",
+      "nombre": "Tus datos",
+      "archivo": "tus-datos.html"
+    },
+    {
+      "id": "confirmacion",
+      "nombre": "Cita confirmada",
+      "archivo": "confirmacion.html"
+    }
+  ],
+  "variantes": [
+    {
+      "id": "A",
+      "nombre": "Actual",
+      "carpeta": "A",
+      "cambios": []
+    },
+    {
+      "id": "B",
+      "nombre": "CTA visible + dudas resueltas + formulario corto",
+      "carpeta": "B",
+      "cambios": [
+        "«Pide tu primera cita» visible arriba en móvil (en A solo está dentro del menú ☰)",
+        "Precio de la primera visita junto al botón (en A solo aparece en las preguntas frecuentes del pie)",
+        "Aviso de cancelación gratuita y próximo hueco en «Elegir hora» (en A no hay)",
+        "Formulario de 3 campos + privacidad (en A son 9 campos + privacidad)",
+        "Explica para qué se usan los datos junto a la casilla de privacidad (en A solo hay texto legal en letra pequeña)",
+        "Botón de confirmar grande (en A es pequeño)"
+      ]
+    }
+  ],
+  "objetivos": [
+    {
+      "id": "pulsa-pedir-cita",
+      "nombre": "Pulsa «Pedir cita» en el inicio",
+      "condicion": "pulsa",
+      "pantalla": "inicio"
+    },
+    {
+      "id": "pulsa-confirmar",
+      "nombre": "Pulsa «Confirmar» en sus datos",
+      "condicion": "pulsa",
+      "pantalla": "tus-datos"
+    }
+  ]
+}
