@@ -132,7 +132,8 @@ objetivos marcados en su pantalla). La revisión completa la hace el simulador:
 Cada prototipo de cada sistema (los de `base/prototypes/` y los propios del sistema) se exporta solo, sin hacer nada
 más, a `journeys/prototipos-<sistema>/<prototipo>/`: un journey con una sola variante (A) y `"tipo": "prototipo"`.
 Los botones que dice `meta.links` pasan a ser enlaces entre pantallas (misma regla que la exportación a Figma: el
-texto del botón es el de `text` o empieza por él). En el simulador se elige un prototipo para cada variante del test
+texto del botón es el de `text` o empieza por él); el botón principal del sistema cuenta como el paso siguiente
+(`data-sim-accion="principal"`) y los demás como secundarios. En el simulador se elige un prototipo para cada variante del test
 (por ejemplo, A = «Onboarding» y B = «Onboarding corto»). El simulador descarga estos archivos de GitHub, así que
 basta con publicar. Si un prototipo no se puede exportar, se avisa en el registro de la publicación pero no la para.
 

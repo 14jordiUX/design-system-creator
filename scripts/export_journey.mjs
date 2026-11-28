@@ -397,7 +397,9 @@ function enlazar(html, links, archivo) {
     if (!l) return todo
     usados.add(normal(l.text))
     const limpios = attrs.replace(/\s(?:type|href|disabled|form|formaction)(?:="[^"]*")?(?=\s|$)/g, "")
-    return `<a href="${archivo(l.to)}"${limpios}>${dentro}</a>`
+    // El botón principal del sistema (variante «default») es el paso siguiente; los demás, secundarios
+    const accion = /data-sim-accion=/.test(limpios) ? "" : ` data-sim-accion="${/data-variant="default"/.test(limpios) ? "principal" : "secundaria"}"`
+    return `<a href="${archivo(l.to)}"${accion}${limpios}>${dentro}</a>`
   })
   return { html: salida, faltan: links.filter((l) => !usados.has(normal(l.text))).map((l) => l.text) }
 }
