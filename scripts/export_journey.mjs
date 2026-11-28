@@ -1,7 +1,8 @@
 // Exporta un journey navegable (con sus variantes A, B…) hecho con el kit de un sistema de diseño.
 //
 //   node scripts/export_journey.mjs systems/sereno/journeys/pedir-cita    ← uno
-//   node scripts/export_journey.mjs --all                                 ← todos los de base/ y systems/
+//   node scripts/export_journey.mjs --all                                 ← todos los de base/ y systems/, y los prototipos
+//   node scripts/export_journey.mjs --prototipos                          ← solo los prototipos (journeys/prototipos-<sistema>/)
 //
 // Lee la fuente (systems/<sistema>/journeys/<journey>/journey.json + <journey>.tsx) y escribe el resultado en
 // journeys/<cliente>/<journey>/, como pide el contrato con el simulador de usuarios sintéticos:
@@ -220,6 +221,21 @@ function revisarHtml(html, donde, archivos, errores) {
     if (!["datos-personales", "pago"].includes(m[1])) errores.push(`${donde}: data-sim-compromiso="${m[1]}" no vale`)
 }
 
+// El CSS de un journey o prototipo exportado: solo las clases que usan sus pantallas, con el tema del sistema,
+// y las fuentes copiadas dentro (comun/estilo.css + comun/fuentes/).
+async function escribirEstilo({ trabajo, pantallasHtml, comun, avisos, compile, Scanner, nombre, sistema }) {
+  const tokensCss = fs.readFileSync(path.join(trabajo, "styles", "tokens.css"), "utf8")
+  const usaCodigo = Object.values(pantallasHtml).some((h) => /font-code|<code|<pre|<kbd/.test(h))
+  const caras = await fuentesLocales(familiasDelSistema(tokensCss, usaCodigo), comun, avisos)
+  const compilador = await compile(`@import "./styles/globals.css";\n`, { base: trabajo, onDependency: () => {} })
+  const scanner = new Scanner({})
+  const candidatos = scanner.scanFiles(Object.values(pantallasHtml).map((content) => ({ content, extension: "html" })))
+  const css = compilador.build(candidatos)
+  fs.writeFileSync(path.join(comun, "estilo.css"),
+    `/* ${nombre}: estilos del sistema «${sistema}». Generado con scripts/export_journey.mjs. No editar a mano. */\n` +
+    (caras ? caras + "\n" : "") + css)
+}
+
 async function exportar(dir, herramientas) {
   const { j, tsx, sistema, kit, fuente } = leerFuente(dir)
   const { createServer, react, renderToStaticMarkup, createElement, compile, Scanner } = herramientas
@@ -316,16 +332,7 @@ async function exportar(dir, herramientas) {
   }
 
   // 5. CSS: solo las clases que usan las pantallas, con el tema del sistema, y las fuentes copiadas dentro.
-  const tokensCss = fs.readFileSync(path.join(trabajo, "styles", "tokens.css"), "utf8")
-  const usaCodigo = Object.values(pantallasHtml).some((h) => /font-code|<code|<pre|<kbd/.test(h))
-  const caras = await fuentesLocales(familiasDelSistema(tokensCss, usaCodigo), comun, avisos)
-  const compilador = await compile(`@import "./styles/globals.css";\n`, { base: trabajo, onDependency: () => {} })
-  const scanner = new Scanner({})
-  const candidatos = scanner.scanFiles(Object.values(pantallasHtml).map((content) => ({ content, extension: "html" })))
-  const css = compilador.build(candidatos)
-  fs.writeFileSync(path.join(comun, "estilo.css"),
-    `/* ${j.nombre}: estilos del sistema «${sistema}». Generado con scripts/export_journey.mjs. No editar a mano. */\n` +
-    (caras ? caras + "\n" : "") + css)
+  await escribirEstilo({ trabajo, pantallasHtml, comun, avisos, compile, Scanner, nombre: j.nombre, sistema })
 
   // 6. journey.json del contrato (lo que lee el simulador)
   const salida = {
@@ -349,6 +356,157 @@ async function exportar(dir, herramientas) {
   return rel
 }
 
+// ------------------------------------------------------------------ prototipos
+//
+// Cada prototipo del kit de cada sistema (systems/<sistema>/kit/prototypes/<prototipo>.tsx: los de base/prototypes/
+// y los propios del sistema) se exporta también, para que el simulador lo pueda usar como variante de un test:
+//   journeys/prototipos-<sistema>/<prototipo>/  (journey.json con «tipo: prototipo», una sola variante A)
+// Un prototipo navega con go(id) en JavaScript; aquí se pinta cada pantalla y los botones que dice `meta.links`
+// ({ from, text, to }) pasan a ser enlaces normales a la otra pantalla. No hace falta tocar nada del prototipo.
+
+const PREFIJO_PROTOTIPOS = "prototipos-"
+
+function todosLosPrototipos() {
+  const out = []
+  const systems = path.join(ROOT, "systems")
+  if (!fs.existsSync(systems)) return out
+  for (const sistema of fs.readdirSync(systems).sort()) {
+    const dir = path.join(systems, sistema, "kit", "prototypes")
+    if (!fs.existsSync(path.join(systems, sistema, "kit", "styles", "globals.css")) || !fs.existsSync(dir)) continue
+    for (const n of fs.readdirSync(dir).sort()) {
+      const slug = n.replace(/\.tsx$/, "")
+      if (n.endsWith(".tsx") && ID.test(slug)) out.push({ sistema, slug })
+    }
+  }
+  return out
+}
+
+const ENTIDADES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", "#39": "'", "#x27": "'" }
+const textoDe = (html) => html.replace(/<[^>]*>/g, " ")
+  .replace(/&(#?[a-z0-9]+);/gi, (m, e) => ENTIDADES[e.toLowerCase()] ?? (e[0] === "#" ? String.fromCodePoint(e[1] === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10)) : m))
+  .replace(/\s+/g, " ").trim()
+const normal = (t) => t.toLocaleLowerCase("es").replace(/\s+/g, " ").trim()
+
+// Convierte en <a href> los botones de `links` (los de esta pantalla), con la misma regla que la exportación a Figma:
+// el texto del botón es el de `text` o empieza por él. Devuelve el HTML y los textos que no encontró.
+function enlazar(html, links, archivo) {
+  const usados = new Set()
+  const salida = html.replace(/<(button|a)\b([^>]*)>([\s\S]*?)<\/\1>/g, (todo, etiqueta, attrs, dentro) => {
+    const txt = normal(textoDe(dentro))
+    const l = links.find((x) => txt === normal(x.text)) ?? links.find((x) => txt.startsWith(normal(x.text)))
+    if (!l) return todo
+    usados.add(normal(l.text))
+    const limpios = attrs.replace(/\s(?:type|href|disabled|form|formaction)(?:="[^"]*")?(?=\s|$)/g, "")
+    // El botón principal del sistema (variante «default») es el paso siguiente; los demás, secundarios
+    const accion = /data-sim-accion=/.test(limpios) ? "" : ` data-sim-accion="${/data-variant="default"/.test(limpios) ? "principal" : "secundaria"}"`
+    return `<a href="${archivo(l.to)}"${accion}${limpios}>${dentro}</a>`
+  })
+  return { html: salida, faltan: links.filter((l) => !usados.has(normal(l.text))).map((l) => l.text) }
+}
+
+function paginaPrototipo({ titulo, pantalla, cuerpo }) {
+  // height:100% para que el «min-h-full» de los prototipos ocupe toda la ventana, como en la web
+  return pagina({ titulo, pantalla, cuerpo }).replace("<html lang=\"es\">", "<html lang=\"es\" style=\"height:100%\">")
+    .replace(`<body data-sim-pantalla=`, `<body style="height:100%" data-sim-pantalla=`)
+}
+
+async function exportarPrototipo({ sistema, slug }, herramientas) {
+  const { createServer, react, renderToStaticMarkup, createElement, compile, Scanner } = herramientas
+  const kit = path.join(ROOT, "systems", sistema, "kit")
+  const avisos = []
+  const trabajo = path.join(TMP, `prototipo--${sistema}--${slug}`)
+  vaciar(trabajo)
+  copiarCarpeta(kit, trabajo)
+
+  const server = await createServer({
+    root: trabajo, configFile: false, logLevel: "error", appType: "custom",
+    plugins: [react()],
+    resolve: { alias: [{ find: /^@\//, replacement: trabajo.replace(/\\/g, "/") + "/" }] },
+    server: { middlewareMode: true, hmr: false, watch: null },
+    optimizeDeps: { noDiscovery: true, include: [] },
+  })
+  const donde = `systems/${sistema}/kit/prototypes/${slug}.tsx`
+  const pantallasHtml = {}
+  let meta
+  try {
+    const mod = await server.ssrLoadModule(path.join(trabajo, "prototypes", `${slug}.tsx`))
+    meta = mod.meta
+    const Prototipo = mod.default
+    if (typeof Prototipo !== "function") throw new ErrorJourney(`${donde}: tiene que exportar por defecto el prototipo ({ screen, go })`)
+    const screens = (meta && Array.isArray(meta.screens) ? meta.screens : []).filter((x) => x && ID.test(x.id || ""))
+    if (!screens.length) throw new ErrorJourney(`${donde}: le falta «meta.screens» (la lista de pantallas)`)
+    meta.screens = screens
+    const archivo = (id) => (id === screens[0].id ? "index.html" : `${id}.html`)
+    const links = (Array.isArray(meta.links) ? meta.links : []).filter((l) => l && l.text && screens.some((x) => x.id === l.to))
+    for (const p of screens) {
+      let cuerpo
+      try {
+        cuerpo = renderToStaticMarkup(createElement(Prototipo, { screen: p.id, go: () => {} }))
+      } catch (e) {
+        throw new ErrorJourney(`${donde}, pantalla «${p.id}»: ${e.message}`)
+      }
+      if (!cuerpo.trim()) throw new ErrorJourney(`${donde}: la pantalla «${p.id}» sale vacía`)
+      const { html, faltan } = enlazar(cuerpo, links.filter((l) => l.from === p.id), archivo)
+      for (const t of faltan) avisos.push(`pantalla «${p.id}»: no encuentro el botón «${t}» (meta.links); en el simulador no llevará a ningún sitio`)
+      pantallasHtml[`A/${archivo(p.id)}`] = paginaPrototipo({ titulo: `${p.label || p.id} · ${meta.label || slug}`, pantalla: p.id, cuerpo: html })
+    }
+    meta._archivo = archivo
+  } finally {
+    await server.close()
+  }
+
+  const archivos = new Set(meta.screens.map((p) => meta._archivo(p.id)))
+  const errores = []
+  for (const [d, html] of Object.entries(pantallasHtml)) revisarHtml(html, d, archivos, errores)
+  if (errores.length) throw new ErrorJourney(`${donde}: no cumple el contrato:\n  ✗ ` + errores.join("\n  ✗ "))
+
+  const destino = path.join(ROOT, SALIDA, PREFIJO_PROTOTIPOS + sistema, slug)
+  vaciar(destino)
+  const comun = path.join(destino, "comun")
+  fs.mkdirSync(comun, { recursive: true })
+  for (const [rel, html] of Object.entries(pantallasHtml)) {
+    fs.mkdirSync(path.dirname(path.join(destino, rel)), { recursive: true })
+    fs.writeFileSync(path.join(destino, rel), html)
+  }
+  const nombre = meta.label || slug
+  await escribirEstilo({ trabajo, pantallasHtml, comun, avisos, compile, Scanner, nombre, sistema })
+  const propio = path.join("systems", sistema, "prototypes", slug, `${slug}.tsx`)
+  const fuente = fs.existsSync(path.join(ROOT, propio)) ? propio : path.join("base", "prototypes", slug, `${slug}.tsx`)
+  const salida = {
+    id: slug,
+    nombre,
+    tipo: "prototipo",
+    origen: "design-system-creator",
+    sistemaDiseno: sistema,
+    fuente: fuente.split(path.sep).join("/"),
+    descripcion: meta.description || "",
+    nota: "Generado con scripts/export_journey.mjs desde el prototipo. No editar a mano: se cambia el prototipo y se vuelve a exportar.",
+    pantallas: meta.screens.map((p) => ({ id: p.id, nombre: p.label || p.id, archivo: meta._archivo(p.id) })),
+    variantes: [{ id: "A", nombre, carpeta: "A", cambios: [] }],
+  }
+  fs.writeFileSync(path.join(destino, "journey.json"), JSON.stringify(salida, null, 2) + "\n")
+  fs.rmSync(trabajo, { recursive: true, force: true })
+  const rel = path.relative(ROOT, destino).split(path.sep).join("/")
+  console.log(`✓ ${rel}: prototipo «${nombre}», ${meta.screens.length} pantallas`)
+  for (const a of avisos) console.log(`  ⚠ ${a}`)
+  return rel
+}
+
+// Quita los prototipos exportados que ya no existen (solo dentro de journeys/prototipos-*/).
+function limpiarPrototipos(exportados) {
+  const base = path.join(ROOT, SALIDA)
+  if (!fs.existsSync(base)) return
+  for (const carpeta of fs.readdirSync(base)) {
+    if (!carpeta.startsWith(PREFIJO_PROTOTIPOS)) continue
+    const dir = path.join(base, carpeta)
+    for (const slug of fs.readdirSync(dir)) {
+      const rel = `${SALIDA}/${carpeta}/${slug}`
+      if (!exportados.has(rel)) { fs.rmSync(path.join(dir, slug), { recursive: true, force: true }); console.log(`− ${rel}: ya no existe el prototipo`) }
+    }
+    if (!fs.readdirSync(dir).length) fs.rmdirSync(dir)
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2)
   if (!args.length || args.includes("-h") || args.includes("--help")) {
@@ -359,8 +517,10 @@ async function main() {
     console.error("✗ Faltan las dependencias de la web. Instálalas una vez con: cd web && npm install")
     return 1
   }
-  const dirs = args.includes("--all") ? todasLasFuentes() : args
-  if (!dirs.length) { console.log("No hay journeys que exportar (systems/<sistema>/journeys/<journey>/journey.json)."); return 0 }
+  const todos = args.includes("--all")
+  const conPrototipos = todos || args.includes("--prototipos")
+  const dirs = todos ? todasLasFuentes() : args.filter((a) => !a.startsWith("--"))
+  if (!dirs.length && !conPrototipos) { console.log("No hay journeys que exportar (systems/<sistema>/journeys/<journey>/journey.json)."); return 0 }
 
   const [{ createServer }, reactPlugin, server, React, tw, oxide] = await Promise.all([
     importar("vite"), importar("@vitejs/plugin-react"), importar("react-dom/server"), importar("react"),
@@ -378,6 +538,19 @@ async function main() {
       fallos++
       console.error(e instanceof ErrorJourney ? `✗ ${e.message}` : e)
     }
+  }
+  if (conPrototipos) {
+    // Un prototipo que no se puede exportar se avisa, pero no para la publicación de la web.
+    const exportados = new Set()
+    for (const p of todosLosPrototipos()) {
+      try {
+        exportados.add(await exportarPrototipo(p, herramientas))
+      } catch (e) {
+        exportados.add(`${SALIDA}/${PREFIJO_PROTOTIPOS}${p.sistema}/${p.slug}`)  // se deja el de la vez anterior
+        console.error(`⚠ prototipo «${p.slug}» (${p.sistema}) sin exportar: ${e instanceof ErrorJourney ? e.message : e}`)
+      }
+    }
+    limpiarPrototipos(exportados)
   }
   if (!fallos) console.log("\nPara comprobarlo, desde «Usuarios sintéticos»: python -m simulador revisar-journey journeys/<cliente>/<journey>")
   return fallos ? 1 : 0
