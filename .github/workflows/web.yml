@@ -49,7 +49,7 @@ jobs:
         run: |
           npm ci
           npm run build
-      - name: Exportar los journeys (journeys/<cliente>/<journey>/, para el simulador)
+      - name: Exportar los journeys y los prototipos (journeys/, para el simulador)
         run: node scripts/export_journey.mjs --all
       - name: Comprobar que todo sale de tokens
         run: |
