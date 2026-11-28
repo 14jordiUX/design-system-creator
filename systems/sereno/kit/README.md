@@ -21,7 +21,7 @@ Si quieres que Claude lo recuerde siempre, guarda `SKILL.md` como skill.
 | `components/ui/` | 62 componentes de shadcn/ui que toman el estilo del sistema. |
 | `components/custom/` | Componentes propios del sistema: app-sidebar, appointment-card, back-button, brand, choice-card, code-input, fab, icon-badge, password-input, setting-row, stat-card, step-footer, steps, tab. |
 | `patterns/` | Pantallas de ejemplo hechas solo con los componentes: panel-de-gestion. |
-| `prototypes/` | Flujos de varias pantallas que se pueden clicar: login, onboarding. |
+| `prototypes/` | Flujos de varias pantallas que se pueden clicar: login, onboarding, onboarding-corto. |
 | `lib/utils.ts` | Función auxiliar que usan los componentes. |
 | `components.json` | Configuración para añadir más componentes con `npx shadcn add`. |
 

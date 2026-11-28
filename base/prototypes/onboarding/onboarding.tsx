@@ -1,13 +1,22 @@
-// Prototipo «Onboarding»: 3 pantallas para dar la bienvenida, elegir intereses y activar avisos.
-// Componentes: Card, Field, Button y Badge (shadcn/ui) y los propios Steps, Icon Badge, Choice Card, Setting Row y Step Footer. Ninguna clase fuera de los tokens.
+// Prototipo «Onboarding»: 3 pasos (bienvenida, elegir intereses y activar avisos) y, al terminar, la app por dentro.
+// Hay una variante con los pasos 2 y 3 en una sola pantalla: prototypes/onboarding-corto (para compararlas en un test A/B).
+// Componentes: Card, Field, Button, Badge, Alert, Item y Avatar (shadcn/ui) y los propios Steps, Icon Badge, Choice Card,
+// Setting Row, Step Footer y App Sidebar. Ninguna clase fuera de los tokens.
 //
 // Cómo funciona un prototipo: recibe `screen` (la pantalla que toca) y `go(id)` (para ir a otra).
 import { useState } from "react"
-import { Bell, CalendarDays, ChartLine, MessagesSquare, Sparkles, UsersRound } from "lucide-react"
+import { Bell, CalendarDays, ChartLine, CircleCheck, Home, MessagesSquare, Settings, Sparkles, UsersRound } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { FieldError, FieldGroup } from "@/components/ui/field"
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
+import {
+  AppHeader, AppMain, AppShell, AppSidebar, AppSidebarContent, AppSidebarFooter, AppSidebarGroup, AppSidebarHeader,
+  AppSidebarItem, AppSidebarTrigger, AppTabBar, AppTabBarItem,
+} from "@/components/custom/app-sidebar"
 import { ChoiceCard } from "@/components/custom/choice-card"
 import { IconBadge } from "@/components/custom/icon-badge"
 import { SettingRow } from "@/components/custom/setting-row"
@@ -21,6 +30,7 @@ export const meta = {
     { id: "bienvenida", label: "Bienvenida" },
     { id: "intereses", label: "Tus intereses" },
     { id: "avisos", label: "Avisos" },
+    { id: "inicio", label: "Ya en la app" },
   ],
   links: [
     { from: "bienvenida", text: "Empezar", to: "intereses" },
@@ -28,11 +38,13 @@ export const meta = {
     { from: "intereses", text: "Atrás", to: "bienvenida" },
     { from: "intereses", text: "Continuar", to: "avisos" },
     { from: "avisos", text: "Atrás", to: "intereses" },
-    { from: "avisos", text: "Terminar", to: "bienvenida" },
+    { from: "avisos", text: "Terminar", to: "inicio" },
+    { from: "inicio", text: "Repetir el onboarding", to: "bienvenida" },
   ],
   hints: [
     "En «Tus intereses» hay que elegir al menos uno para continuar.",
-    "«Terminar» vuelve al principio para poder repetir el flujo.",
+    "«Terminar» entra en la app: la pantalla de inicio enseña primero lo que has elegido.",
+    "Variante para comparar: «Onboarding corto» junta los intereses y los avisos en una sola pantalla.",
   ],
 }
 
@@ -48,12 +60,14 @@ const INTERESTS = [
 export default function Onboarding({ screen, go }: Props) {
   // Lo elegido se recuerda entre pantallas
   const [picked, setPicked] = useState<string[]>(["agenda"])
+  const [alerts, setAlerts] = useState({ movil: true, email: false })
+  if (screen === "inicio") return <AppHome go={go} picked={picked} alerts={alerts} />
   return (
     <div className="flex min-h-full w-full items-center justify-center bg-muted p-inset-lg">
       <div className="w-full max-w-sheet">
         {screen === "bienvenida" && <Welcome go={go} />}
         {screen === "intereses" && <Interests go={go} picked={picked} setPicked={setPicked} />}
-        {screen === "avisos" && <Notifications go={go} count={picked.length} />}
+        {screen === "avisos" && <Notifications go={go} count={picked.length} alerts={alerts} setAlerts={setAlerts} />}
       </div>
     </div>
   )
@@ -106,7 +120,9 @@ function Interests({ go, picked, setPicked }: { go: Props["go"]; picked: string[
   )
 }
 
-function Notifications({ go, count }: { go: Props["go"]; count: number }) {
+type Alerts = { movil: boolean; email: boolean }
+
+function Notifications({ go, count, alerts, setAlerts }: { go: Props["go"]; count: number; alerts: Alerts; setAlerts: (a: Alerts) => void }) {
   return (
     <Card>
       <CardHeader>
@@ -118,13 +134,93 @@ function Notifications({ go, count }: { go: Props["go"]; count: number }) {
       </CardHeader>
       <CardContent>
         <FieldGroup>
-          <SettingRow id="aviso-movil" icon={<Bell />} title="Avisos en el móvil" description="Recordatorios y cambios importantes." defaultChecked />
-          <SettingRow id="aviso-email" icon={<MessagesSquare />} title="Resumen por email" description="Una vez a la semana, los lunes." />
+          <SettingRow id="aviso-movil" icon={<Bell />} title="Avisos en el móvil" description="Recordatorios y cambios importantes."
+            checked={alerts.movil} onCheckedChange={(v) => setAlerts({ ...alerts, movil: v })} />
+          <SettingRow id="aviso-email" icon={<MessagesSquare />} title="Resumen por email" description="Una vez a la semana, los lunes."
+            checked={alerts.email} onCheckedChange={(v) => setAlerts({ ...alerts, email: v })} />
         </FieldGroup>
       </CardContent>
       <CardFooter>
-        <StepFooter onBack={() => go("intereses")} onNext={() => go("bienvenida")} nextLabel="Terminar" />
+        <StepFooter onBack={() => go("intereses")} onNext={() => go("inicio")} nextLabel="Terminar" />
       </CardFooter>
     </Card>
+  )
+}
+
+// Última pantalla: ya estás dentro de la app. Lo primero que ves es lo que elegiste en el onboarding.
+const NAV = [
+  { id: "inicio", label: "Inicio", icon: <Home /> },
+  { id: "agenda", label: "Agenda", icon: <CalendarDays /> },
+  { id: "equipo", label: "Equipo", icon: <UsersRound /> },
+  { id: "mensajes", label: "Mensajes", icon: <MessagesSquare /> },
+]
+
+function AppHome({ go, picked, alerts }: { go: Props["go"]; picked: string[]; alerts: Alerts }) {
+  const chosen = INTERESTS.filter((i) => picked.includes(i.id))
+  const shown = chosen.length ? chosen : INTERESTS.slice(0, 2)
+  const on = [alerts.movil && "avisos en el móvil", alerts.email && "resumen por email"].filter(Boolean)
+  return (
+    <AppShell className="h-full" shortcut={false} mobileNav="tabbar">
+      <AppSidebar>
+        <AppSidebarHeader logo={<Sparkles className="text-primary" />} title="Tu app" />
+        <AppSidebarContent>
+          <AppSidebarGroup label="Menú">
+            {NAV.map((n) => <AppSidebarItem key={n.id} icon={n.icon} active={n.id === "inicio"}>{n.label}</AppSidebarItem>)}
+          </AppSidebarGroup>
+        </AppSidebarContent>
+        <AppSidebarFooter>
+          <AppSidebarItem icon={<Settings />}>Ajustes</AppSidebarItem>
+        </AppSidebarFooter>
+      </AppSidebar>
+      <AppMain>
+        <AppHeader>
+          <AppSidebarTrigger />
+          <span className="text-ui font-strong">Inicio</span>
+          <div className="ms-auto flex items-center gap-gap-xs">
+            <Button variant="ghost" size="icon" aria-label="Avisos"><Bell /></Button>
+            <Avatar><AvatarFallback>MR</AvatarFallback></Avatar>
+          </div>
+        </AppHeader>
+        <div className="mx-auto grid w-full max-w-page gap-gap-lg p-inset-lg">
+          <div>
+            <h1 className="text-h3">¡Ya estás dentro, Marta!</h1>
+            <p className="text-ui text-muted-foreground">Hemos preparado el inicio con lo que nos has contado.</p>
+          </div>
+          <Alert>
+            <CircleCheck />
+            <AlertTitle>Todo listo</AlertTitle>
+            <AlertDescription>
+              {on.length ? `Tienes activados: ${on.join(" y ")}.` : "No te enviaremos avisos. Puedes activarlos en Ajustes."}
+            </AlertDescription>
+          </Alert>
+          <Card>
+            <CardHeader>
+              <CardTitle>Empieza por aquí</CardTitle>
+              <CardDescription>{chosen.length ? "Según lo que has elegido." : "Lo más usado para empezar."}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ItemGroup>
+                {shown.map(({ id, icon: Icon, title, text }) => (
+                  <Item key={id} variant="outline">
+                    <ItemMedia variant="icon"><Icon /></ItemMedia>
+                    <ItemContent>
+                      <ItemTitle>{title}</ItemTitle>
+                      <ItemDescription>{text}</ItemDescription>
+                    </ItemContent>
+                    <ItemActions><Button variant="outline" size="sm">Abrir</Button></ItemActions>
+                  </Item>
+                ))}
+              </ItemGroup>
+            </CardContent>
+            <CardFooter>
+              <Button variant="ghost" className="w-full" onClick={() => go("bienvenida")}>Repetir el onboarding</Button>
+            </CardFooter>
+          </Card>
+        </div>
+        <AppTabBar>
+          {NAV.map((n) => <AppTabBarItem key={n.id} icon={n.icon} active={n.id === "inicio"}>{n.label}</AppTabBarItem>)}
+        </AppTabBar>
+      </AppMain>
+    </AppShell>
   )
 }
